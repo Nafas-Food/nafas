@@ -16,7 +16,7 @@ fi
 
 fail=0
 for model in "${SOFT_DELETE_MODELS[@]}"; do
-  pattern="prisma(Service)?(\.extended)?\.${model}\.(delete|deleteMany)\\("
+  pattern="prisma(Service)?(\\.extended)?\\.${model}\\.(delete|deleteMany)\\s*\\("
   if grep -RInE "$pattern" "$SRC_DIR" --include='*.ts' --exclude-dir=node_modules; then
     echo ""
     echo "FORBIDDEN: hard delete on soft-delete model '$model'."

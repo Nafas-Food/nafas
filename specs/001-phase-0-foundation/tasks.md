@@ -528,31 +528,31 @@ description: "Phase 0 Foundation — implementation tasks"
 
 **Independent Test**: A reviewer with read-only DB credentials lists tables and finds all 17 (16 constitutional + InvalidatedToken). `npx prisma migrate status` reports "Database schema is up to date!" Re-running `npx prisma migrate dev` reports "no pending migrations."
 
-- [ ] T029 [US2] Replace `<repo>\backend\prisma\schema.prisma` with the canonical schema. The full content lives at `<repo>\specs\001-phase-0-foundation\contracts\schema.prisma`. Copy it byte-for-byte into `<repo>\backend\prisma\schema.prisma`. Do not edit either copy. (The two files are kept identical so reviewers can read the contract without leaving the spec folder.)
+- [X] T029 [US2] Replace `<repo>\backend\prisma\schema.prisma` with the canonical schema. The full content lives at `<repo>\specs\001-phase-0-foundation\contracts\schema.prisma`. Copy it byte-for-byte into `<repo>\backend\prisma\schema.prisma`. Do not edit either copy. (The two files are kept identical so reviewers can read the contract without leaving the spec folder.)
 
-- [ ] T030 [US2] In the Supabase dashboard for your dev project, navigate to **Authentication → Policies** and confirm Row Level Security is **disabled** on the `public` schema. This is FR-016. If you cannot disable it via the UI, run this SQL once in **SQL Editor**: `ALTER TABLE [each table] DISABLE ROW LEVEL SECURITY;` after T031 completes. (Phase 0 ships no app code that depends on RLS; the disable is to prevent surprise denials when tables are created.)
+- [X] T030 [US2] In the Supabase dashboard for your dev project, navigate to **Authentication → Policies** and confirm Row Level Security is **disabled** on the `public` schema. This is FR-016. If you cannot disable it via the UI, run this SQL once in **SQL Editor**: `ALTER TABLE [each table] DISABLE ROW LEVEL SECURITY;` after T031 completes. (Phase 0 ships no app code that depends on RLS; the disable is to prevent surprise denials when tables are created.)
 
-- [ ] T031 [US2] Apply the schema. Confirm `<repo>\backend\.env` has a working `DATABASE_URL`, then from `<repo>\backend` run:
+- [X] T031 [US2] Apply the schema. Confirm `<repo>\backend\.env` has a working `DATABASE_URL`, then from `<repo>\backend` run:
   ```powershell
   npx prisma migrate dev --name init
   ```
   Expected outcome: a new `<repo>\backend\prisma\migrations\<timestamp>_init\migration.sql` file is created and applied. The terminal output should show `Applying migration` followed by `Your database is now in sync with your schema`.
 
-- [ ] T032 [US2] Verify table count. From `<repo>\backend` run:
+- [X] T032 [US2] Verify table count. From `<repo>\backend` run:
   ```powershell
   npx prisma db execute --stdin --url $env:DATABASE_URL
   ```
   When the prompt appears, paste `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';` and press Ctrl+Z then Enter. Expected: 17 tables total (16 application tables — `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken` — plus `_prisma_migrations`).
 
-  > If `npx prisma db execute` is awkward in your shell, the equivalent test is to open Supabase **Table Editor** and visually confirm the 17 application tables are present: `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken`. (Prisma capitalizes model names by default; if your Supabase view is lowercase that is also OK — Postgres is case-folded unless quoted, and Prisma quotes them.)
+  > If `npx prisma db execute` is awkward in your shell, the equivalent test is to open Supabase **Table Editor** and visually confirm the 16 application tables are present: `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken`. (Prisma capitalizes model names by default; if your Supabase view is lowercase that is also OK — Postgres is case-folded unless quoted, and Prisma quotes them.)
 
-- [ ] T033 [US2] Verify zero schema drift. From `<repo>\backend` run:
+- [X] T033 [US2] Verify zero schema drift. From `<repo>\backend` run:
   ```powershell
   npx prisma migrate status
   ```
   Expected: `Database schema is up to date!`. If output instead says "drift detected" or "following migration(s) have not yet been applied", stop and re-read the canonical schema in T029 — your local copy diverged.
 
-- [ ] T034 [US2] Verify the canonical schema and the live schema agree. In the Supabase Table Editor, click any one of `User`, `Order`, `Item`, `Transaction`, `UserReview` and confirm:
+- [X] T034 [US2] Verify the canonical schema and the live schema agree. In the Supabase Table Editor, click any one of `User`, `Order`, `Item`, `Transaction`, `UserReview` and confirm:
   - Primary key is `uuid` (not `int`/`serial`) — FR-015.
   - Money columns (`amount`, `total`, `price`, `subtotal`, `deliveryFee`, `serviceFee`, `subtotalAfterDiscount`, `priceBeforeDiscount`, `minOrderPrice`) are `numeric(10,2)` — FR-014.
   - Soft-delete columns (`deletedAt`) exist on the soft-delete entities listed in `data-model.md`'s coverage matrix.
@@ -569,7 +569,7 @@ description: "Phase 0 Foundation — implementation tasks"
 
 ### Soft-delete extension (FR-004)
 
-- [ ] T035 [US3] Create `<repo>\backend\src\common\admin-context\admin-context.service.ts` with the following exact content:
+- [X] T035 [US3] Create `<repo>\backend\src\common\admin-context\admin-context.service.ts` with the following exact content:
   ```ts
   import { Injectable } from '@nestjs/common';
   import { AsyncLocalStorage } from 'node:async_hooks';
@@ -592,7 +592,7 @@ description: "Phase 0 Foundation — implementation tasks"
   }
   ```
 
-- [ ] T036 [US3] Create `<repo>\backend\src\common\admin-context\admin-context.module.ts` with the following exact content:
+- [X] T036 [US3] Create `<repo>\backend\src\common\admin-context\admin-context.module.ts` with the following exact content:
   ```ts
   import { Global, Module } from '@nestjs/common';
   import { AdminContextService } from './admin-context.service';
@@ -605,7 +605,7 @@ description: "Phase 0 Foundation — implementation tasks"
   export class AdminContextModule {}
   ```
 
-- [ ] T037 [US3] Replace `<repo>\backend\src\common\prisma\prisma.service.ts` with the following exact content (adds the soft-delete `$extends` plus a `softDelete()` model helper, gated by AdminContextService):
+- [X] T037 [US3] Replace `<repo>\backend\src\common\prisma\prisma.service.ts` with the following exact content (adds the soft-delete `$extends` plus a `softDelete()` model helper, gated by AdminContextService):
   ```ts
   import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
   import { Prisma, PrismaClient } from '@prisma/client';
@@ -742,7 +742,7 @@ description: "Phase 0 Foundation — implementation tasks"
   >
   > Document this convention in T052's CLAUDE.md update.
 
-- [ ] T038 [US3] Edit `<repo>\backend\src\common\prisma\prisma.module.ts`. Replace its content with:
+- [X] T038 [US3] Edit `<repo>\backend\src\common\prisma\prisma.module.ts`. Replace its content with:
   ```ts
   import { Global, Module } from '@nestjs/common';
   import { AdminContextModule } from '../admin-context/admin-context.module';
@@ -757,11 +757,11 @@ description: "Phase 0 Foundation — implementation tasks"
   export class PrismaModule {}
   ```
 
-- [ ] T039 [US3] Edit `<repo>\backend\src\app.module.ts`. Add `import { AdminContextModule } from './common/admin-context/admin-context.module';` near the other imports, and add `AdminContextModule` to the `imports` array (place it before `PrismaModule`). Leave every other line unchanged.
+- [X] T039 [US3] Edit `<repo>\backend\src\app.module.ts`. Add `import { AdminContextModule } from './common/admin-context/admin-context.module';` near the other imports, and add `AdminContextModule` to the `imports` array (place it before `PrismaModule`). Leave every other line unchanged.
 
 ### CI grep gate (FR-005)
 
-- [ ] T040 [US3] Create `<repo>\backend\scripts\ci-no-hard-delete.sh` with the following exact content (LF line endings — if your editor saves CRLF, run `dos2unix` or set `core.autocrlf=input` for this file):
+- [X] T040 [US3] Create `<repo>\backend\scripts\ci-no-hard-delete.sh` with the following exact content (LF line endings — if your editor saves CRLF, run `dos2unix` or set `core.autocrlf=input` for this file):
   ```bash
   #!/usr/bin/env bash
   # CI gate: forbid prisma.<SoftDeleteModel>.delete( and deleteMany( calls.
@@ -796,7 +796,7 @@ description: "Phase 0 Foundation — implementation tasks"
   echo "ci-no-hard-delete: OK (no forbidden delete calls found)"
   ```
 
-- [ ] T041 [US3] Verify the gate works locally. From `<repo>\backend` run:
+- [X] T041 [US3] Verify the gate works locally. From `<repo>\backend` run:
   ```powershell
   bash scripts/ci-no-hard-delete.sh
   ```
@@ -804,9 +804,9 @@ description: "Phase 0 Foundation — implementation tasks"
 
 ### Storage buckets + default placeholders (FR-010, FR-011)
 
-- [ ] T042 [US3] **Document the per-contributor Storage bucket setup.** Because each contributor uses their own free-tier Supabase project (research R10), the four buckets must be created in each contributor's project, not centrally. Action: confirm `<repo>\README.md` and `<repo>\specs\001-phase-0-foundation\quickstart.md` Step 5 instruct the contributor to create buckets named exactly `chef-logos`, `chef-banners`, `item-images`, `review-images`, each marked **Public bucket**, in their own Supabase project. If the wording is missing or has drifted, fix README/quickstart now. Then create the four buckets in *your own* dev Supabase project to verify the documented steps work.
+- [X] T042 [US3] **Document the per-contributor Storage bucket setup.** Because each contributor uses their own free-tier Supabase project (research R10), the four buckets must be created in each contributor's project, not centrally. Action: confirm `<repo>\README.md` and `<repo>\specs\001-phase-0-foundation\quickstart.md` Step 5 instruct the contributor to create buckets named exactly `chef-logos`, `chef-banners`, `item-images`, `review-images`, each marked **Public bucket**, in their own Supabase project. If the wording is missing or has drifted, fix README/quickstart now. Then create the four buckets in *your own* dev Supabase project to verify the documented steps work.
 
-- [ ] T043 [US3] **Generate the brand-aligned default chef placeholders and document the upload step.** Invoke the design-system skill (`/nafas-design-system`) and request: "default chef logo (512×512) and banner (1600×600) PNGs — gradient background + Nafas wordmark, no text in either Arabic or English beyond the wordmark itself." Commit the generated PNGs to `<repo>\backend\assets\defaults\default-logo.png` and `<repo>\backend\assets\defaults\default-banner.png` (create the directory) so every contributor has the same source artwork. Then:
+- [X] T043 [US3] **Generate the brand-aligned default chef placeholders and document the upload step.** Invoke the design-system skill (`/nafas-design-system`) and request: "default chef logo (512×512) and banner (1600×600) PNGs — gradient background + Nafas wordmark, no text in either Arabic or English beyond the wordmark itself." Commit the generated PNGs to `<repo>\backend\assets\defaults\default-logo.png` and `<repo>\backend\assets\defaults\default-banner.png` (create the directory) so every contributor has the same source artwork. Then:
   1. Confirm the README and `quickstart.md` Step 5 instruct the contributor to upload `default-logo.png` to the `chef-logos` bucket (root, no subfolder) and `default-banner.png` to the `chef-banners` bucket in their own Supabase project, and to copy the resulting public URLs into `<repo>\backend\.env` as `DEFAULT_CHEF_LOGO_URL` and `DEFAULT_CHEF_BANNER_URL`.
   2. Add the two new variables to `<repo>\backend\.env.example` (append after `SUPABASE_SERVICE_KEY`):
      ```env
@@ -818,7 +818,7 @@ description: "Phase 0 Foundation — implementation tasks"
 
 ### InvalidatedToken cleanup job (FR-017)
 
-- [ ] T044 [US3] Create `<repo>\backend\src\common\jobs\invalidated-token-cleanup.job.ts` with the following exact content:
+- [X] T044 [US3] Create `<repo>\backend\src\common\jobs\invalidated-token-cleanup.job.ts` with the following exact content:
   ```ts
   import { Injectable, Logger } from '@nestjs/common';
   import { Cron, CronExpression } from '@nestjs/schedule';
@@ -843,7 +843,7 @@ description: "Phase 0 Foundation — implementation tasks"
   }
   ```
 
-- [ ] T045 [US3] Create `<repo>\backend\src\common\jobs\jobs.module.ts` with the following exact content, then edit `<repo>\backend\src\app.module.ts` to add `import { JobsModule } from './common/jobs/jobs.module';` and append `JobsModule` to the `imports` array:
+- [X] T045 [US3] Create `<repo>\backend\src\common\jobs\jobs.module.ts` with the following exact content, then edit `<repo>\backend\src\app.module.ts` to add `import { JobsModule } from './common/jobs/jobs.module';` and append `JobsModule` to the `imports` array:
   ```ts
   import { Module } from '@nestjs/common';
   import { InvalidatedTokenCleanupJob } from './invalidated-token-cleanup.job';
@@ -856,7 +856,7 @@ description: "Phase 0 Foundation — implementation tasks"
 
 ### Secrets verification (FR-009, SC-008)
 
-- [ ] T046 [US3] Confirm zero secret-shaped values are tracked. From `<repo>` run:
+- [X] T046 [US3] Confirm zero secret-shaped values are tracked. From `<repo>` run:
   ```powershell
   git ls-files | Select-String -Pattern '\.env$|\.pem$|\.key$|\.p12$|\.pfx$'
   ```
