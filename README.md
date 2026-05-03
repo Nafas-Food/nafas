@@ -26,8 +26,8 @@ Short version:
 4. `npm install && npx prisma migrate dev --name init`
 5. In Supabase Storage, create four **public** buckets: `chef-logos`,
    `chef-banners`, `item-images`, `review-images`. Upload
-   `backend/assets/defaults/default-logo.png` → `chef-logos` and
-   `backend/assets/defaults/default-banner.png` → `chef-banners`, then
+   `assets/defaults/default-logo.png` → `chef-logos` and
+   `assets/defaults/default-banner.png` → `chef-banners`, then
    paste the public URLs into `.env` as `DEFAULT_CHEF_LOGO_URL` and
    `DEFAULT_CHEF_BANNER_URL` (see `quickstart.md` Step 5 for details)
 6. `cd .. && docker compose -f docker-compose.dev.yml up backend`

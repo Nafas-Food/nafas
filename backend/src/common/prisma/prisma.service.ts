@@ -39,16 +39,40 @@ function buildExtended(base: PrismaClient, adminContext: AdminContextService) {
           return query(args);
         },
         async findUnique({ model, args, query }) {
-          const result = await query(args);
           if (
             SOFT_DELETE_MODELS.has(model) &&
-            !adminContext.getStore()?.includeDeleted &&
-            result &&
-            (result as { deletedAt?: Date | null }).deletedAt !== null
+            !adminContext.getStore()?.includeDeleted
           ) {
-            return null as never;
+            args.where = { ...(args.where ?? {}), deletedAt: null };
           }
-          return result;
+          return query(args);
+        },
+        async findFirstOrThrow({ model, args, query }) {
+          if (
+            SOFT_DELETE_MODELS.has(model) &&
+            !adminContext.getStore()?.includeDeleted
+          ) {
+            args.where = { ...(args.where ?? {}), deletedAt: null };
+          }
+          return query(args);
+        },
+        async findUniqueOrThrow({ model, args, query }) {
+          if (
+            SOFT_DELETE_MODELS.has(model) &&
+            !adminContext.getStore()?.includeDeleted
+          ) {
+            args.where = { ...(args.where ?? {}), deletedAt: null };
+          }
+          return query(args);
+        },
+        async groupBy({ model, args, query }) {
+          if (
+            SOFT_DELETE_MODELS.has(model) &&
+            !adminContext.getStore()?.includeDeleted
+          ) {
+            args.where = { ...(args.where ?? {}), deletedAt: null };
+          }
+          return query(args);
         },
         async count({ model, args, query }) {
           if (

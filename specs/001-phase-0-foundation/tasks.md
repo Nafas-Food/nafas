@@ -544,7 +544,7 @@ description: "Phase 0 Foundation — implementation tasks"
   ```
   When the prompt appears, paste `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';` and press Ctrl+Z then Enter. Expected: 17 tables total (16 application tables — `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken` — plus `_prisma_migrations`).
 
-  > If `npx prisma db execute` is awkward in your shell, the equivalent test is to open Supabase **Table Editor** and visually confirm the 17 application tables are present: `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken`. (Prisma capitalizes model names by default; if your Supabase view is lowercase that is also OK — Postgres is case-folded unless quoted, and Prisma quotes them.)
+  > If `npx prisma db execute` is awkward in your shell, the equivalent test is to open Supabase **Table Editor** and visually confirm the 16 application tables are present: `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken`. (Prisma capitalizes model names by default; if your Supabase view is lowercase that is also OK — Postgres is case-folded unless quoted, and Prisma quotes them.)
 
 - [X] T033 [US2] Verify zero schema drift. From `<repo>\backend` run:
   ```powershell
