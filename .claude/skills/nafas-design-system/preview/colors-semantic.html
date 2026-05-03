@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAF7F2; padding: 20px; }
+  .section { margin-bottom: 18px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #9C8B75; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 10px; }
+  .grid { display: flex; gap: 8px; }
+  .swatch { flex: 1; border-radius: 10px; overflow: hidden; }
+  .color-block { height: 64px; }
+  .color-meta { padding: 8px 9px; background: #fff; border: 1px solid #EDE6DA; border-top: none; border-radius: 0 0 10px 10px; }
+  .color-name { font-size: 11px; font-weight: 600; color: #2C1F14; }
+  .color-hex  { font-size: 10px; color: #9C8B75; margin-top: 2px; font-family: monospace; }
+  /* Dark mode section */
+  .dark-wrap { background: #1A120B; border-radius: 12px; padding: 14px; }
+  .dark-label { font-size: 10px; font-weight: 600; color: #7A6555; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 10px; }
+  .dark-grid { display: flex; gap: 8px; }
+  .dark-swatch { flex: 1; border-radius: 10px; overflow: hidden; }
+  .dark-meta { padding: 8px 9px; background: #2A1C12; border: 1px solid #3D2A1E; border-top: none; border-radius: 0 0 10px 10px; }
+  .dark-name { font-size: 11px; font-weight: 600; color: #F5ECD7; }
+  .dark-hex  { font-size: 10px; color: #7A6555; margin-top: 2px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <div class="section-label">Semantic / Feedback</div>
+  <div class="grid">
+    <div class="swatch">
+      <div class="color-block" style="background:#2D7A4F;"></div>
+      <div class="color-meta">
+        <div class="color-name">Success</div>
+        <div class="color-hex">#2D7A4F</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="color-block" style="background:#B83C2B;"></div>
+      <div class="color-meta">
+        <div class="color-name">Destructive</div>
+        <div class="color-hex">#B83C2B</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="color-block" style="background:#C4622D;"></div>
+      <div class="color-meta">
+        <div class="color-name">Warning</div>
+        <div class="color-hex">#C4622D</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="color-block" style="background:#5A7A6B;"></div>
+      <div class="color-meta">
+        <div class="color-name">Info</div>
+        <div class="color-hex">#5A7A6B</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="dark-wrap">
+    <div class="dark-label">Dark Mode Tokens</div>
+    <div class="dark-grid">
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#1A120B; border:1px solid #3D2A1E;"></div>
+        <div class="dark-meta"><div class="dark-name">Background</div><div class="dark-hex">#1A120B</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#2A1C12;"></div>
+        <div class="dark-meta"><div class="dark-name">Card</div><div class="dark-hex">#2A1C12</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#D4744A;"></div>
+        <div class="dark-meta"><div class="dark-name">Primary</div><div class="dark-hex">#D4744A</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#3D2416;"></div>
+        <div class="dark-meta"><div class="dark-name">Secondary</div><div class="dark-hex">#3D2416</div></div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#F5ECD7;"></div>
+        <div class="dark-meta"><div class="dark-name">Foreground</div><div class="dark-hex">#F5ECD7</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#7A6555;"></div>
+        <div class="dark-meta"><div class="dark-name">Muted FG</div><div class="dark-hex">#7A6555</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#3D2A1E;"></div>
+        <div class="dark-meta"><div class="dark-name">Border</div><div class="dark-hex">#3D2A1E</div></div>
+      </div>
+      <div class="dark-swatch">
+        <div class="color-block" style="background:#2D7A4F;"></div>
+        <div class="dark-meta"><div class="dark-name">Success</div><div class="dark-hex">#2D7A4F</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

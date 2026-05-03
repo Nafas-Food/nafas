@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAF7F2; padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+
+  /* ── Chef Card ──────────────────────────────────────── */
+  .chef-card {
+    width: 156px;
+    background: #FFFFFF;
+    border: 1px solid #EDE6DA;
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(44, 31, 20, 0.07);
+    display: flex; flex-direction: column; gap: 5px;
+    flex-shrink: 0;
+  }
+  .avatar-wrap { position: relative; width: 56px; height: 56px; margin-bottom: 6px; }
+  .avatar-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #F5ECD7, #D4944A);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #2C1F14;
+  }
+  .open-dot {
+    position: absolute; bottom: 1px; right: 1px;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #2D7A4F; border: 2.5px solid #fff;
+  }
+  .heart-btn {
+    position: absolute; top: 0; right: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #FAF7F2; border: 1px solid #EDE6DA;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chef-name { font-size: 14px; font-weight: 700; color: #2C1F14; }
+  .chef-spec { font-size: 11px; color: #9C8B75; line-height: 1.4; }
+  .rating-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+  .star { color: #D4944A; font-size: 11px; }
+  .rating-val { font-size: 12px; font-weight: 600; color: #2C1F14; }
+  .rating-meta { font-size: 11px; color: #9C8B75; }
+  .open-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #2D7A4F18; border-radius: 100px;
+    padding: 3px 8px; margin-top: 4px; align-self: flex-start;
+  }
+  .open-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #2D7A4F; }
+  .open-badge-text { font-size: 10px; font-weight: 600; color: #2D7A4F; }
+
+  /* ── Dish Card ──────────────────────────────────────── */
+  .dish-card {
+    flex: 1;
+    background: #FFFFFF;
+    border: 1px solid #EDE6DA;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(44, 31, 20, 0.07);
+    display: flex;
+  }
+  .dish-img {
+    width: 108px; height: 108px;
+    background: linear-gradient(135deg, #FDEEC8, #D4944A);
+    flex-shrink: 0; position: relative; overflow: hidden;
+  }
+  .dish-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cat-badge {
+    position: absolute; bottom: 8px; left: 8px;
+    background: rgba(44, 31, 20, 0.65);
+    backdrop-filter: blur(4px);
+    border-radius: 100px; padding: 2px 8px;
+    font-size: 9px; font-weight: 600; color: #F5ECD7;
+    letter-spacing: 0.5px;
+  }
+  .dish-info { padding: 13px 13px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+  .dish-name { font-size: 14px; font-weight: 700; color: #2C1F14; line-height: 1.3; }
+  .dish-chef { font-size: 11px; color: #9C8B75; margin-top: 2px; }
+  .dish-desc { font-size: 11px; color: #9C8B75; line-height: 1.5; margin-top: 4px; }
+  .dish-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .dish-price { font-size: 16px; font-weight: 700; color: #C4622D; }
+  .add-btn {
+    width: 32px; height: 32px;
+    background: #C4622D; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(196, 98, 45, 0.30);
+  }
+  .prep-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: #F2EDE4; border-radius: 100px;
+    padding: 3px 7px;
+  }
+  .prep-text { font-size: 10px; color: #9C8B75; font-weight: 500; }
+</style>
+</head>
+<body>
+
+  <!-- Chef Card -->
+  <div class="chef-card">
+    <div style="position:relative;">
+      <div class="avatar-wrap">
+        <div class="avatar-circle">UA</div>
+        <div class="open-dot"></div>
+      </div>
+      <div class="heart-btn" style="position:absolute;top:0;right:0;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B8A898" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </div>
+    </div>
+    <div class="chef-name">Umm Ahmed</div>
+    <div class="chef-spec">Koshary · Molokheya · Fattah</div>
+    <div class="rating-row">
+      <span class="star">★</span>
+      <span class="rating-val">4.9</span>
+      <span class="rating-meta"> · 45–60 min</span>
+    </div>
+    <div class="open-badge">
+      <div class="open-badge-dot"></div>
+      <span class="open-badge-text">Open now</span>
+    </div>
+  </div>
+
+  <!-- Dish Card -->
+  <div class="dish-card">
+    <div class="dish-img">
+      <img src="../assets/images/koshary.png" alt="Koshary">
+      <div class="cat-badge">KOSHARY</div>
+    </div>
+    <div class="dish-info">
+      <div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:3px;">
+          <div class="dish-name">Koshary Family Pot</div>
+          <div class="prep-badge">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9C8B75" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="prep-text">20m</span>
+          </div>
+        </div>
+        <div class="dish-chef">by Umm Ahmed</div>
+        <div class="dish-desc">Rice, lentils, macaroni, crispy onions &amp; two sauces.</div>
+      </div>
+      <div class="dish-footer">
+        <div class="dish-price">EGP 65</div>
+        <div class="add-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

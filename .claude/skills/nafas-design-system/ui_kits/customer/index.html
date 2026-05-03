@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nafas — Customer App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:#1a1a2e; font-family:'Inter',sans-serif; }
+body { display:flex; align-items:center; justify-content:center; }
+.stage { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
+.phone-wrap { position:relative; }
+.phone-frame {
+  width:390px; height:844px;
+  background:#FAFAFE;
+  border-radius:44px;
+  overflow:hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+  position:relative;
+  display:flex; flex-direction:column;
+}
+.status-bar {
+  height:44px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px;
+  position:relative; z-index:10;
+}
+.status-bar .time { font-size:15px; font-weight:600; color:#0D0B1E; }
+.status-bar .icons { display:flex; align-items:center; gap:6px; }
+.screen-content { flex:1; overflow-y:auto; overflow-x:hidden; position:relative; }
+.screen-content::-webkit-scrollbar { display:none; }
+/* Bottom tab bar */
+.tab-bar {
+  height:83px; flex-shrink:0;
+  background:#fff; border-top:1px solid #E4E2F8;
+  display:flex; align-items:flex-start; padding-top:8px;
+}
+.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding-top:4px; }
+.tab-label { font-size:10px; font-weight:500; color:#7C7A9E; }
+.tab-label.active { color:#4F46E5; font-weight:600; }
+/* Nav outside phone */
+.nav-bar {
+  position:absolute; bottom:-56px; left:0; right:0;
+  display:flex; justify-content:center; gap:8px;
+}
+.nav-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; transition:all 0.2s; }
+.nav-dot.active { background:#fff; transform:scale(1.3); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone-wrap">
+    <div id="root"></div>
+    <div class="nav-bar" id="nav-bar"></div>
+  </div>
+</div>
+<script type="text/babel">
+const C = {
+  bg: '#FAFAFE', fg: '#0D0B1E', card: '#FFFFFF',
+  primary: '#4F46E5', primaryFg: '#FFFFFF',
+  secondary: '#EEF2FF', secondaryFg: '#4338CA',
+  muted: '#F0F0FF', mutedFg: '#7C7A9E',
+  accent: '#F59E0B', border: '#E4E2F8',
+  success: '#16A34A', destructive: '#DC2626',
+  input: '#ECEAFA',
+};
+
+const STATUS_COLORS = {
+  pending:'#F59E0B', confirmed:'#3B82F6', preparing:'#8B5CF6',
+  ready:'#10B981', on_the_way:'#6366F1', delivered:'#16A34A', cancelled:'#EF4444'
+};
+
+// ─── Icons (Feather-style inline SVGs) ────────────────────
+const Icon = ({ name, size=16, color='currentColor', style={} }) => {
+  const s = { display:'inline-block', flexShrink:0, ...style };
+  const paths = {
+    home: <><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+    search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    heart: <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>,
+    bag: <><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    'arrow-left': <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
+    'arrow-right': <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+    star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>,
+    clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+    'map-pin': <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></>,
+    plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    minus: <line x1="5" y1="12" x2="19" y2="12"/>,
+    x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    check: <polyline points="20 6 9 17 4 12"/>,
+    'chevron-right': <polyline points="9 18 15 12 9 6"/>,
+    'chevron-down': <polyline points="6 9 12 15 18 9"/>,
+    phone: <path d="M22 16.92V19a2 2 0 01-2.18 2A19.86 19.86 0 013 4.18 2 2 0 015 2h2.09a2 2 0 012 1.72c.128.96.338 1.905.625 2.82a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.916.287 1.86.497 2.82.625A2 2 0 0122 16.92z"/>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>,
+    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+    'alert-circle': <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+    'shopping-cart': <><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.88 1.61h9.72a2 2 0 001.88-1.61L23 6H6"/></>,
+    trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></>,
+    'check-circle': <><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
+    navigation: <polygon points="3 11 22 2 13 21 11 13 3 11"/>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={s}>
+      {paths[name] || null}
+    </svg>
+  );
+};
+
+// ─── Status Bar ───────────────────────────────────────────
+const StatusBar = ({ light=false }) => (
+  <div className="status-bar" style={{ background:'transparent' }}>
+    <span className="time" style={{ color: light ? '#fff' : C.fg }}>9:41</span>
+    <div className="icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill={light?'#fff':C.fg}><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill={light?'#fff':C.fg}><path d="M8 2.4C9.9 2.4 11.6 3.2 12.8 4.5L14.2 3C12.6 1.1 10.4 0 8 0S3.4 1.1 1.8 3L3.2 4.5C4.4 3.2 6.1 2.4 8 2.4z" opacity="0.5"/><path d="M8 5.1c1.2 0 2.3.5 3.1 1.3L12.5 5C11.3 3.8 9.7 3 8 3S4.7 3.8 3.5 5l1.4 1.4C5.7 5.6 6.8 5.1 8 5.1z" opacity="0.7"/><path d="M8 7.8c.6 0 1.2.2 1.6.6L8 11l-1.6-2.6c.4-.4 1-.6 1.6-.6z"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke={light?'#fff':C.fg} strokeOpacity="0.35"/><rect x="2" y="2" width="16" height="8" rx="2" fill={light?'#fff':C.fg}/><path d="M23 4.5v3a1.5 1.5 0 000-3z" fill={light?'#fff':C.fg} opacity="0.4"/></svg>
+    </div>
+  </div>
+);
+
+// ─── Bottom Tab Bar ───────────────────────────────────────
+const BottomTabs = ({ active, onTab }) => {
+  const tabs = [
+    { id:'home', icon:'home', label:'Home' },
+    { id:'explore', icon:'search', label:'Explore' },
+    { id:'favorites', icon:'heart', label:'Favorites' },
+    { id:'orders', icon:'bag', label:'Orders' },
+    { id:'profile', icon:'user', label:'Profile' },
+  ];
+  return (
+    <div className="tab-bar">
+      {tabs.map(t => (
+        <div key={t.id} className="tab-item" onClick={() => onTab(t.id)}>
+          <Icon name={t.icon} size={22} color={active===t.id ? C.primary : C.mutedFg} />
+          <span className={`tab-label ${active===t.id?'active':''}`}>{t.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Chef Avatar Placeholder ──────────────────────────────
+const AvatarPlaceholder = ({ name, size=52, colors=['#c7d2fe','#818cf8'] }) => {
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:'50%',
+      background:`linear-gradient(135deg,${colors[0]},${colors[1]})`,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      flexShrink:0, fontSize:size*0.32, fontWeight:700, color:'#fff'
+    }}>{initials}</div>
+  );
+};
+
+// ─── Screen 1: Welcome ────────────────────────────────────
+const WelcomeScreen = ({ onNavigate }) => (
+  <div style={{ display:'flex', flexDirection:'column', height:'100%', background:C.bg }}>
+    <div style={{ position:'relative', flex:1, overflow:'hidden' }}>
+      <img src="../../assets/images/hero_banner.png" alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.02) 60%)' }} />
+      <StatusBar light />
+      {/* Language toggle */}
+      <div style={{ position:'absolute', top:54, right:16, background:'rgba(255,255,255,0.88)', borderRadius:100, padding:'4px 6px', display:'flex', gap:2, backdropFilter:'blur(8px)', border:`1px solid ${C.border}` }}>
+        <div style={{ padding:'5px 12px', borderRadius:100, background:'#fff', fontSize:12, fontWeight:600, color:C.fg, boxShadow:'0 1px 3px rgba(0,0,0,0.12)' }}>EN</div>
+        <div style={{ padding:'5px 12px', borderRadius:100, fontSize:12, fontWeight:600, color:C.mutedFg }}>عربي</div>
+      </div>
+    </div>
+    <div style={{ background:C.bg, borderRadius:'28px 28px 0 0', marginTop:-28, padding:'28px 24px 40px' }}>
+      {/* Logo */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
+        <div style={{ width:40, height:40, borderRadius:12, background:C.primary, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <img src="../../assets/images/icon.png" style={{ width:36, height:36, objectFit:'contain' }} />
+        </div>
+        <span style={{ fontSize:20, fontWeight:700, color:C.fg, letterSpacing:0.5 }}>نفس <span style={{color:C.primary}}>·</span> Nafas</span>
+      </div>
+      <div style={{ fontSize:24, fontWeight:700, color:C.fg, lineHeight:1.3, marginBottom:10 }}>
+        Homemade Egyptian food,<br/>delivered with love
+      </div>
+      <div style={{ fontSize:14, color:C.mutedFg, lineHeight:1.6, marginBottom:18 }}>
+        Connect with talented homemakers serving authentic recipes from their kitchens to your door.
+      </div>
+      {/* Badges */}
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:28 }}>
+        {['Koshary','Mahshi','Molokheya','Om Ali'].map(d => (
+          <div key={d} style={{ background:C.secondary, color:C.primary, borderRadius:100, padding:'5px 12px', fontSize:12, fontWeight:500 }}>{d}</div>
+        ))}
+      </div>
+      <button onClick={() => onNavigate('signin')} style={{ width:'100%', height:54, borderRadius:16, background:C.primary, border:'none', color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:12 }}>
+        Create Account <Icon name="arrow-right" size={18} color="#fff" />
+      </button>
+      <button onClick={() => onNavigate('signin')} style={{ width:'100%', height:54, borderRadius:16, background:C.card, border:`1.5px solid ${C.border}`, color:C.fg, fontSize:16, fontWeight:600, cursor:'pointer' }}>
+        Sign In
+      </button>
+    </div>
+  </div>
+);
+
+// ─── Screen 2: Sign In ───────────────────────────────────
+const SignInScreen = ({ onNavigate }) => {
+  const [mobile, setMobile] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [showPw, setShowPw] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const handleSignIn = () => {
+    if (!mobile) { setError('Please enter your mobile number.'); return; }
+    if (!password) { setError('Please enter your password.'); return; }
+    onNavigate('home');
+  };
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', padding:'0 24px 40px' }}>
+      <StatusBar />
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28 }}>
+        <button onClick={() => onNavigate('welcome')} style={{ background:'none', border:'none', cursor:'pointer', padding:4 }}>
+          <Icon name="arrow-left" size={22} color={C.fg} />
+        </button>
+        <div style={{ background:'rgba(255,255,255,0.88)', borderRadius:100, padding:'4px 6px', display:'flex', gap:2, border:`1px solid ${C.border}` }}>
+          <div style={{ padding:'5px 12px', borderRadius:100, background:'#fff', fontSize:12, fontWeight:600, color:C.fg, boxShadow:'0 1px 3px rgba(0,0,0,0.12)' }}>EN</div>
+          <div style={{ padding:'5px 12px', borderRadius:100, fontSize:12, fontWeight:600, color:C.mutedFg }}>عربي</div>
+        </div>
+      </div>
+      <div style={{ width:54, height:54, borderRadius:16, background:C.primary, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:24 }}>
+        <img src="../../assets/images/icon.png" style={{ width:48, height:48, objectFit:'contain' }} />
+      </div>
+      <div style={{ fontSize:28, fontWeight:700, color:C.fg, marginBottom:6 }}>Welcome back</div>
+      <div style={{ fontSize:15, color:C.mutedFg, marginBottom:28 }}>Sign in to your Nafas account</div>
+      {error && (
+        <div style={{ display:'flex', alignItems:'center', gap:8, background:`${C.destructive}14`, border:`1px solid ${C.destructive}40`, borderRadius:12, padding:12, marginBottom:18 }}>
+          <Icon name="alert-circle" size={14} color={C.destructive} />
+          <span style={{ fontSize:13, color:C.destructive }}>{error}</span>
+        </div>
+      )}
+      <div style={{ marginBottom:18 }}>
+        <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>Mobile Number</div>
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'13px 14px' }}>
+          <Icon name="phone" size={17} color={C.mutedFg} />
+          <input value={mobile} onChange={e=>{ setMobile(e.target.value); setError(''); }}
+            placeholder="01X XXXX XXXX" style={{ flex:1, border:'none', outline:'none', fontSize:15, fontFamily:'Inter,sans-serif', color:C.fg, background:'transparent' }} />
+        </div>
+      </div>
+      <div style={{ marginBottom:28 }}>
+        <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>Password</div>
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'13px 14px' }}>
+          <Icon name="lock" size={17} color={C.mutedFg} />
+          <input type={showPw?'text':'password'} value={password} onChange={e=>{ setPassword(e.target.value); setError(''); }}
+            placeholder="Min. 6 characters" style={{ flex:1, border:'none', outline:'none', fontSize:15, fontFamily:'Inter,sans-serif', color:C.fg, background:'transparent' }} />
+          <button onClick={()=>setShowPw(v=>!v)} style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
+            <Icon name="eye" size={17} color={C.mutedFg} />
+          </button>
+        </div>
+      </div>
+      <button onClick={handleSignIn} style={{ width:'100%', height:54, borderRadius:16, background:C.primary, border:'none', color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', marginBottom:24 }}>
+        Sign In
+      </button>
+      <div style={{ display:'flex', justifyContent:'center', gap:4, fontSize:14 }}>
+        <span style={{ color:C.mutedFg }}>Don't have an account?</span>
+        <button style={{ background:'none', border:'none', color:C.primary, fontSize:14, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>Create one</button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 3: Home ───────────────────────────────────────
+const HomeScreen = ({ onNavigate }) => {
+  const [selCat, setSelCat] = React.useState('all');
+  const [cartCount, setCartCount] = React.useState(0);
+  const cats = ['All','Koshary','Mahshi','Molokheya','Hawawshi','Sweets','Feteer'];
+  const chefs = [
+    { id:'hm1', name:'Umm Ahmed', spec:'Koshary · Molokheya', rating:4.9, time:'45–60 min', open:true, colors:['#c7d2fe','#818cf8'] },
+    { id:'hm2', name:'Zeinab Hassan', spec:'Mahshi · Feteer', rating:4.8, time:'50–70 min', open:true, colors:['#fde68a','#fb923c'] },
+    { id:'hm3', name:'Fatma El-Sayed', spec:'Sweets · Hawawshi', rating:4.7, time:'40–55 min', open:true, colors:['#bbf7d0','#22c55e'] },
+  ];
+  const dishes = [
+    { id:'d1', name:'Koshary Family Pot', desc:'Rice, lentils, macaroni, crispy onions, two sauces.', price:65, chef:'Umm Ahmed', prepTime:20, img:'../../assets/images/koshary.png' },
+    { id:'d2', name:'Molokheya with Chicken', desc:'Slow-cooked jute mallow with tender chicken.', price:95, chef:'Umm Ahmed', prepTime:40, img:'../../assets/images/molokheya.png' },
+    { id:'d3', name:'Mixed Mahshi Platter', desc:'Stuffed grape leaves, zucchini, bell peppers.', price:120, chef:'Zeinab Hassan', prepTime:50, img:'../../assets/images/mahshi.png' },
+  ];
+  const [qtys, setQtys] = React.useState({});
+  const addToCart = (id) => {
+    setQtys(q => ({ ...q, [id]: (q[id]||0)+1 }));
+    setCartCount(c => c+1);
+  };
+  const dec = (id) => {
+    if (!qtys[id]) return;
+    setQtys(q => ({ ...q, [id]: q[id]-1 }));
+    setCartCount(c => Math.max(0,c-1));
+  };
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', paddingBottom:20 }}>
+      <div style={{ padding:'0 20px' }}>
+        <StatusBar />
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:2 }}>
+              <Icon name="map-pin" size={13} color={C.primary} />
+              <span style={{ fontSize:12, color:C.mutedFg }}>Delivering to</span>
+              <Icon name="chevron-down" size={12} color={C.mutedFg} />
+            </div>
+            <div style={{ fontSize:16, fontWeight:700, color:C.fg }}>Heliopolis, Cairo</div>
+          </div>
+          <button onClick={() => onNavigate('cart')} style={{ position:'relative', background:C.secondary, border:'none', borderRadius:12, width:42, height:42, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+            <Icon name="shopping-cart" size={20} color={C.primary} />
+            {cartCount > 0 && <div style={{ position:'absolute', top:-4, right:-4, width:18, height:18, background:C.primary, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff' }}><span style={{ fontSize:10, fontWeight:700, color:'#fff' }}>{cartCount}</span></div>}
+          </button>
+        </div>
+        {/* Greeting */}
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:26, fontWeight:400, color:C.fg }}>Craving something</div>
+          <div style={{ fontSize:26, fontWeight:700, color:C.primary }}>homemade?</div>
+        </div>
+        {/* Search */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:'12px 14px', marginBottom:18 }}>
+          <Icon name="search" size={16} color={C.mutedFg} />
+          <span style={{ fontSize:14, color:C.mutedFg }}>Search dishes or homemakers…</span>
+        </div>
+      </div>
+      {/* Hero Banner */}
+      <div style={{ margin:'0 20px 26px', borderRadius:18, overflow:'hidden', height:175, position:'relative', cursor:'pointer' }} onClick={() => onNavigate('chef')}>
+        <img src="../../assets/images/hero_banner.png" alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+        <div style={{ position:'absolute', inset:0, background:'rgba(20,10,0,0.45)', padding:20, display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+          <div style={{ fontSize:10, fontWeight:600, color:'#E8A650', letterSpacing:1.5, textTransform:'uppercase', marginBottom:6 }}>TODAY'S SPECIAL</div>
+          <div style={{ fontSize:20, fontWeight:700, color:'#fff', lineHeight:1.3, marginBottom:12 }}>Authentic Egyptian<br/>Home Cooking</div>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:100, padding:'7px 14px', alignSelf:'flex-start' }}>
+            <span style={{ fontSize:13, fontWeight:600, color:'#fff' }}>Explore Now</span>
+            <Icon name="arrow-right" size={14} color="#fff" />
+          </div>
+        </div>
+      </div>
+      {/* Top Homemakers */}
+      <div style={{ padding:'0 20px', marginBottom:20 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+          <div style={{ fontSize:17, fontWeight:700, color:C.fg }}>Top Homemakers</div>
+          <button style={{ background:'none', border:'none', color:C.primary, fontSize:13, fontWeight:500, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>See all</button>
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:12, overflowX:'auto', padding:'0 20px 4px', scrollbarWidth:'none' }}>
+        {chefs.map(hm => (
+          <div key={hm.id} onClick={() => onNavigate('chef')} style={{ width:148, background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:14, flexShrink:0, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ position:'relative', alignSelf:'flex-start', marginBottom:8 }}>
+              <AvatarPlaceholder name={hm.name} size={52} colors={hm.colors} />
+              <div style={{ position:'absolute', bottom:1, right:1, width:11, height:11, borderRadius:6, background: hm.open ? C.success : C.mutedFg, border:'2px solid #fff' }} />
+            </div>
+            <div style={{ fontSize:14, fontWeight:600, color:C.fg, marginBottom:3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{hm.name}</div>
+            <div style={{ fontSize:11, color:C.mutedFg, marginBottom:5, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{hm.spec}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:3 }}>
+              <Icon name="star" size={11} color={C.accent} />
+              <span style={{ fontSize:12, fontWeight:500, color:C.fg }}>{hm.rating}</span>
+              <span style={{ fontSize:11, color:C.mutedFg }}> · {hm.time}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Categories */}
+      <div style={{ padding:'20px 20px 0' }}>
+        <div style={{ fontSize:17, fontWeight:700, color:C.fg, marginBottom:12 }}>Browse by Category</div>
+        <div style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4 }}>
+          {cats.map(c => (
+            <div key={c} onClick={() => setSelCat(c)} style={{ flexShrink:0, padding:'6px 14px', borderRadius:100, background: selCat===c ? C.primary : C.muted, color: selCat===c ? '#fff' : C.mutedFg, fontSize:13, fontWeight:500, cursor:'pointer', whiteSpace:'nowrap' }}>{c}</div>
+          ))}
+        </div>
+      </div>
+      {/* Dishes */}
+      <div style={{ padding:'16px 20px 0' }}>
+        {dishes.map(d => (
+          <div key={d.id} style={{ display:'flex', background:C.card, border:`1px solid ${C.border}`, borderRadius:14, marginBottom:12, overflow:'hidden', boxShadow:'0 2px 6px rgba(0,0,0,0.04)' }}>
+            <img src={d.img} style={{ width:105, height:105, objectFit:'cover', flexShrink:0 }} />
+            <div style={{ flex:1, padding:12, display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:3 }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:C.fg, flex:1, marginRight:6 }}>{d.name}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:3, background:C.secondary, borderRadius:20, padding:'2px 6px', flexShrink:0 }}>
+                    <Icon name="clock" size={10} color={C.mutedFg} />
+                    <span style={{ fontSize:10, color:C.mutedFg }}>{d.prepTime}m</span>
+                  </div>
+                </div>
+                <div style={{ fontSize:12, color:C.mutedFg, lineHeight:1.5 }}>{d.desc}</div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:6 }}>
+                <div style={{ fontSize:15, fontWeight:700, color:C.primary }}>EGP {d.price}</div>
+                {!qtys[d.id] ? (
+                  <button onClick={() => addToCart(d.id)} style={{ width:30, height:30, borderRadius:15, background:C.primary, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <Icon name="plus" size={16} color="#fff" />
+                  </button>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, border:`1.5px solid ${C.primary}`, borderRadius:20, padding:'3px 8px' }}>
+                    <button onClick={() => dec(d.id)} style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="minus" size={13} color={C.primary} /></button>
+                    <span style={{ fontSize:13, fontWeight:600, color:C.primary, minWidth:16, textAlign:'center' }}>{qtys[d.id]}</span>
+                    <button onClick={() => addToCart(d.id)} style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="plus" size={13} color={C.primary} /></button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 4: Chef Profile ───────────────────────────────
+const ChefScreen = ({ onNavigate }) => {
+  const [fav, setFav] = React.useState(false);
+  const [cart, setCart] = React.useState({});
+  const dishes = [
+    { id:'d1', name:'Koshary Family Pot', desc:'Rice, lentils, macaroni, crispy onions, two sauces. Comfort in every bite.', price:65, cat:'Koshary', time:20, img:'../../assets/images/koshary.png' },
+    { id:'d2', name:'Molokheya with Chicken', desc:'Slow-cooked jute mallow with tender chicken and aromatic garlic tarka.', price:95, cat:'Molokheya', time:40, img:'../../assets/images/molokheya.png' },
+    { id:'d3', name:'Fattah Feast', desc:'Layers of crispy bread soaked in rich lamb broth, topped with rice and lamb.', price:150, cat:'Fattah', time:60, img:'../../assets/images/hero_banner.png' },
+  ];
+  const reviews = [
+    { name:'Sara M.', rating:5, comment:'Best koshary I\'ve ever had. Tastes exactly like grandma\'s!', date:'2 days ago' },
+    { name:'Karim A.', rating:5, comment:'The molokheya is absolutely authentic. Will order again.', date:'1 week ago' },
+  ];
+  const addToCart = (id) => setCart(c => ({ ...c, [id]:(c[id]||0)+1 }));
+  const totalInCart = Object.values(cart).reduce((a,b)=>a+b,0);
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', position:'relative' }}>
+      {/* Hero section */}
+      <div style={{ background:C.secondary, paddingTop:44, paddingBottom:24, paddingLeft:20, paddingRight:20, textAlign:'center' }}>
+        <StatusBar />
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <button onClick={() => onNavigate('home')} style={{ width:38, height:38, borderRadius:19, background:'rgba(255,255,255,0.85)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Icon name="arrow-left" size={20} color={C.fg} />
+          </button>
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={() => setFav(v=>!v)} style={{ width:38, height:38, borderRadius:19, background: fav ? `${C.primary}18` : 'rgba(255,255,255,0.85)', border: fav ? `1.5px solid ${C.primary}` : 'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon name="heart" size={18} color={fav ? C.primary : C.fg} />
+            </button>
+            <button onClick={() => onNavigate('cart')} style={{ position:'relative', width:38, height:38, borderRadius:19, background:'rgba(255,255,255,0.85)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon name="shopping-cart" size={18} color={C.fg} />
+              {totalInCart > 0 && <div style={{ position:'absolute', top:-3, right:-3, width:16, height:16, background:C.primary, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ fontSize:9, fontWeight:700, color:'#fff' }}>{totalInCart}</span></div>}
+            </button>
+          </div>
+        </div>
+        <div style={{ width:90, height:90, borderRadius:45, border:'3px solid #fff', overflow:'hidden', margin:'0 auto 12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)' }}>
+          <AvatarPlaceholder name="Umm Ahmed" size={84} colors={['#c7d2fe','#818cf8']} />
+        </div>
+        <div style={{ fontSize:22, fontWeight:700, color:C.fg }}>Umm Ahmed</div>
+        <div style={{ fontSize:15, color:C.mutedFg, marginTop:2, marginBottom:12 }}>أم أحمد</div>
+        <div style={{ display:'flex', gap:6, justifyContent:'center', flexWrap:'wrap' }}>
+          {['Koshary','Molokheya','Fattah'].map(s => <div key={s} style={{ background:`${C.primary}18`, color:C.primary, borderRadius:100, padding:'5px 12px', fontSize:12, fontWeight:500 }}>{s}</div>)}
+        </div>
+        {fav && <div style={{ display:'inline-flex', alignItems:'center', gap:5, marginTop:14, background:C.primary, borderRadius:100, padding:'6px 14px' }}>
+          <Icon name="heart" size={11} color="#fff" />
+          <span style={{ fontSize:12, fontWeight:600, color:'#fff' }}>Saved to Favorites</span>
+        </div>}
+      </div>
+      {/* Stats */}
+      <div style={{ margin:'14px 20px 0', background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:14, display:'flex', alignItems:'center', gap:8 }}>
+        {[
+          { icon:'star', val:'4.9', sub:'(312)', color:C.accent },
+          null,
+          { icon:'clock', val:'45–60 min', sub:null, color:C.mutedFg },
+          null,
+          { icon:'map-pin', val:'Heliopolis', sub:null, color:C.mutedFg },
+        ].map((item, i) => item === null
+          ? <div key={i} style={{ width:1, height:20, background:C.border }} />
+          : <div key={i} style={{ flex:1, display:'flex', alignItems:'center', gap:4, justifyContent:'center' }}>
+              <Icon name={item.icon} size={13} color={item.color} />
+              <span style={{ fontSize:13, fontWeight:600, color:C.fg }}>{item.val}</span>
+              {item.sub && <span style={{ fontSize:11, color:C.mutedFg }}>{item.sub}</span>}
+            </div>
+        )}
+      </div>
+      {/* Status + bio */}
+      <div style={{ padding:'14px 20px 0', display:'flex', alignItems:'center', gap:6 }}>
+        <div style={{ width:8, height:8, borderRadius:4, background:C.success }} />
+        <span style={{ fontSize:13, fontWeight:500, color:C.success }}>Open now</span>
+        <span style={{ fontSize:13, color:C.mutedFg }}> · Min. order EGP 80</span>
+      </div>
+      <div style={{ padding:'14px 20px 0' }}>
+        <div style={{ fontSize:16, fontWeight:700, color:C.fg, marginBottom:8 }}>About</div>
+        <div style={{ fontSize:14, color:C.mutedFg, lineHeight:1.6 }}>25 years of cooking authentic Cairene recipes passed down from my grandmother. Every dish is made with love and the finest fresh ingredients from the local market.</div>
+      </div>
+      {/* Menu */}
+      <div style={{ padding:'20px 20px 0' }}>
+        <div style={{ fontSize:16, fontWeight:700, color:C.fg, marginBottom:14 }}>Menu ({dishes.length} dishes)</div>
+        {dishes.map(d => (
+          <div key={d.id} style={{ display:'flex', background:C.card, border:`1px solid ${C.border}`, borderRadius:14, marginBottom:12, overflow:'hidden' }}>
+            <img src={d.img} style={{ width:105, height:105, objectFit:'cover', flexShrink:0 }} />
+            <div style={{ flex:1, padding:12, display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:600, color:C.fg, marginBottom:3 }}>{d.name}</div>
+                <div style={{ fontSize:12, color:C.mutedFg, lineHeight:1.5 }}>{d.desc}</div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:6 }}>
+                <div style={{ fontSize:15, fontWeight:700, color:C.primary }}>EGP {d.price}</div>
+                {!cart[d.id] ? (
+                  <button onClick={() => addToCart(d.id)} style={{ width:30, height:30, borderRadius:15, background:C.primary, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <Icon name="plus" size={16} color="#fff" />
+                  </button>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, border:`1.5px solid ${C.primary}`, borderRadius:20, padding:'3px 8px' }}>
+                    <button onClick={() => setCart(c=>({...c,[d.id]:Math.max(0,c[d.id]-1)}))} style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="minus" size={13} color={C.primary} /></button>
+                    <span style={{ fontSize:13, fontWeight:600, color:C.primary, minWidth:16, textAlign:'center' }}>{cart[d.id]}</span>
+                    <button onClick={() => addToCart(d.id)} style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="plus" size={13} color={C.primary} /></button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Reviews */}
+      <div style={{ padding:'20px 20px 40px' }}>
+        <div style={{ fontSize:16, fontWeight:700, color:C.fg, marginBottom:14 }}>Reviews</div>
+        {reviews.map((r,i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:14, marginBottom:10 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <span style={{ fontSize:13, fontWeight:600, color:C.fg }}>{r.name}</span>
+              <div style={{ display:'flex', gap:2 }}>{[1,2,3,4,5].map(s=><Icon key={s} name="star" size={11} color={s<=r.rating?C.accent:C.border} />)}</div>
+            </div>
+            <div style={{ fontSize:13, color:C.mutedFg, lineHeight:1.5, fontStyle:'italic' }}>"{r.comment}"</div>
+            <div style={{ fontSize:11, color:C.border, marginTop:6 }}>{r.date}</div>
+          </div>
+        ))}
+      </div>
+      {/* Floating cart bar */}
+      {totalInCart > 0 && (
+        <div style={{ position:'sticky', bottom:0, margin:'0 20px 16px', background:C.primary, borderRadius:16, padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', boxShadow:'0 8px 24px rgba(79,70,229,0.3)' }} onClick={() => onNavigate('cart')}>
+          <div style={{ background:'rgba(255,255,255,0.2)', borderRadius:8, padding:'4px 10px', fontSize:13, fontWeight:700, color:'#fff' }}>{totalInCart}</div>
+          <span style={{ fontSize:15, fontWeight:700, color:'#fff' }}>View Cart</span>
+          <Icon name="arrow-right" size={18} color="#fff" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Screen 5: Cart ───────────────────────────────────────
+const CartScreen = ({ onNavigate }) => {
+  const items = [
+    { name:'Koshary Family Pot', qty:2, price:65 },
+    { name:'Molokheya with Chicken', qty:1, price:95 },
+  ];
+  const subtotal = items.reduce((a,b) => a + b.qty*b.price, 0);
+  const delivery = 15;
+  const service = Math.round(subtotal * 0.05);
+  const total = subtotal + delivery + service;
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', paddingBottom:32 }}>
+      <div style={{ padding:'0 20px' }}>
+        <StatusBar />
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+          <button onClick={() => onNavigate('chef')} style={{ background:'none', border:'none', cursor:'pointer' }}>
+            <Icon name="arrow-left" size={22} color={C.fg} />
+          </button>
+          <div>
+            <div style={{ fontSize:20, fontWeight:700, color:C.fg }}>Your Order</div>
+            <div style={{ fontSize:13, color:C.mutedFg }}>Umm Ahmed's Kitchen</div>
+          </div>
+        </div>
+        {/* Items */}
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, overflow:'hidden', marginBottom:16 }}>
+          {items.map((item, i) => (
+            <div key={i}>
+              <div style={{ display:'flex', alignItems:'center', padding:14, gap:12 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:C.fg, marginBottom:2 }}>{item.name}</div>
+                  <div style={{ fontSize:13, color:C.primary, fontWeight:700 }}>EGP {item.price}</div>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:10, border:`1.5px solid ${C.primary}`, borderRadius:20, padding:'4px 10px' }}>
+                  <button style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="minus" size={13} color={C.primary} /></button>
+                  <span style={{ fontSize:13, fontWeight:600, color:C.primary, minWidth:16, textAlign:'center' }}>{item.qty}</span>
+                  <button style={{ background:'none', border:'none', cursor:'pointer', display:'flex' }}><Icon name="plus" size={13} color={C.primary} /></button>
+                </div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.fg, width:52, textAlign:'right' }}>EGP {item.qty*item.price}</div>
+              </div>
+              {i < items.length-1 && <div style={{ height:1, background:C.border }} />}
+            </div>
+          ))}
+        </div>
+        {/* Notes */}
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>Notes (optional)</div>
+          <div style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'12px 14px', fontSize:14, color:C.mutedFg }}>e.g. Less spice please…</div>
+        </div>
+        {/* Address */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>Delivery Address</div>
+          <div style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'12px 14px', display:'flex', alignItems:'center', gap:10 }}>
+            <Icon name="map-pin" size={16} color={C.primary} />
+            <span style={{ fontSize:14, color:C.fg, flex:1 }}>15 El-Nozha St, Heliopolis</span>
+            <Icon name="chevron-right" size={15} color={C.mutedFg} />
+          </div>
+        </div>
+        {/* Totals */}
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:16, marginBottom:20 }}>
+          {[['Subtotal', `EGP ${subtotal}`], ['Delivery fee', `EGP ${delivery}`], ['Service fee (5%)', `EGP ${service}`]].map(([label,val],i) => (
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+              <span style={{ fontSize:14, color:C.mutedFg }}>{label}</span>
+              <span style={{ fontSize:14, color:C.fg }}>{val}</span>
+            </div>
+          ))}
+          <div style={{ height:1, background:C.border, margin:'4px 0 10px' }} />
+          <div style={{ display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:16, fontWeight:700, color:C.fg }}>Total</span>
+            <span style={{ fontSize:16, fontWeight:700, color:C.fg }}>EGP {total}</span>
+          </div>
+        </div>
+        <button onClick={() => onNavigate('orders')} style={{ width:'100%', height:54, borderRadius:16, background:C.primary, border:'none', color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer' }}>
+          Place Order
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Screen 6: Orders ────────────────────────────────────
+const OrdersScreen = ({ onNavigate }) => {
+  const orders = [
+    { id:'o1', chef:'Umm Ahmed', date:'Today, 2:30 PM', status:'preparing', items:'2× Koshary, 1× Molokheya', total:225, eta:'3:15 PM', colors:['#c7d2fe','#818cf8'] },
+    { id:'o2', chef:'Zeinab Hassan', date:'Yesterday, 7:00 PM', status:'delivered', items:'1× Mahshi Platter', total:120, eta:null, colors:['#fde68a','#fb923c'] },
+    { id:'o3', chef:'Fatma El-Sayed', date:'3 May, 1:00 PM', status:'delivered', items:'2× Om Ali', total:110, eta:null, colors:['#bbf7d0','#22c55e'] },
+  ];
+  const statusLabel = { pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', on_the_way:'On the Way', delivered:'Delivered', cancelled:'Cancelled' };
+  const statusIcon = { preparing:'clock', on_the_way:'navigation', delivered:'check-circle' };
+  const active = orders.filter(o => o.status !== 'delivered');
+  const past = orders.filter(o => o.status === 'delivered');
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', padding:'0 20px 40px' }}>
+      <StatusBar />
+      <div style={{ fontSize:26, fontWeight:700, color:C.fg, marginBottom:22 }}>My Orders</div>
+      {active.length > 0 && (
+        <div style={{ marginBottom:28 }}>
+          <div style={{ fontSize:15, fontWeight:600, color:C.fg, marginBottom:12 }}>Active</div>
+          {active.map(o => {
+            const sc = STATUS_COLORS[o.status];
+            return (
+              <div key={o.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, marginBottom:12, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:14 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <AvatarPlaceholder name={o.chef} size={40} colors={o.colors} />
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:600, color:C.fg }}>{o.chef}</div>
+                      <div style={{ fontSize:11, color:C.mutedFg, marginTop:1 }}>{o.date}</div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:4, background:`${sc}20`, borderRadius:100, padding:'5px 9px' }}>
+                    <Icon name={statusIcon[o.status]||'clock'} size={11} color={sc} />
+                    <span style={{ fontSize:11, fontWeight:600, color:sc }}>{statusLabel[o.status]}</span>
+                  </div>
+                </div>
+                <div style={{ height:1, background:C.border }} />
+                <div style={{ padding:'10px 14px' }}>
+                  {o.items.split(',').map((item,i) => (
+                    <div key={i} style={{ display:'flex', gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:C.primary, width:24 }}>{item.trim().split('×')[0]}×</span>
+                      <span style={{ fontSize:13, color:C.fg }}>{item.trim().split('×')[1]?.trim()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ height:1, background:C.border }} />
+                <div style={{ display:'flex', justifyContent:'space-between', padding:14 }}>
+                  <span style={{ fontSize:13, color:C.mutedFg }}>Total</span>
+                  <span style={{ fontSize:15, fontWeight:700, color:C.fg }}>EGP {o.total}</span>
+                </div>
+                {o.eta && (
+                  <div style={{ display:'flex', alignItems:'center', gap:6, background:C.secondary, padding:'10px 14px' }}>
+                    <Icon name="clock" size={12} color={C.primary} />
+                    <span style={{ fontSize:12, fontWeight:500, color:C.primary }}>Estimated arrival: {o.eta}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div>
+        <div style={{ fontSize:15, fontWeight:600, color:C.fg, marginBottom:12 }}>Past Orders</div>
+        {past.map(o => {
+          const sc = STATUS_COLORS[o.status];
+          return (
+            <div key={o.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, marginBottom:12, overflow:'hidden' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:14 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <AvatarPlaceholder name={o.chef} size={40} colors={o.colors} />
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:600, color:C.fg }}>{o.chef}</div>
+                    <div style={{ fontSize:11, color:C.mutedFg, marginTop:1 }}>{o.date}</div>
+                  </div>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:4, background:`${sc}20`, borderRadius:100, padding:'5px 9px' }}>
+                  <Icon name="check-circle" size={11} color={sc} />
+                  <span style={{ fontSize:11, fontWeight:600, color:sc }}>Delivered</span>
+                </div>
+              </div>
+              <div style={{ height:1, background:C.border }} />
+              <div style={{ display:'flex', justifyContent:'space-between', padding:14 }}>
+                <span style={{ fontSize:13, color:C.mutedFg }}>{o.items}</span>
+                <span style={{ fontSize:15, fontWeight:700, color:C.fg }}>EGP {o.total}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── App Shell ────────────────────────────────────────────
+const SCREENS = ['welcome','signin','home','chef','cart','orders'];
+const TAB_MAP = { home:'home', explore:'home', favorites:'home', orders:'orders', profile:'home' };
+
+function App() {
+  const [screen, setScreen] = React.useState('welcome');
+  const [activeTab, setActiveTab] = React.useState('home');
+  const showTabs = ['home','chef','orders'].includes(screen);
+  const showStatusBarInShell = false;
+
+  const navigate = (to) => {
+    setScreen(to);
+    if (to === 'home') setActiveTab('home');
+    if (to === 'orders') setActiveTab('orders');
+  };
+
+  const handleTab = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'orders') setScreen('orders');
+    else setScreen('home');
+  };
+
+  React.useEffect(() => {
+    // Update nav dots
+    const bar = document.getElementById('nav-bar');
+    if (!bar) return;
+    bar.innerHTML = '';
+    SCREENS.forEach(s => {
+      const dot = document.createElement('div');
+      dot.className = `nav-dot ${screen === s ? 'active' : ''}`;
+      dot.onclick = () => navigate(s);
+      bar.appendChild(dot);
+    });
+  }, [screen]);
+
+  const screenMap = {
+    welcome: <WelcomeScreen onNavigate={navigate} />,
+    signin:  <SignInScreen onNavigate={navigate} />,
+    home:    <HomeScreen onNavigate={navigate} />,
+    chef:    <ChefScreen onNavigate={navigate} />,
+    cart:    <CartScreen onNavigate={navigate} />,
+    orders:  <OrdersScreen onNavigate={navigate} />,
+  };
+
+  return (
+    <div className="phone-frame" style={{ background: screen === 'welcome' ? '#000' : C.bg }}>
+      <div className="screen-content">
+        {screenMap[screen] || <HomeScreen onNavigate={navigate} />}
+      </div>
+      {showTabs && <BottomTabs active={activeTab} onTab={handleTab} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

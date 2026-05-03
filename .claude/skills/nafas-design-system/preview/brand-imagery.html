@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 16px; display: flex; gap: 12px; }
+  .hero { position: relative; border-radius: 18px; overflow: hidden; width: 260px; height: 160px; flex-shrink: 0; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; }
+  .overlay { position: absolute; inset: 0; background: rgba(20,10,0,0.45); display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; }
+  .eyebrow { font-size: 9px; font-weight: 600; color: #E8A650; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+  .hero-title { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 10px; }
+  .hero-btn { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 100px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: #fff; }
+  .dishes { display: flex; flex-direction: column; gap: 8px; }
+  .dish-thumb { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; }
+  .dish-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .dish-label { font-size: 10px; font-weight: 600; color: #7C7A9E; text-align: center; margin-top: 4px; }
+  .thumb-col { display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <img src="../assets/images/hero_banner.png" alt="Hero food photography">
+    <div class="overlay">
+      <div class="eyebrow">TODAY'S SPECIAL</div>
+      <div class="hero-title">Authentic Egyptian<br>Home Cooking</div>
+      <div class="hero-btn">Explore Now →</div>
+    </div>
+  </div>
+  <div class="dishes">
+    <div style="display:flex;gap:8px;">
+      <div class="thumb-col">
+        <div class="dish-thumb"><img src="../assets/images/koshary.png" alt="Koshary"></div>
+        <div class="dish-label">Koshary</div>
+      </div>
+      <div class="thumb-col">
+        <div class="dish-thumb"><img src="../assets/images/mahshi.png" alt="Mahshi"></div>
+        <div class="dish-label">Mahshi</div>
+      </div>
+      <div class="thumb-col">
+        <div class="dish-thumb"><img src="../assets/images/molokheya.png" alt="Molokheya"></div>
+        <div class="dish-label">Molokheya</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nafas — Chef App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:#0f0e1a; font-family:'Inter',sans-serif; }
+body { display:flex; align-items:center; justify-content:center; }
+.stage { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
+.phone-wrap { position:relative; }
+.phone-frame {
+  width:390px; height:844px;
+  background:#FAFAFE;
+  border-radius:44px;
+  overflow:hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  position:relative;
+  display:flex; flex-direction:column;
+}
+.screen-content { flex:1; overflow-y:auto; overflow-x:hidden; position:relative; padding-bottom:100px; }
+.screen-content::-webkit-scrollbar { display:none; }
+.status-bar { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; flex-shrink:0; }
+/* Floating pill tab bar */
+.float-tab-bar {
+  position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+  background:#fff; border:1px solid #E4E2F8;
+  border-radius:100px; padding:6px;
+  display:flex; align-items:center; gap:2px;
+  box-shadow: 0 8px 32px rgba(79,70,229,0.14);
+  z-index:100;
+}
+.f-tab { display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:100px; cursor:pointer; transition:all 0.2s; }
+.f-tab-active { background:#4F46E5; padding:8px 16px; }
+.nav-bar { position:absolute; bottom:-52px; left:0; right:0; display:flex; justify-content:center; gap:8px; }
+.nav-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; }
+.nav-dot.active { background:#fff; transform:scale(1.3); }
+/* Toggle switch */
+.toggle-switch { width:48px; height:28px; border-radius:14px; position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0; }
+.toggle-thumb { position:absolute; top:3px; width:22px; height:22px; border-radius:11px; background:#fff; transition:left 0.25s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone-wrap">
+    <div id="root"></div>
+    <div class="nav-bar" id="nav-bar"></div>
+  </div>
+</div>
+<script type="text/babel">
+const C = {
+  bg:'#FAFAFE', fg:'#0D0B1E', card:'#FFFFFF',
+  primary:'#4F46E5', primaryFg:'#FFFFFF',
+  secondary:'#EEF2FF', secondaryFg:'#4338CA',
+  muted:'#F0F0FF', mutedFg:'#7C7A9E',
+  accent:'#F59E0B', border:'#E4E2F8',
+  success:'#16A34A', destructive:'#DC2626',
+};
+const STATUS_COLORS = {
+  pending:'#F59E0B', confirmed:'#3B82F6', preparing:'#8B5CF6',
+  ready:'#10B981', on_the_way:'#6366F1', delivered:'#16A34A', cancelled:'#EF4444',
+};
+const STATUS_NEXT = {
+  pending:'confirmed', confirmed:'preparing', preparing:'ready',
+  ready:'on_the_way', on_the_way:'delivered',
+};
+const STATUS_LABELS = {
+  pending:'Pending', confirmed:'Confirmed', preparing:'Preparing',
+  ready:'Ready', on_the_way:'On the Way', delivered:'Delivered', cancelled:'Cancelled',
+};
+const ACTION_LABELS = {
+  pending:'Confirm', confirmed:'Start Cooking', preparing:'Mark Ready',
+  ready:'Out for Delivery', on_the_way:'Mark Delivered',
+};
+
+// ─── Icon ─────────────────────────────────────────────────
+const Icon = ({ name, size=16, color='currentColor', style={} }) => {
+  const paths = {
+    grid: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>,
+    bag: <><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></>,
+    book: <><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></>,
+    chart: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    award: <><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></>,
+    clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+    star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>,
+    dollar: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></>,
+    activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,
+    'arrow-left': <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
+    'chevron-right': <polyline points="9 18 15 12 9 6"/>,
+    plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    'edit-2': <><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></>,
+    'trash-2': <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></>,
+    inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></>,
+    package: <><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
+    'x-circle': <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>,
+    check: <polyline points="20 6 9 17 4 12"/>,
+    'trending-up': <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{ display:'inline-block', flexShrink:0, ...style }}>
+      {paths[name] || null}
+    </svg>
+  );
+};
+
+const StatusBar = () => (
+  <div className="status-bar" style={{ background:'transparent' }}>
+    <span style={{ fontSize:15, fontWeight:600, color:C.fg }}>9:41</span>
+    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill={C.fg}><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke={C.fg} strokeOpacity="0.35"/><rect x="2" y="2" width="16" height="8" rx="2" fill={C.fg}/><path d="M23 4.5v3a1.5 1.5 0 000-3z" fill={C.fg} opacity="0.4"/></svg>
+    </div>
+  </div>
+);
+
+const Toggle = ({ on, onToggle }) => (
+  <div className="toggle-switch" onClick={onToggle}
+    style={{ background: on ? 'rgba(255,255,255,0.35)' : C.border }}>
+    <div className="toggle-thumb" style={{ left: on ? 23 : 3 }} />
+  </div>
+);
+
+// ─── Floating Tab Bar ─────────────────────────────────────
+const FloatTabs = ({ active, onTab }) => {
+  const tabs = [
+    { id:'dashboard', icon:'grid', label:'Dashboard' },
+    { id:'orders', icon:'bag', label:'Orders' },
+    { id:'menu', icon:'book', label:'Menu' },
+    { id:'stats', icon:'chart', label:'Stats' },
+    { id:'schedule', icon:'calendar', label:'Schedule' },
+    { id:'profile', icon:'user', label:'Profile' },
+  ];
+  return (
+    <div className="float-tab-bar">
+      {tabs.map(t => (
+        <div key={t.id} className={`f-tab ${active===t.id?'f-tab-active':''}`} onClick={() => onTab(t.id)}>
+          <Icon name={t.icon} size={17} color={active===t.id ? '#fff' : C.mutedFg} />
+          {active===t.id && <span style={{ fontSize:12, fontWeight:600, color:'#fff' }}>{t.label}</span>}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Dashboard ────────────────────────────────────────────
+const DashboardScreen = () => {
+  const [isOpen, setIsOpen] = React.useState(true);
+  const orders = [
+    { id:'o1', customer:'Ahmed Youssef', status:'pending', items:'2× Koshary, 1× Molokheya', time:'9:15 AM', total:225 },
+    { id:'o2', customer:'Sara Ibrahim', status:'preparing', items:'1× Fattah Feast', time:'8:52 AM', total:150 },
+    { id:'o3', customer:'Omar Hassan', status:'on_the_way', items:'3× Koshary', time:'8:10 AM', total:195 },
+  ];
+  const reviews = [
+    { name:'Ahmed Y.', rating:5, comment:'Best koshary I\'ve ever had!', },
+    { name:'Sara I.', rating:5, comment:'Absolutely authentic — will order again.' },
+  ];
+  return (
+    <div style={{ background:C.bg, padding:'0 20px', paddingBottom:20 }}>
+      <StatusBar />
+      {/* Header */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
+        <div>
+          <div style={{ fontSize:13, color:C.mutedFg, marginBottom:2 }}>Good morning,</div>
+          <div style={{ fontSize:22, fontWeight:700, color:C.fg }}>Umm Ahmed 👩‍🍳</div>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:5, background:`${C.primary}18`, borderRadius:100, padding:'6px 12px' }}>
+          <Icon name="award" size={13} color={C.primary} />
+          <span style={{ fontSize:12, fontWeight:600, color:C.primary }}>Chef</span>
+        </div>
+      </div>
+
+      {/* Kitchen Toggle */}
+      <div onClick={() => setIsOpen(v=>!v)} style={{
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        borderRadius:18, padding:18, marginBottom:16, cursor:'pointer',
+        background: isOpen ? C.primary : C.muted,
+        border:`1px solid ${isOpen ? C.primary : C.border}`,
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:10, height:10, borderRadius:5, background: isOpen ? '#fff' : C.mutedFg }} />
+          <div>
+            <div style={{ fontSize:16, fontWeight:700, color: isOpen ? '#fff' : C.fg }}>{isOpen ? 'Kitchen is Open' : 'Kitchen is Closed'}</div>
+            <div style={{ fontSize:12, color: isOpen ? 'rgba(255,255,255,0.75)' : C.mutedFg, marginTop:2 }}>{isOpen ? 'Accepting orders right now' : 'Tap to open your kitchen'}</div>
+          </div>
+        </div>
+        <Toggle on={isOpen} onToggle={() => setIsOpen(v=>!v)} />
+      </div>
+
+      {/* Quick Stats */}
+      <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+        {[
+          { icon:'clock', val:2, label:'Pending', color:'#F59E0B' },
+          { icon:'activity', val:3, label:'Active', color:C.primary },
+          { icon:'dollar', val:'1,240', label:'EGP Today', color:C.primary },
+          { icon:'star', val:'4.9', label:'Rating', color:'#F59E0B' },
+        ].map((s,i) => (
+          <div key={i} style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:11, display:'flex', flexDirection:'column', alignItems:'center', gap:5, boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ width:30, height:30, borderRadius:9, background:`${s.color}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon name={s.icon} size={15} color={s.color} />
+            </div>
+            <div style={{ fontSize:15, fontWeight:700, color:C.fg }}>{s.val}</div>
+            <div style={{ fontSize:9, color:C.mutedFg, textAlign:'center' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Analytics link */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:14, marginBottom:22, cursor:'pointer' }}>
+        <div style={{ width:42, height:42, borderRadius:12, background:C.secondary, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <Icon name="chart" size={18} color={C.primary} />
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:15, fontWeight:600, color:C.fg }}>View Full Analytics</div>
+          <div style={{ fontSize:12, color:C.mutedFg, marginTop:2 }}>Revenue, orders, top dishes & reviews</div>
+        </div>
+        <Icon name="chevron-right" size={18} color={C.mutedFg} />
+      </div>
+
+      {/* Today's Orders */}
+      <div style={{ marginBottom:22 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <div style={{ fontSize:16, fontWeight:700, color:C.fg }}>Today's Orders</div>
+          <span style={{ fontSize:13, fontWeight:500, color:C.primary, cursor:'pointer' }}>See all</span>
+        </div>
+        {orders.map(o => {
+          const sc = STATUS_COLORS[o.status];
+          return (
+            <div key={o.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:13, marginBottom:10 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                <div style={{ fontSize:14, fontWeight:600, color:C.fg }}>{o.customer}</div>
+                <div style={{ background:`${sc}20`, borderRadius:100, padding:'3px 10px' }}>
+                  <span style={{ fontSize:11, fontWeight:600, color:sc }}>{STATUS_LABELS[o.status]}</span>
+                </div>
+              </div>
+              <div style={{ fontSize:12, color:C.mutedFg, marginBottom:5 }}>{o.items}</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:12, color:C.mutedFg }}>{o.time}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.primary }}>EGP {o.total}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Reviews */}
+      <div>
+        <div style={{ fontSize:16, fontWeight:700, color:C.fg, marginBottom:12 }}>Latest Reviews</div>
+        {reviews.map((r,i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:14, marginBottom:10 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <span style={{ fontSize:13, fontWeight:600, color:C.fg }}>{r.name}</span>
+              <div style={{ display:'flex', gap:2 }}>{[1,2,3,4,5].map(s=><Icon key={s} name="star" size={11} color={s<=r.rating?C.accent:C.border} />)}</div>
+            </div>
+            <div style={{ fontSize:13, color:C.mutedFg, lineHeight:1.5, fontStyle:'italic' }}>"{r.comment}"</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Orders Screen ────────────────────────────────────────
+const OrdersScreen = () => {
+  const [filter, setFilter] = React.useState('all');
+  const [orders, setOrders] = React.useState([
+    { id:'o1', customer:'Ahmed Youssef', phone:'0100 123 4567', status:'pending', items:[{qty:2,name:'Koshary Family Pot',price:65},{qty:1,name:'Molokheya with Chicken',price:95}], address:'15 El-Nozha St, Heliopolis', time:'9:15 AM', total:225, notes:'Less spice please' },
+    { id:'o2', customer:'Sara Ibrahim', phone:'0111 987 6543', status:'preparing', items:[{qty:1,name:'Fattah Feast',price:150}], address:'32 Roxy St, Heliopolis', time:'8:52 AM', total:150, notes:'' },
+    { id:'o3', customer:'Omar Hassan', phone:'0101 555 0123', status:'on_the_way', items:[{qty:3,name:'Koshary Family Pot',price:65}], address:'7 Merghany St, Heliopolis', time:'8:10 AM', total:195, notes:'' },
+    { id:'o4', customer:'Hana Khalil', phone:'0106 321 9876', status:'delivered', items:[{qty:1,name:'Mixed Mahshi',price:120}], address:'4 Syria St, Heliopolis', time:'Yesterday', total:120, notes:'' },
+  ]);
+
+  const advance = (id) => setOrders(prev => prev.map(o => {
+    if (o.id !== id) return o;
+    const next = STATUS_NEXT[o.status];
+    return next ? { ...o, status: next } : o;
+  }));
+
+  const cancel = (id) => setOrders(prev => prev.map(o => o.id === id ? { ...o, status:'cancelled' } : o));
+
+  const tabs = [
+    { id:'all', label:'All' },
+    { id:'active', label:'Active' },
+    { id:'pending', label:'Pending' },
+    { id:'done', label:'Done' },
+  ];
+
+  const filtered = orders.filter(o => {
+    if (filter === 'all') return o.status !== 'cancelled';
+    if (filter === 'active') return ['confirmed','preparing','ready','on_the_way'].includes(o.status);
+    if (filter === 'pending') return o.status === 'pending';
+    if (filter === 'done') return ['delivered','cancelled'].includes(o.status);
+    return true;
+  });
+
+  return (
+    <div style={{ background:C.bg, minHeight:'100%' }}>
+      <div style={{ padding:'0 20px' }}>
+        <StatusBar />
+        <div style={{ fontSize:26, fontWeight:700, color:C.fg, marginBottom:16 }}>Orders</div>
+        {/* Filter tabs */}
+        <div style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', marginBottom:18 }}>
+          {tabs.map(t => (
+            <div key={t.id} onClick={() => setFilter(t.id)} style={{ flexShrink:0, padding:'7px 16px', borderRadius:100, background: filter===t.id ? C.primary : C.muted, color: filter===t.id ? '#fff' : C.mutedFg, fontSize:13, fontWeight:500, cursor:'pointer' }}>{t.label}</div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding:'0 20px' }}>
+        {filtered.length === 0 ? (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', paddingTop:60, gap:10 }}>
+            <Icon name="inbox" size={40} color={C.border} />
+            <div style={{ fontSize:15, color:C.mutedFg }}>No orders here</div>
+          </div>
+        ) : filtered.map(o => {
+          const sc = STATUS_COLORS[o.status];
+          const canAdvance = !!STATUS_NEXT[o.status];
+          return (
+            <div key={o.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, marginBottom:14, overflow:'hidden', boxShadow:'0 2px 6px rgba(0,0,0,0.04)' }}>
+              <div style={{ padding:14 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                  <div>
+                    <div style={{ fontSize:15, fontWeight:600, color:C.fg }}>{o.customer}</div>
+                    <div style={{ fontSize:12, color:C.mutedFg, marginTop:1 }}>{o.phone} · {o.time}</div>
+                  </div>
+                  <div style={{ background:`${sc}20`, borderRadius:100, padding:'4px 10px' }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:sc }}>{STATUS_LABELS[o.status]}</span>
+                  </div>
+                </div>
+                {/* Items */}
+                <div style={{ background:C.bg, borderRadius:10, padding:'8px 10px', marginBottom:10 }}>
+                  {o.items.map((item,i) => (
+                    <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:i<o.items.length-1?4:0 }}>
+                      <span style={{ color:C.fg }}>{item.qty}× {item.name}</span>
+                      <span style={{ color:C.mutedFg }}>EGP {item.qty*item.price}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Address */}
+                <div style={{ fontSize:12, color:C.mutedFg, marginBottom: o.notes ? 6 : 0 }}>📍 {o.address}</div>
+                {o.notes && <div style={{ fontSize:12, color:C.mutedFg, fontStyle:'italic' }}>📝 "{o.notes}"</div>}
+              </div>
+              <div style={{ height:1, background:C.border }} />
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px' }}>
+                <div style={{ fontSize:15, fontWeight:700, color:C.fg }}>EGP {o.total}</div>
+                {o.status !== 'delivered' && o.status !== 'cancelled' && (
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={() => cancel(o.id)} style={{ background:'none', border:`1.5px solid ${C.destructive}`, borderRadius:10, padding:'7px 12px', fontSize:12, fontWeight:600, color:C.destructive, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>Cancel</button>
+                    {canAdvance && (
+                      <button onClick={() => advance(o.id)} style={{ background:sc, border:'none', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+                        {ACTION_LABELS[o.status]}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {o.status === 'delivered' && <div style={{ display:'flex', alignItems:'center', gap:5, color:C.success, fontSize:13, fontWeight:600 }}><Icon name="check" size={15} color={C.success} />Delivered</div>}
+                {o.status === 'cancelled' && <div style={{ display:'flex', alignItems:'center', gap:5, color:C.destructive, fontSize:13, fontWeight:600 }}><Icon name="x-circle" size={15} color={C.destructive} />Cancelled</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── Menu Screen ──────────────────────────────────────────
+const MenuScreen = () => {
+  const [items, setItems] = React.useState([
+    { id:'m1', name:'Koshary Family Pot', nameAr:'كشري عيلة', desc:'Rice, lentils, macaroni, crispy onions, two sauces.', price:65, cat:'koshary', available:true, stock:-1 },
+    { id:'m2', name:'Molokheya with Chicken', nameAr:'ملوخية بالفراخ', desc:'Slow-cooked jute mallow with tender chicken.', price:95, cat:'molokheya', available:true, stock:8 },
+    { id:'m3', name:'Fattah Feast', nameAr:'فتة كاملة', desc:'Layers of crispy bread in rich lamb broth.', price:150, cat:'fattah', available:true, stock:2 },
+    { id:'m4', name:'Om Ali', nameAr:'أم علي', desc:'Egypt\'s beloved bread pudding with nuts and cream.', price:55, cat:'sweets', available:false, stock:-1 },
+  ]);
+  const [showForm, setShowForm] = React.useState(false);
+  const [editItem, setEditItem] = React.useState(null);
+  const [formData, setFormData] = React.useState({ name:'', price:'', desc:'', cat:'koshary', available:true, stock:'' });
+
+  const toggleAvail = (id) => setItems(prev => prev.map(i => i.id===id ? {...i, available:!i.available} : i));
+  const deleteItem = (id) => setItems(prev => prev.filter(i => i.id!==id));
+  const openEdit = (item) => {
+    setEditItem(item);
+    setFormData({ name:item.name, price:String(item.price), desc:item.desc, cat:item.cat, available:item.available, stock:item.stock===-1?'':String(item.stock) });
+    setShowForm(true);
+  };
+  const openAdd = () => {
+    setEditItem(null);
+    setFormData({ name:'', price:'', desc:'', cat:'koshary', available:true, stock:'' });
+    setShowForm(true);
+  };
+  const saveItem = () => {
+    if (!formData.name || !formData.price) return;
+    if (editItem) {
+      setItems(prev => prev.map(i => i.id===editItem.id ? {...i, name:formData.name, price:parseFloat(formData.price), desc:formData.desc, cat:formData.cat, available:formData.available, stock:formData.stock?parseInt(formData.stock):-1} : i));
+    } else {
+      setItems(prev => [...prev, { id:`m${Date.now()}`, name:formData.name, nameAr:'', desc:formData.desc, price:parseFloat(formData.price)||0, cat:formData.cat, available:formData.available, stock:formData.stock?parseInt(formData.stock):-1 }]);
+    }
+    setShowForm(false);
+  };
+
+  if (showForm) {
+    const cats = ['koshary','mahshi','molokheya','hawawshi','sweets','feteer','fattah','other'];
+    return (
+      <div style={{ background:C.bg, minHeight:'100%', padding:'0 24px 40px' }}>
+        <StatusBar />
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
+          <button onClick={() => setShowForm(false)} style={{ background:'none', border:'none', cursor:'pointer' }}>
+            <Icon name="arrow-left" size={22} color={C.fg} />
+          </button>
+          <div style={{ fontSize:22, fontWeight:700, color:C.fg }}>{editItem ? 'Edit Item' : 'Add Item'}</div>
+        </div>
+        {[
+          { label:'Name (English) *', key:'name', ph:'e.g. Koshary Family Pot' },
+          { label:'Description', key:'desc', ph:'Describe the dish…', multi:true },
+          { label:'Price (EGP) *', key:'price', ph:'0', type:'number' },
+          { label:'Stock (empty = unlimited)', key:'stock', ph:'10', type:'number' },
+        ].map(f => (
+          <div key={f.key} style={{ marginBottom:18 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>{f.label}</div>
+            {f.multi ? (
+              <textarea value={formData[f.key]} onChange={e=>setFormData(d=>({...d,[f.key]:e.target.value}))} placeholder={f.ph}
+                style={{ width:'100%', background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'12px 14px', fontSize:15, fontFamily:'Inter,sans-serif', color:C.fg, height:72, resize:'none', outline:'none' }} />
+            ) : (
+              <input type={f.type||'text'} value={formData[f.key]} onChange={e=>setFormData(d=>({...d,[f.key]:e.target.value}))} placeholder={f.ph}
+                style={{ width:'100%', background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'12px 14px', fontSize:15, fontFamily:'Inter,sans-serif', color:C.fg, outline:'none' }} />
+            )}
+          </div>
+        ))}
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:C.fg, marginBottom:7 }}>Category</div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {cats.map(c => (
+              <div key={c} onClick={() => setFormData(d=>({...d,cat:c}))} style={{ padding:'6px 14px', borderRadius:100, border:`1px solid ${formData.cat===c?C.primary:C.border}`, background:formData.cat===c?C.primary:C.card, color:formData.cat===c?'#fff':C.fg, fontSize:12, fontWeight:500, cursor:'pointer' }}>{c}</div>
+            ))}
+          </div>
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:C.fg }}>Available now</div>
+          <div onClick={() => setFormData(d=>({...d,available:!d.available}))}
+            style={{ width:48, height:28, borderRadius:14, background:formData.available?C.primary:C.border, position:'relative', cursor:'pointer' }}>
+            <div style={{ position:'absolute', top:3, left:formData.available?23:3, width:22, height:22, borderRadius:11, background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,0.2)', transition:'left 0.2s' }} />
+          </div>
+        </div>
+        <button onClick={saveItem} style={{ width:'100%', height:54, borderRadius:16, background:C.primary, border:'none', color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', fontFamily:'Inter,sans-serif', marginBottom:12 }}>
+          {editItem ? 'Save Changes' : 'Add Item'}
+        </button>
+        <button onClick={() => setShowForm(false)} style={{ width:'100%', height:44, background:'none', border:'none', color:C.mutedFg, fontSize:15, fontWeight:500, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>Cancel</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background:C.bg, minHeight:'100%' }}>
+      <div style={{ padding:'0 20px', background:C.bg, borderBottom:`1px solid ${C.border}` }}>
+        <StatusBar />
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:14 }}>
+          <div style={{ fontSize:26, fontWeight:700, color:C.fg }}>My Menu</div>
+          <button onClick={openAdd} style={{ display:'flex', alignItems:'center', gap:6, background:C.primary, border:'none', borderRadius:12, padding:'9px 14px', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+            <Icon name="plus" size={16} color="#fff" />Add Item
+          </button>
+        </div>
+      </div>
+      <div style={{ padding:'16px 20px' }}>
+        <div style={{ fontSize:13, color:C.mutedFg, marginBottom:12 }}>{items.length} items</div>
+        {items.map(item => (
+          <div key={item.id} style={{ display:'flex', gap:10, background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:14, marginBottom:12, opacity: item.available ? 1 : 0.6, boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ flex:1 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                <div style={{ fontSize:15, fontWeight:600, color:C.fg, flex:1, marginRight:8 }}>{item.name}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:C.primary, flexShrink:0 }}>EGP {item.price}</div>
+              </div>
+              <div style={{ fontSize:12, color:C.mutedFg, lineHeight:1.5, marginBottom:8 }}>{item.desc}</div>
+              <div style={{ display:'flex', gap:6 }}>
+                <div style={{ background:C.secondary, color:C.primary, borderRadius:100, padding:'3px 8px', fontSize:11, fontWeight:500 }}>{item.cat}</div>
+                {item.stock === -1 ? (
+                  <div style={{ background:'#16A34A18', color:'#16A34A', borderRadius:100, padding:'3px 8px', fontSize:11, fontWeight:500 }}>Unlimited</div>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:4, background: item.stock<=2 ? '#EF444418' : C.secondary, color: item.stock<=2 ? '#EF4444' : C.primary, borderRadius:100, padding:'3px 8px', fontSize:11, fontWeight:500 }}>
+                    <Icon name="package" size={10} color={item.stock<=2?'#EF4444':C.primary} />
+                    {item.stock} left
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+              {/* Toggle */}
+              <div onClick={() => toggleAvail(item.id)}
+                style={{ width:40, height:24, borderRadius:12, background:item.available?C.primary:C.border, position:'relative', cursor:'pointer', flexShrink:0 }}>
+                <div style={{ position:'absolute', top:2, left:item.available?18:2, width:20, height:20, borderRadius:10, background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,0.2)', transition:'left 0.2s' }} />
+              </div>
+              <button onClick={() => openEdit(item)} style={{ width:32, height:32, borderRadius:10, background:C.secondary, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Icon name="edit-2" size={14} color={C.primary} />
+              </button>
+              <button onClick={() => deleteItem(item.id)} style={{ width:32, height:32, borderRadius:10, background:'#EF444418', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Icon name="trash-2" size={14} color='#EF4444' />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Stats Screen ─────────────────────────────────────────
+const StatsScreen = () => {
+  const [period, setPeriod] = React.useState('week');
+  const weekBars = [40, 65, 55, 80, 120, 95, 70];
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const maxBar = Math.max(...weekBars);
+  return (
+    <div style={{ background:C.bg, minHeight:'100%', padding:'0 20px 40px' }}>
+      <StatusBar />
+      <div style={{ fontSize:26, fontWeight:700, color:C.fg, marginBottom:20 }}>Analytics</div>
+      {/* Summary grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:20 }}>
+        {[
+          { label:'Total Revenue', val:'EGP 8,240', icon:'dollar', color:C.primary },
+          { label:'Delivered', val:'68', icon:'check', color:C.success },
+          { label:'Avg Value', val:'EGP 121', icon:'trending-up', color:C.primary },
+          { label:'Rating', val:'4.9 ★', icon:'star', color:C.accent },
+          { label:'Cancelled', val:'4', icon:'x-circle', color:C.destructive },
+          { label:'Menu Items', val:'12', icon:'book', color:C.mutedFg },
+        ].map((s,i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:12, display:'flex', flexDirection:'column', gap:6 }}>
+            <div style={{ width:28, height:28, borderRadius:8, background:`${s.color}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon name={s.icon} size={14} color={s.color} />
+            </div>
+            <div style={{ fontSize:15, fontWeight:700, color:C.fg }}>{s.val}</div>
+            <div style={{ fontSize:10, color:C.mutedFg }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      {/* Revenue chart */}
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:16, marginBottom:16 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:C.fg }}>Revenue</div>
+          <div style={{ display:'flex', gap:4 }}>
+            {['week','month'].map(p => (
+              <div key={p} onClick={() => setPeriod(p)} style={{ padding:'4px 12px', borderRadius:100, background:period===p?C.primary:C.muted, color:period===p?'#fff':C.mutedFg, fontSize:12, fontWeight:500, cursor:'pointer' }}>{p.charAt(0).toUpperCase()+p.slice(1)}</div>
+            ))}
+          </div>
+        </div>
+        <div style={{ display:'flex', alignItems:'flex-end', gap:6, height:80 }}>
+          {weekBars.map((val,i) => (
+            <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+              <div style={{ width:'100%', background:`${C.primary}20`, borderRadius:'4px 4px 0 0', height:Math.round((val/maxBar)*64), position:'relative', overflow:'hidden' }}>
+                <div style={{ position:'absolute', bottom:0, left:0, right:0, background:C.primary, borderRadius:'3px 3px 0 0', height:'60%' }} />
+              </div>
+              <div style={{ fontSize:8, color:C.mutedFg }}>{days[i]}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize:12, color:C.mutedFg, marginTop:10 }}>Week Total: <strong style={{color:C.fg}}>EGP 1,870</strong></div>
+      </div>
+      {/* Top dishes */}
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:16 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:C.fg, marginBottom:14 }}>Top Dishes</div>
+        {[
+          { name:'Koshary Family Pot', pct:42 },
+          { name:'Molokheya with Chicken', pct:31 },
+          { name:'Fattah Feast', pct:18 },
+          { name:'Om Ali', pct:9 },
+        ].map((d,i) => (
+          <div key={i} style={{ marginBottom:12 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:5 }}>
+              <span style={{ color:C.fg, fontWeight:500 }}>{d.name}</span>
+              <span style={{ color:C.mutedFg }}>{d.pct}%</span>
+            </div>
+            <div style={{ height:6, background:C.muted, borderRadius:3, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${d.pct}%`, background:C.primary, borderRadius:3 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── App ──────────────────────────────────────────────────
+const TABS = ['dashboard','orders','menu','stats','schedule','profile'];
+
+function App() {
+  const [tab, setTab] = React.useState('dashboard');
+
+  const screenMap = {
+    dashboard: <DashboardScreen />,
+    orders: <OrdersScreen />,
+    menu: <MenuScreen />,
+    stats: <StatsScreen />,
+    schedule: (
+      <div style={{ padding:'44px 20px', textAlign:'center', color:C.mutedFg }}>
+        <StatusBar />
+        <div style={{ marginTop:60 }}><Icon name="calendar" size={48} color={C.border} /></div>
+        <div style={{ marginTop:16, fontSize:16, fontWeight:600, color:C.fg }}>Scheduled Orders</div>
+        <div style={{ fontSize:14, color:C.mutedFg, marginTop:8 }}>Future pre-orders will appear here</div>
+      </div>
+    ),
+    profile: (
+      <div style={{ padding:'0 20px 40px' }}>
+        <StatusBar />
+        <div style={{ textAlign:'center', marginTop:20, marginBottom:24 }}>
+          <div style={{ width:80, height:80, borderRadius:40, background:`linear-gradient(135deg,#c7d2fe,#818cf8)`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', fontSize:28, fontWeight:700, color:'#fff' }}>UA</div>
+          <div style={{ fontSize:20, fontWeight:700, color:C.fg }}>Umm Ahmed</div>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:`${C.primary}18`, borderRadius:100, padding:'5px 12px', marginTop:8 }}>
+            <Icon name="award" size={13} color={C.primary} />
+            <span style={{ fontSize:12, fontWeight:600, color:C.primary }}>Verified Chef</span>
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:10, marginBottom:24 }}>
+          {[{ label:'Revenue', val:'EGP 8,240' },{ label:'Delivered', val:'68' },{ label:'Rating', val:'4.9 ★' },{ label:'Items', val:'12' }].map((s,i) => (
+            <div key={i} style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:10, textAlign:'center' }}>
+              <div style={{ fontSize:14, fontWeight:700, color:C.fg }}>{s.val}</div>
+              <div style={{ fontSize:9, color:C.mutedFg, marginTop:2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        {[['Full Name','Umm Ahmed'],['Mobile','0100 123 4567'],['Specialties','Koshary · Molokheya · Fattah']].map(([l,v],i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:'14px 16px', marginBottom:10 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:C.mutedFg, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.5px' }}>{l}</div>
+            <div style={{ fontSize:15, color:C.fg }}>{v}</div>
+          </div>
+        ))}
+        <button style={{ width:'100%', height:52, borderRadius:14, background:'none', border:`1.5px solid ${C.destructive}`, color:C.destructive, fontSize:15, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif', marginTop:8 }}>Sign Out</button>
+      </div>
+    ),
+  };
+
+  return (
+    <div className="phone-frame">
+      <div className="screen-content">
+        {screenMap[tab]}
+      </div>
+      <FloatTabs active={tab} onTab={setTab} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

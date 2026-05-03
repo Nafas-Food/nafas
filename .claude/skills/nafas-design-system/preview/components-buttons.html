@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #7C7A9E; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 16px; font-family: 'Inter', sans-serif; font-size: 15px;
+    font-weight: 700; height: 48px; padding: 0 22px; border: none; cursor: pointer;
+  }
+  .btn-primary { background: #4F46E5; color: #fff; }
+  .btn-ghost { background: transparent; border: 1.5px solid #4F46E5; color: #4F46E5; font-weight: 600; }
+  .btn-destructive { background: transparent; border: 1.5px solid #DC2626; color: #DC2626; font-size: 14px; font-weight: 600; }
+  .btn-small { background: #4F46E5; color: #fff; border-radius: 12px; font-size: 13px; font-weight: 600; height: 36px; padding: 0 14px; }
+  .btn-icon { background: #EEF2FF; border-radius: 10px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+  .disabled { opacity: 0.5; }
+</style>
+</head>
+<body>
+<div class="section-label">Primary</div>
+<div class="row">
+  <button class="btn btn-primary">Create Account</button>
+  <button class="btn btn-primary disabled">Disabled</button>
+</div>
+<div class="section-label">Ghost / Outline</div>
+<div class="row">
+  <button class="btn btn-ghost">Sign In</button>
+  <button class="btn btn-ghost disabled">Disabled</button>
+</div>
+<div class="section-label">Destructive</div>
+<div class="row">
+  <button class="btn btn-destructive">Cancel Order</button>
+</div>
+<div class="section-label">Small + Icon</div>
+<div class="row">
+  <button class="btn btn-small">+ Add Item</button>
+  <button class="btn btn-icon">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="btn btn-icon" style="background:#EF444418;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  </button>
+</div>
+</body>
+</html>

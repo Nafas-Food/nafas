@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 100px;
+    font-size: 11px; font-weight: 700;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .section-label { font-size: 10px; font-weight: 600; color: #7C7A9E; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="section-label">Order Status Lifecycle</div>
+<div class="row">
+  <div class="pill" style="background:#F59E0B20; color:#F59E0B;">
+    <div class="dot" style="background:#F59E0B;"></div>Pending
+  </div>
+  <div class="pill" style="background:#3B82F620; color:#3B82F6;">
+    <div class="dot" style="background:#3B82F6;"></div>Confirmed
+  </div>
+  <div class="pill" style="background:#8B5CF620; color:#8B5CF6;">
+    <div class="dot" style="background:#8B5CF6;"></div>Preparing
+  </div>
+  <div class="pill" style="background:#10B98120; color:#10B981;">
+    <div class="dot" style="background:#10B981;"></div>Ready
+  </div>
+  <div class="pill" style="background:#6366F120; color:#6366F1;">
+    <div class="dot" style="background:#6366F1;"></div>On the Way
+  </div>
+  <div class="pill" style="background:#16A34A20; color:#16A34A;">
+    <div class="dot" style="background:#16A34A;"></div>Delivered
+  </div>
+  <div class="pill" style="background:#EF444420; color:#EF4444;">
+    <div class="dot" style="background:#EF4444;"></div>Cancelled
+  </div>
+</div>
+</body>
+</html>

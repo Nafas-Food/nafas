@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #7C7A9E; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .section { margin-bottom: 16px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .chip-default { background: #F0F0FF; color: #7C7A9E; }
+  .chip-active { background: #4F46E5; color: #fff; }
+  .chip-secondary { background: #EEF2FF; color: #4F46E5; font-size: 12px; font-weight: 500; padding: 5px 12px; }
+  /* Language toggle */
+  .lang-toggle { display: flex; align-items: center; background: rgba(255,255,255,0.85); border: 1px solid #E4E2F8; border-radius: 100px; padding: 4px; backdrop-filter: blur(8px); gap: 0; width: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .lang-seg { padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .lang-active { background: #fff; color: #0D0B1E; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+  .lang-inactive { color: #7C7A9E; }
+</style>
+</head>
+<body>
+<div class="section">
+  <div class="section-label">Category Chips</div>
+  <div class="row">
+    <div class="chip chip-active">All</div>
+    <div class="chip chip-default">Koshary</div>
+    <div class="chip chip-default">Mahshi</div>
+    <div class="chip chip-default">Molokheya</div>
+    <div class="chip chip-default">Sweets</div>
+    <div class="chip chip-default">Hawawshi</div>
+  </div>
+</div>
+<div class="section">
+  <div class="section-label">Specialty Tags (Chef Profile)</div>
+  <div class="row">
+    <div class="chip chip-secondary">Koshary</div>
+    <div class="chip chip-secondary">Molokheya</div>
+    <div class="chip chip-secondary">Fattah</div>
+  </div>
+</div>
+<div class="section">
+  <div class="section-label">Language Toggle</div>
+  <div class="lang-toggle">
+    <div class="lang-seg lang-active">EN</div>
+    <div class="lang-seg lang-inactive">عربي</div>
+  </div>
+</div>
+</body>
+</html>

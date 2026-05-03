@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAF7F2; padding: 20px; }
+
+  .row { display: flex; gap: 20px; align-items: flex-start; }
+
+  /* ── Primary lockup ──────────────────────────────── */
+  .lockup {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; flex: 1;
+  }
+  .logo-mark {
+    width: 80px; height: 80px; border-radius: 22px;
+    overflow: hidden; box-shadow: 0 4px 20px rgba(196, 98, 45, 0.20);
+    flex-shrink: 0;
+  }
+  .logo-mark img { width: 100%; height: 100%; object-fit: cover; }
+
+  .wordmark-row { display: flex; align-items: center; gap: 10px; }
+  .wordmark-ar {
+    font-size: 26px; font-weight: 700;
+    color: #2C1F14; letter-spacing: -0.5px;
+    font-family: 'Inter', sans-serif;
+    direction: rtl;
+  }
+  .wordmark-divider { width: 1.5px; height: 22px; background: #EDE6DA; }
+  .wordmark-en {
+    font-size: 26px; font-weight: 700;
+    color: #2C1F14; letter-spacing: 0.5px;
+    font-family: 'Inter', sans-serif;
+  }
+  .tagline-en {
+    font-size: 12px; color: #9C8B75; font-weight: 400;
+    letter-spacing: 0.3px; text-align: center;
+  }
+  .tagline-ar {
+    font-size: 12px; color: #9C8B75; font-weight: 400;
+    direction: rtl; text-align: center; line-height: 1.8;
+  }
+
+  /* divider */
+  .vdivider { width: 1px; background: #EDE6DA; align-self: stretch; }
+
+  /* ── Size variants ───────────────────────────────── */
+  .sizes { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+  .size-row { display: flex; align-items: center; gap: 10px; }
+  .sz-lg { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; box-shadow: 0 3px 12px rgba(196,98,45,0.15); }
+  .sz-md { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(196,98,45,0.12); }
+  .sz-sm { width: 32px; height: 32px; border-radius: 9px; overflow: hidden; box-shadow: 0 1px 6px rgba(196,98,45,0.10); }
+  .sz-xs { width: 24px; height: 24px; border-radius: 7px; overflow: hidden; }
+  .sz-label { font-size: 10px; color: #9C8B75; font-family: monospace; }
+
+  /* ── Dark lockup ─────────────────────────────────── */
+  .dark-lockup {
+    background: #2C1F14; border-radius: 16px;
+    padding: 16px 18px; display: flex; flex-direction: column;
+    align-items: center; gap: 10px;
+  }
+  .dark-wordmark { font-size: 18px; font-weight: 700; color: #F5ECD7; letter-spacing: 0.5px; }
+  .dark-tagline  { font-size: 10px; color: #9C8B75; text-align: center; }
+</style>
+</head>
+<body>
+<div class="row">
+
+  <!-- Primary lockup -->
+  <div class="lockup">
+    <div class="logo-mark">
+      <img src="../assets/images/icon.png" alt="Nafas logo">
+    </div>
+    <div class="wordmark-row">
+      <span class="wordmark-ar">نفَس</span>
+      <div class="wordmark-divider"></div>
+      <span class="wordmark-en">Nafas</span>
+    </div>
+    <div class="tagline-en">Homemade Egyptian food, delivered with love</div>
+    <div class="tagline-ar">أكل بيتي مصري، يوصلك بحب</div>
+  </div>
+
+  <div class="vdivider"></div>
+
+  <!-- Size scale -->
+  <div class="sizes">
+    <div class="size-row">
+      <div class="sz-lg"><img src="../assets/images/icon.png" style="width:100%;height:100%;object-fit:cover;"></div>
+      <span class="sz-label">64px — nav bar</span>
+    </div>
+    <div class="size-row">
+      <div class="sz-md"><img src="../assets/images/icon.png" style="width:100%;height:100%;object-fit:cover;"></div>
+      <span class="sz-label">44px — compact</span>
+    </div>
+    <div class="size-row">
+      <div class="sz-sm"><img src="../assets/images/icon.png" style="width:100%;height:100%;object-fit:cover;"></div>
+      <span class="sz-label">32px — list item</span>
+    </div>
+    <div class="size-row">
+      <div class="sz-xs"><img src="../assets/images/icon.png" style="width:100%;height:100%;object-fit:cover;"></div>
+      <span class="sz-label">24px — micro</span>
+    </div>
+    <!-- Dark variant -->
+    <div class="dark-lockup">
+      <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;">
+        <img src="../assets/images/icon.png" style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <div class="dark-wordmark">نفَس · Nafas</div>
+      <div class="dark-tagline">Dark mode wordmark</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

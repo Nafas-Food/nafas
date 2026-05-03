@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .bar { background: #4F46E5; border-radius: 3px; height: 12px; }
+  .token { font-size: 10px; font-family: monospace; color: #7C7A9E; width: 56px; flex-shrink: 0; }
+  .label { font-size: 11px; color: #0D0B1E; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="row"><div class="token">--space-1</div><div class="bar" style="width:4px;"></div><div class="label">4px — xs</div></div>
+  <div class="row"><div class="token">--space-2</div><div class="bar" style="width:8px;"></div><div class="label">8px — sm</div></div>
+  <div class="row"><div class="token">--space-3</div><div class="bar" style="width:12px;"></div><div class="label">12px — md-sm</div></div>
+  <div class="row"><div class="token">--space-3-5</div><div class="bar" style="width:14px;"></div><div class="label">14px — md</div></div>
+  <div class="row"><div class="token">--space-4</div><div class="bar" style="width:16px;"></div><div class="label">16px — base</div></div>
+  <div class="row"><div class="token">--space-5</div><div class="bar" style="width:20px; background:#6366F1;"></div><div class="label">20px — container-px ★</div></div>
+  <div class="row"><div class="token">--space-6</div><div class="bar" style="width:24px;"></div><div class="label">24px — xl</div></div>
+  <div class="row"><div class="token">--space-7</div><div class="bar" style="width:28px;"></div><div class="label">28px — 2xl</div></div>
+  <div class="row"><div class="token">--space-8</div><div class="bar" style="width:32px;"></div><div class="label">32px — 3xl</div></div>
+</body>
+</html>
