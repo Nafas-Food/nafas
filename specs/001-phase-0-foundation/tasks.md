@@ -164,25 +164,25 @@ description: "Phase 0 Foundation — implementation tasks"
 
 **⚠️ CRITICAL**: No US1–US4 task may begin until this phase is complete.
 
-- [ ] T009 Install backend runtime dependencies. From `<repo>\backend` run:
+- [X] T009 Install backend runtime dependencies. From `<repo>\backend` run:
   ```powershell
   npm install @nestjs/swagger@7 @nestjs/throttler@5 @nestjs/schedule@4 @nestjs/terminus@10 @nestjs/config@3 @prisma/client@5 helmet@7 class-validator@0.14 class-transformer@0.5 decimal.js@10 reflect-metadata@0.2 rxjs@7
   ```
   Expected outcome: all packages appear under `dependencies` in `backend/package.json`.
 
-- [ ] T010 Install backend dev dependencies. From `<repo>\backend` run:
+- [X] T010 Install backend dev dependencies. From `<repo>\backend` run:
   ```powershell
   npm install --save-dev prisma@5 @types/node@20 supertest@6 @types/supertest@6
   ```
   Expected outcome: packages appear under `devDependencies`.
 
-- [ ] T011 Initialize Prisma in the backend. From `<repo>\backend` run:
+- [X] T011 Initialize Prisma in the backend. From `<repo>\backend` run:
   ```powershell
   npx prisma init --datasource-provider postgresql
   ```
   Expected outcome: `<repo>\backend\prisma\schema.prisma` exists with a `datasource db { url = env("DATABASE_URL") }` block. Delete the `<repo>\backend\.env` file that `prisma init` creates (we manage `.env` separately and don't want a half-populated copy committed by mistake).
 
-- [ ] T012 Create `<repo>\backend\src\common\prisma\prisma.service.ts` with the following exact content (base PrismaService — soft-delete `$extends` is added in T037 under US3):
+- [X] T012 Create `<repo>\backend\src\common\prisma\prisma.service.ts` with the following exact content (base PrismaService — soft-delete `$extends` is added in T037 under US3):
   ```ts
   import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
   import { PrismaClient } from '@prisma/client';
@@ -203,7 +203,7 @@ description: "Phase 0 Foundation — implementation tasks"
   }
   ```
 
-- [ ] T013 Create `<repo>\backend\src\common\prisma\prisma.module.ts` with the following exact content:
+- [X] T013 Create `<repo>\backend\src\common\prisma\prisma.module.ts` with the following exact content:
   ```ts
   import { Global, Module } from '@nestjs/common';
   import { PrismaService } from './prisma.service';
@@ -216,7 +216,7 @@ description: "Phase 0 Foundation — implementation tasks"
   export class PrismaModule {}
   ```
 
-- [ ] T014 Replace `<repo>\backend\src\main.ts` with the following exact content (overwrites the scaffold):
+- [X] T014 Replace `<repo>\backend\src\main.ts` with the following exact content (overwrites the scaffold):
   ```ts
   import { ValidationPipe } from '@nestjs/common';
   import { NestFactory } from '@nestjs/core';
@@ -253,7 +253,7 @@ description: "Phase 0 Foundation — implementation tasks"
   void bootstrap();
   ```
 
-- [ ] T015 Replace `<repo>\backend\src\app.module.ts` with the following exact content (HealthModule import is added in T022 — for now, leave it commented as shown):
+- [X] T015 Replace `<repo>\backend\src\app.module.ts` with the following exact content (HealthModule import is added in T022 — for now, leave it commented as shown):
   ```ts
   import { Module } from '@nestjs/common';
   import { ConfigModule } from '@nestjs/config';
@@ -277,9 +277,9 @@ description: "Phase 0 Foundation — implementation tasks"
   export class AppModule {}
   ```
 
-- [ ] T016 Delete `<repo>\backend\src\app.controller.ts`, `<repo>\backend\src\app.service.ts`, `<repo>\backend\src\app.controller.spec.ts` if they exist (the scaffold creates them; we replace them with `HealthModule` in US1).
+- [X] T016 Delete `<repo>\backend\src\app.controller.ts`, `<repo>\backend\src\app.service.ts`, `<repo>\backend\src\app.controller.spec.ts` if they exist (the scaffold creates them; we replace them with `HealthModule` in US1).
 
-- [ ] T017 Create `<repo>\backend\Dockerfile.dev` with the following exact content:
+- [X] T017 Create `<repo>\backend\Dockerfile.dev` with the following exact content:
   ```dockerfile
   FROM node:20-alpine
   WORKDIR /app
@@ -294,7 +294,7 @@ description: "Phase 0 Foundation — implementation tasks"
   CMD ["npm", "run", "start:dev"]
   ```
 
-- [ ] T018 Create `<repo>\docker-compose.dev.yml` with the following exact content:
+- [X] T018 Create `<repo>\docker-compose.dev.yml` with the following exact content:
   ```yaml
   services:
     backend:
@@ -314,9 +314,9 @@ description: "Phase 0 Foundation — implementation tasks"
       command: npm run start:dev
   ```
 
-- [ ] T019 Create directory `<repo>\backend\src\modules\` (empty for now — modules land in T021/T037/T039) and `<repo>\backend\src\common\admin-context\` (empty for now — populated in T038).
+- [X] T019 Create directory `<repo>\backend\src\modules\` (empty for now — modules land in T021/T037/T039) and `<repo>\backend\src\common\admin-context\` (empty for now — populated in T038).
 
-- [ ] T020 Verify foundational install succeeds. From `<repo>\backend` run:
+- [X] T020 Verify foundational install succeeds. From `<repo>\backend` run:
   ```powershell
   npm run build
   ```
@@ -332,7 +332,7 @@ description: "Phase 0 Foundation — implementation tasks"
 
 **Independent Test**: From a fresh checkout, a teammate runs through the README quickstart, calls `curl http://localhost:3000/api/v1/health`, and observes a `200` response with `{ "status": "ok", "checks": { "db": "ok" }, "version": "0.1.0" }`. Separately, a no-op PR triggering each workspace's CI (touch a comment in each workspace) shows a green check within five minutes.
 
-- [ ] T021 [US1] Create `<repo>\backend\src\modules\health\prisma.health.ts` with the following exact content (custom Terminus indicator with explicit two-second short-circuit per research R4):
+- [X] T021 [US1] Create `<repo>\backend\src\modules\health\prisma.health.ts` with the following exact content (custom Terminus indicator with explicit two-second short-circuit per research R4):
   ```ts
   import { Injectable } from '@nestjs/common';
   import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
@@ -361,7 +361,7 @@ description: "Phase 0 Foundation — implementation tasks"
   }
   ```
 
-- [ ] T022 [US1] Create `<repo>\backend\src\modules\health\health.controller.ts` with the following exact content:
+- [X] T022 [US1] Create `<repo>\backend\src\modules\health\health.controller.ts` with the following exact content:
   ```ts
   import { Controller, Get, HttpCode } from '@nestjs/common';
   import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -397,7 +397,7 @@ description: "Phase 0 Foundation — implementation tasks"
   ```
   > Note: `@HealthCheck()` is intentionally omitted so Terminus never auto-returns 503. `pingCheck` catches its own errors and reports `down` via `getStatus`, so the endpoint always returns 200 with the degraded payload — matching FR-007 ("remain responsive") and the `health.openapi.yaml` contract.
 
-- [ ] T023 [US1] Create `<repo>\backend\src\modules\health\health.module.ts` with the following exact content:
+- [X] T023 [US1] Create `<repo>\backend\src\modules\health\health.module.ts` with the following exact content:
   ```ts
   import { Module } from '@nestjs/common';
   import { TerminusModule } from '@nestjs/terminus';
@@ -412,9 +412,9 @@ description: "Phase 0 Foundation — implementation tasks"
   export class HealthModule {}
   ```
 
-- [ ] T024 [US1] Edit `<repo>\backend\src\app.module.ts`. Uncomment the `HealthModule` import line and the `HealthModule` entry inside `imports`. Final `imports` array must include `HealthModule` as the last entry. Leave every other line unchanged.
+- [X] T024 [US1] Edit `<repo>\backend\src\app.module.ts`. Uncomment the `HealthModule` import line and the `HealthModule` entry inside `imports`. Final `imports` array must include `HealthModule` as the last entry. Leave every other line unchanged.
 
-- [ ] T025 [P] [US1] Create `<repo>\.github\workflows\backend.yml` with the following exact content:
+- [X] T025 [P] [US1] Create `<repo>\.github\workflows\backend.yml` with the following exact content:
   ```yaml
   name: backend
 
@@ -449,7 +449,7 @@ description: "Phase 0 Foundation — implementation tasks"
           run: bash scripts/ci-no-hard-delete.sh
   ```
 
-- [ ] T026 [P] [US1] Create `<repo>\.github\workflows\mobile.yml` with the following exact content:
+- [X] T026 [P] [US1] Create `<repo>\.github\workflows\mobile.yml` with the following exact content:
   ```yaml
   name: mobile
 
@@ -480,7 +480,7 @@ description: "Phase 0 Foundation — implementation tasks"
         - run: npx tsc --noEmit
   ```
 
-- [ ] T027 [P] [US1] Create `<repo>\.github\workflows\admin.yml` with the following exact content. Note: the admin workspace was scaffolded with `--no-eslint` (T004), so eslint is not installed and `npm run lint` would fail. We use `npx tsc --noEmit` for type-check parity with mobile, and rely on `next build` for any remaining static checks:
+- [X] T027 [P] [US1] Create `<repo>\.github\workflows\admin.yml` with the following exact content. Note: the admin workspace was scaffolded with `--no-eslint` (T004), so eslint is not installed and `npm run lint` would fail. We use `npx tsc --noEmit` for type-check parity with mobile, and rely on `next build` for any remaining static checks:
   ```yaml
   name: admin
 
@@ -512,7 +512,7 @@ description: "Phase 0 Foundation — implementation tasks"
         - run: npm run build
   ```
 
-- [ ] T028 [US1] Verify the health endpoint locally. With `<repo>\backend\.env` populated (per `quickstart.md`) and the schema migrated (US2 must complete before this verification can return `db: ok`), from `<repo>` run:
+- [X] T028 [US1] Verify the health endpoint locally. With `<repo>\backend\.env` populated (per `quickstart.md`) and the schema migrated (US2 must complete before this verification can return `db: ok`), from `<repo>` run:
   ```powershell
   docker compose -f docker-compose.dev.yml up --build backend
   ```
