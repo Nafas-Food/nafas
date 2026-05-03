@@ -33,6 +33,28 @@ Short version:
 6. `cd .. && docker compose -f docker-compose.dev.yml up backend`
 7. `curl http://localhost:3000/api/v1/health` → `{ "status": "ok", ... }`
 
+## Operating the health endpoint
+
+The platform exposes a single unauthenticated probe at:
+
+- Local: `http://localhost:3000/api/v1/health`
+- Production (Phase 13+): `https://api.nafas.app/api/v1/health`
+
+Response shape:
+
+```json
+{ "status": "ok" | "degraded", "checks": { "db": "ok" | "down" }, "version": "0.1.0" }
+```
+
+- `status` is `"ok"` when every entry in `checks` is `"ok"`, otherwise
+  `"degraded"`. External monitors should treat `200 + degraded` as a
+  paging-worthy event distinct from a connection failure.
+- The endpoint short-circuits the database probe at two seconds, so the
+  HTTP response always returns within five seconds regardless of database
+  state.
+- No authentication is required. Recommended monitor cadence: 5 minutes
+  (UptimeRobot's free tier).
+
 ## Constitution
 
 Read `.specify/memory/constitution.md` before contributing. The seven core
