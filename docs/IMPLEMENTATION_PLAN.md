@@ -67,7 +67,7 @@ nafas/
 │   │   ├── common/{decorators,guards,filters,interceptors,pipes,prisma}/
 │   ├── Dockerfile
 │   └── package.json
-├── mobile/                       # Expo SDK 52
+├── mobile/                       # Expo SDK 54
 │   ├── app/{(auth),(tabs),(chef)}/
 │   ├── context/, components/, services/, hooks/, constants/
 │   └── package.json
@@ -92,7 +92,7 @@ nafas/
 |---|---|
 | 0.1 | Initialize monorepo: scaffold `backend/`, `mobile/`, `admin/` empty workspaces. Independent installs per project (see Open Items §A1). |
 | 0.2 | `nest new backend --strict` (Node 20, TypeScript strict). Add Prettier + ESLint. |
-| 0.3 | `npx create-expo-app mobile` (SDK 52, Expo Router v6, TypeScript). Install: `expo-secure-store`, `expo-localization`, `expo-haptics`, `expo-notifications`, `expo-image-picker`, `react-native-maps`, `axios`, `@expo/vector-icons`, `expo-google-fonts/inter`. |
+| 0.3 | `npx create-expo-app mobile` (SDK 54, Expo Router v6, TypeScript). Install: `expo-secure-store`, `expo-localization`, `expo-haptics`, `expo-notifications`, `expo-image-picker`, `react-native-maps`, `axios`, `@expo/vector-icons`, `expo-google-fonts/inter`. |
 | 0.4 | `npx create-next-app admin --typescript --tailwind --app`. Install: `next-auth`, `axios`, `@tanstack/react-table`, `@dnd-kit/sortable`. |
 | 0.5 | Create Supabase project. Copy `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`. **Disable RLS** (app-layer auth governs). |
 | 0.6 | Create Supabase Storage buckets: `chef-logos`, `chef-banners`, `item-images`, `review-images` (public-read). Upload default `default-logo.png` + `default-banner.png` into the first two; capture their public URLs as constants in backend config. |
