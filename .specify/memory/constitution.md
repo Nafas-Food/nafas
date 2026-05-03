@@ -1,7 +1,16 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (initial population) → 1.0.0
+Version change: (initial population) → 1.0.0 → 1.0.1 (current)
+
+1.0.1 amendment (PATCH): Tech-stack snapshot refinement. Mobile entry
+updated from "Expo SDK 52" to "Expo SDK 54" to match what
+`create-expo-app@latest` produces today (Phase 0 scaffolding observed
+54.0.33). No principle behavior changed; SDK 54 is API-compatible with
+SDK 52 for the libraries the project uses (expo-secure-store,
+expo-localization, expo-notifications, expo-router v6, react-native-maps).
+
+1.0.0 (original ratification):
 Bump rationale: First ratified constitution for the Nafas project. All sections
 populated from scratch; no previous principles to deprecate, so initial MAJOR.
 
@@ -180,7 +189,7 @@ Swagger/OpenAPI via `@nestjs/swagger`, Firebase Cloud Messaging via
 `firebase-admin`, Supabase Storage for files, Supabase Vault for secrets,
 REST/JSON API style.
 
-**Mobile**: React Native + Expo SDK 52, Expo Router v6 (file-based),
+**Mobile**: React Native + Expo SDK 54, Expo Router v6 (file-based),
 TypeScript, Inter font (expo-google-fonts), `@expo/vector-icons` (Feather
 set), `expo-haptics`, `expo-notifications` + FCM, React Context per
 domain, AsyncStorage for session and language preference, Axios with
@@ -290,4 +299,4 @@ document wins.
 (3) the `nafas-design-system` skill for any UI work, (4) project README
 and module-level docs.
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-03 | **Last Amended**: 2026-05-03
+**Version**: 1.0.1 | **Ratified**: 2026-05-03 | **Last Amended**: 2026-05-03

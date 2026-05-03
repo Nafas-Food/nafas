@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Nafas Foundation API
+  version: 0.1.0
+  description: |
+    Phase 0 ships exactly one endpoint: an unauthenticated health probe
+    that an external uptime monitor can call without any further
+    configuration. The endpoint reports both service liveness and
+    database reachability so monitors can distinguish "service crashed"
+    from "database unreachable". Constitution principles I-VII apply,
+    though only Principle II (server-authoritative) and Principle IV
+    (schema-first / soft-delete) are exercised by this single endpoint.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+paths:
+  /api/v1/health:
+    get:
+      operationId: getHealth
+      summary: Service + database liveness probe
+      description: |
+        Returns within one second under normal conditions and within
+        five seconds when the database is unreachable (FR-006, FR-007,
+        SC-007). Unauthenticated; safe for external uptime monitors.
+        The endpoint MUST NOT execute business queries — it issues a
+        single `SELECT 1` against the database to confirm reachability.
+      tags:
+        - Health
+      security: []
+      responses:
+        "200":
+          description: Service is up; database state reported in payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                healthy:
+                  summary: Normal operation
+                  value:
+                    status: ok
+                    checks:
+                      db: ok
+                    version: 0.1.0
+                degraded:
+                  summary: Database unreachable
+                  value:
+                    status: degraded
+                    checks:
+                      db: down
+                    version: 0.1.0
+        "503":
+          description: |
+            Returned only if the service itself is so degraded that it
+            cannot answer (e.g., bootstrap not yet complete). External
+            monitors should treat 503 as "service down" and the
+            `degraded` 200 above as "service up, dependency down".
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - checks
+        - version
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          description: |
+            `ok` when every check in `checks` is `ok`. `degraded` when
+            any check is `down`. Mirrors what an external monitor needs
+            in a single field.
+        checks:
+          type: object
+          additionalProperties: false
+          required:
+            - db
+          properties:
+            db:
+              type: string
+              enum: [ok, down]
+              description: |
+                `ok` when the database returned the liveness probe
+                within the indicator's two-second timeout. `down`
+                otherwise.
+        version:
+          type: string
+          description: |
+            Backend service version, read from `package.json` at module
+            construction. Lets monitors correlate degradation with a
+            specific deploy.
+          example: 0.1.0
