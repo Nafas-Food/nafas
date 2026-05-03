@@ -10,10 +10,7 @@ build/
 *.tsbuildinfo
 
 # Environment files (NEVER commit)
-.env
-.env.local
-.env.*.local
-**/.env
+.env*
 !**/.env.example
 
 # Keys (NEVER commit)

@@ -94,38 +94,13 @@ per Open Item A1 in `docs/IMPLEMENTATION_PLAN.md`.
 
 | # | Principle | Status | Notes |
 |---|---|---|---|
-| I | Bilingual & RTL by Default | PASS | No UI ships in Phase 0; the
-chosen mobile/admin scaffolds are configured to host bilingual strings
-later (Expo + `expo-localization` ready, Next.js i18n-capable). No
-hardcoded strings introduced. |
-| II | Server-Authoritative Trust Boundary | PASS | Phase 0 introduces no
-client-trusted computations. The only endpoint, `GET /api/v1/health`, is
-read-only and authority-free. |
-| III | Modular Monolith with Strict Module Boundaries | PASS | Phase 0
-defines exactly one feature module (`HealthModule`) and one common
-services layer (`PrismaService` + `AdminContextService` + scheduled job).
-Common services are infrastructure, not domain logic, consistent with
-the principle. |
-| IV | Schema-First, Soft-Delete-Always Data Layer | PASS¹ | Schema lives
-exclusively in `backend/prisma/schema.prisma`; migrations are the sole
-mutation path. Soft-delete columns present on all entities the
-constitution names. `PrismaService` uses Client Extensions (the
-non-deprecated successor to middleware) to default-exclude soft-deleted
-rows, with a strictly admin-context-only opt-in. CI grep gate blocks
-hard-delete calls on soft-delete entities. |
-| V | Design-System-First UI | PASS | No UI ships in Phase 0. The default
-chef logo + banner placeholders are derived from the design system
-(gradient + Nafas wordmark) so that even the placeholder honors the
-brand tokens. |
-| VI | Auditable, Reversible Order Lifecycle | PASS | No order-state
-code ships in Phase 0. Schema slots for `Order`, `OrderItem`,
-`Transaction`, and `Notification` exist exactly as the constitution
-defines them so Phase 6 can implement the lifecycle without schema
-churn. |
-| VII | Scope Discipline & Documented Non-Goals | PASS | All non-goal
-schema slots (Driver role, Visa/Instapay payment methods,
-`Transaction.cardAmount`) are present but unwired. No code paths for
-non-goals are introduced. |
+| I | Bilingual & RTL by Default | PASS | No UI ships in Phase 0; the chosen mobile/admin scaffolds are configured to host bilingual strings later (Expo + `expo-localization` ready, Next.js i18n-capable). No hardcoded strings introduced. |
+| II | Server-Authoritative Trust Boundary | PASS | Phase 0 introduces no client-trusted computations. The only endpoint, `GET /api/v1/health`, is read-only and authority-free. |
+| III | Modular Monolith with Strict Module Boundaries | PASS | Phase 0 defines exactly one feature module (`HealthModule`) and one common services layer (`PrismaService` + `AdminContextService` + scheduled job). Common services are infrastructure, not domain logic, consistent with the principle. |
+| IV | Schema-First, Soft-Delete-Always Data Layer | PASS¹ | Schema lives exclusively in `backend/prisma/schema.prisma`; migrations are the sole mutation path. Soft-delete columns present on all entities the constitution names. `PrismaService` uses Client Extensions (the non-deprecated successor to middleware) to default-exclude soft-deleted rows, with a strictly admin-context-only opt-in. CI grep gate blocks hard-delete calls on soft-delete entities. |
+| V | Design-System-First UI | PASS | No UI ships in Phase 0. The default chef logo + banner placeholders are derived from the design system (gradient + Nafas wordmark) so that even the placeholder honors the brand tokens. |
+| VI | Auditable, Reversible Order Lifecycle | PASS | No order-state code ships in Phase 0. Schema slots for `Order`, `OrderItem`, `Transaction`, and `Notification` exist exactly as the constitution defines them so Phase 6 can implement the lifecycle without schema churn. |
+| VII | Scope Discipline & Documented Non-Goals | PASS | All non-goal schema slots (Driver role, Visa/Instapay payment methods, `Transaction.cardAmount`) are present but unwired. No code paths for non-goals are introduced. |
 
 > ¹ Narrow exception: `prisma.$queryRaw\`SELECT 1\`` inside the
 > `PrismaHealthIndicator` (T021) is a liveness probe, not a data query.
@@ -142,33 +117,13 @@ produced.
 
 | # | Principle | Status | Notes |
 |---|---|---|---|
-| I | Bilingual & RTL by Default | PASS | No design artifact introduces
-hardcoded strings. The default chef logo/banner placeholder generation
-is documented in `quickstart.md` as language-neutral (wordmark + gradient
-only). |
-| II | Server-Authoritative Trust Boundary | PASS | The `health.openapi.yaml`
-contract describes a read-only endpoint that returns flat strings.
-`data-model.md` documents server-only soft-delete enforcement. |
-| III | Modular Monolith with Strict Module Boundaries | PASS | Project
-structure shows `modules/health/` as the only feature module and
-`common/{prisma,jobs,guards,interceptors}` as the shared infrastructure
-layer. No cross-module imports are introduced. |
-| IV | Schema-First, Soft-Delete-Always Data Layer | PASS¹ | `data-model.md`
-catalogs every soft-delete entity and notes the `$extends`-based default
-filter and the `softDelete()` helper. `research.md` documents the choice
-of Client Extensions over the deprecated middleware API. The contracts
-folder contains the canonical Prisma schema as `schema.prisma`. |
-| V | Design-System-First UI | PASS | No UI artifacts in this phase. The
-quickstart describes generating the placeholder PNGs from the design
-system (`nafas-design-system` skill) before uploading. |
-| VI | Auditable, Reversible Order Lifecycle | PASS | `data-model.md`
-includes the full Order/OrderItem/Transaction/Notification slots with
-the constitution's enum values. No transition logic ships in this phase
-but the slots are present. |
-| VII | Scope Discipline & Documented Non-Goals | PASS | `data-model.md`
-explicitly tags v2 schema slots (Driver, Visa/Instapay,
-`Transaction.cardAmount`) as "reserved, unwired in v1" so future
-contributors do not mistake them for live features. |
+| I | Bilingual & RTL by Default | PASS | No design artifact introduces hardcoded strings. The default chef logo/banner placeholder generation is documented in `quickstart.md` as language-neutral (wordmark + gradient only). |
+| II | Server-Authoritative Trust Boundary | PASS | The `health.openapi.yaml` contract describes a read-only endpoint that returns flat strings. `data-model.md` documents server-only soft-delete enforcement. |
+| III | Modular Monolith with Strict Module Boundaries | PASS | Project structure shows `modules/health/` as the only feature module and `common/{prisma,jobs,guards,interceptors}` as the shared infrastructure layer. No cross-module imports are introduced. |
+| IV | Schema-First, Soft-Delete-Always Data Layer | PASS¹ | `data-model.md` catalogs every soft-delete entity and notes the `$extends`-based default filter and the `softDelete()` helper. `research.md` documents the choice of Client Extensions over the deprecated middleware API. The contracts folder contains the canonical Prisma schema as `schema.prisma`. |
+| V | Design-System-First UI | PASS | No UI artifacts in this phase. The quickstart describes generating the placeholder PNGs from the design system (`nafas-design-system` skill) before uploading. |
+| VI | Auditable, Reversible Order Lifecycle | PASS | `data-model.md` includes the full Order/OrderItem/Transaction/Notification slots with the constitution's enum values. No transition logic ships in this phase but the slots are present. |
+| VII | Scope Discipline & Documented Non-Goals | PASS | `data-model.md` explicitly tags v2 schema slots (Driver, Visa/Instapay, `Transaction.cardAmount`) as "reserved, unwired in v1" so future contributors do not mistake them for live features. |
 
 > ¹ Same `$queryRaw` carve-out as the initial gate (see footnote above).
 > Phase 0 introduces no other raw-SQL usage.
@@ -267,5 +222,7 @@ triggers only when its workspace is touched.
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
 No violations. The Constitution Check both pre-research and post-design
-returned PASS for all seven principles. No `$queryRaw` exceptions, no
-extra projects, no deprecated APIs are introduced in this phase.
+returned PASS for all seven principles. The only `$queryRaw` usage is the
+justified health-probe carve-out documented in the footnote above; no
+other raw-SQL exceptions, extra projects, or deprecated APIs are
+introduced in this phase.

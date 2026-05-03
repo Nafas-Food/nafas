@@ -191,8 +191,8 @@ configure an external monitor against it without further changes.
   role guard) so the misuse cannot reach production even if it slips
   through review.
 - **Schema drift at runtime**: The schema definition file in the repository
-  ahead of the live database. Migration must be the only path to closing the
-  gap; the platform must surface the drift rather than silently working
+  is ahead of the live database. Migration must be the only path to closing
+  the gap; the platform must surface the drift rather than silently working
   against an outdated schema.
 - **Health endpoint under partial degradation**: The service is up but the
   database is unreachable. The endpoint must remain responsive (so monitors

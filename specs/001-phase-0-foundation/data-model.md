@@ -19,9 +19,11 @@ support of FR-017.
   `@default(dbgenerated("gen_random_uuid()"))`). FR-015 forbids
   auto-increment IDs. `InvalidatedToken` is keyed by `jti` (the refresh
   token's JWT ID), which is opaque by design.
-- **Timestamps**: All entities carry `createdAt` (`@default(now())`) and
-  `updatedAt` (`@updatedAt`). Soft-delete entities additionally carry
-  `deletedAt DateTime?`.
+- **Timestamps**: By default, entities carry `createdAt` (`@default(now())`);
+  many also carry `updatedAt` (`@updatedAt`). Some Phase 0 models
+  (`MenuAvailability`, `OrderItem`, `Favorite`, `Notification`,
+  `InvalidatedToken`) include only `createdAt`. Soft-delete entities
+  additionally carry `deletedAt DateTime?`.
 - **Soft-delete entities**: `User`, `UserAddress`, `Chef`, `Category`,
   `Menu`, `Item`, `Order`, `UserReview`, `Transaction`. The Prisma Client
   Extension default-filters `deletedAt: null` for these on read; the

@@ -365,7 +365,7 @@ description: "Phase 0 Foundation — implementation tasks"
   ```ts
   import { Controller, Get, HttpCode } from '@nestjs/common';
   import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-  import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
+  import { HealthCheckService } from '@nestjs/terminus';
   import { PrismaHealthIndicator } from './prisma.health';
 
   @ApiTags('Health')
@@ -378,7 +378,6 @@ description: "Phase 0 Foundation — implementation tasks"
 
     @Get()
     @HttpCode(200)
-    @HealthCheck()
     @ApiOperation({ summary: 'Service + database liveness probe' })
     @ApiResponse({ status: 200, description: 'Service up; db state in payload.' })
     async check(): Promise<{
@@ -396,7 +395,7 @@ description: "Phase 0 Foundation — implementation tasks"
     }
   }
   ```
-  > Note: `@HealthCheck()` makes Terminus return 503 when an indicator throws. We catch the throw inside `pingCheck` and report `down` instead, so the endpoint always returns 200 with the degraded payload — matching FR-007 ("remain responsive") and the `health.openapi.yaml` contract.
+  > Note: `@HealthCheck()` is intentionally omitted so Terminus never auto-returns 503. `pingCheck` catches its own errors and reports `down` via `getStatus`, so the endpoint always returns 200 with the degraded payload — matching FR-007 ("remain responsive") and the `health.openapi.yaml` contract.
 
 - [ ] T023 [US1] Create `<repo>\backend\src\modules\health\health.module.ts` with the following exact content:
   ```ts
@@ -543,7 +542,7 @@ description: "Phase 0 Foundation — implementation tasks"
   ```powershell
   npx prisma db execute --stdin --url $env:DATABASE_URL
   ```
-  When the prompt appears, paste `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';` and press Ctrl+Z then Enter. Expected: at least 17 tables (16 constitutional models + `InvalidatedToken`; Prisma also creates `_prisma_migrations` which is a 18th, that is expected and OK).
+  When the prompt appears, paste `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';` and press Ctrl+Z then Enter. Expected: 17 tables total (16 application tables — `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken` — plus `_prisma_migrations`).
 
   > If `npx prisma db execute` is awkward in your shell, the equivalent test is to open Supabase **Table Editor** and visually confirm the 17 application tables are present: `User`, `UserAddress`, `Chef`, `Category`, `Menu`, `MenuAvailability`, `Item`, `Cart`, `CartItem`, `Order`, `OrderItem`, `Transaction`, `UserReview`, `Favorite`, `Notification`, `InvalidatedToken`. (Prisma capitalizes model names by default; if your Supabase view is lowercase that is also OK — Postgres is case-folded unless quoted, and Prisma quotes them.)
 
@@ -669,6 +668,15 @@ description: "Phase 0 Foundation — implementation tasks"
             }
             return query(args);
           },
+          async aggregate({ model, args, query }) {
+            if (
+              SOFT_DELETE_MODELS.has(model) &&
+              !adminContext.getStore()?.includeDeleted
+            ) {
+              args.where = { ...(args.where ?? {}), deletedAt: null };
+            }
+            return query(args);
+          },
         },
       },
       model: {
@@ -698,6 +706,23 @@ description: "Phase 0 Foundation — implementation tasks"
     constructor(private readonly adminContext: AdminContextService) {
       super();
       this.extended = buildExtended(this, adminContext);
+      return new Proxy(this, {
+        get: (target, prop) => {
+          if (prop === 'extended') return target.extended;
+          if (prop === '$connect') return target.$connect.bind(target);
+          if (prop === '$disconnect') return target.$disconnect.bind(target);
+          if (prop === '$queryRaw') return target.$queryRaw.bind(target);
+          if (prop === 'onModuleInit') return target.onModuleInit.bind(target);
+          if (prop === 'onModuleDestroy') return target.onModuleDestroy.bind(target);
+          if (prop === 'logger') return target.logger;
+          if (typeof prop === 'string' && prop.startsWith('$')) {
+            return (target as any)[prop];
+          }
+          const ext = target.extended[prop as string];
+          if (ext !== undefined) return ext;
+          return (target as any)[prop];
+        },
+      }) as any;
     }
 
     async onModuleInit(): Promise<void> {
@@ -711,7 +736,7 @@ description: "Phase 0 Foundation — implementation tasks"
     }
   }
   ```
-  > **Important**: All future read paths in later phases MUST go through `prismaService.extended.<model>.findMany(...)` etc. (including `findUnique`), not `prismaService.<model>.findMany(...)`. This is by convention; the raw `super` client is preserved so health checks (`$queryRaw\`SELECT 1\``) and migration tooling can still use it.
+  > **Important**: The PrismaService constructor returns a Proxy that routes model property accesses (e.g., `prismaService.user.findMany(...)`) to `this.extended`, so soft-delete filtering is applied by default. Prisma-native methods prefixed with `$` (`$queryRaw`, `$connect`, `$disconnect`, `$transaction`, etc.) and NestJS lifecycle hooks remain on the raw `super` client. This means `prismaService.user.findMany()` and `prismaService.extended.user.findMany()` are functionally equivalent — the extension is the default surface.
   >
   > `findUnique` returns `null` for soft-deleted rows via post-fetch suppression — the row is fetched but discarded. If you legitimately need to know a soft-deleted row exists, run inside an admin context with `adminContext.run({ includeDeleted: true }, () => ...)`.
   >
@@ -872,7 +897,7 @@ description: "Phase 0 Foundation — implementation tasks"
 - [ ] T049 [US4] Verify the version field is populated. The `version` field reads `process.env.npm_package_version`. When started via `npm run start:dev`, npm sets this from `backend/package.json`'s `version` field. Confirm `<repo>\backend\package.json` has `"version": "0.1.0"` (the scaffold defaults to this; if it's something else, change to `0.1.0`). The health response's `version` should match.
 
 - [ ] T050 [US4] Append a new section to `<repo>\README.md` titled `## Operating the health endpoint` with the following exact content:
-  ```markdown
+  ````markdown
   ## Operating the health endpoint
 
   The platform exposes a single unauthenticated probe at:
@@ -894,7 +919,7 @@ description: "Phase 0 Foundation — implementation tasks"
     state.
   - No authentication is required. Recommended monitor cadence: 5 minutes
     (UptimeRobot's free tier).
-  ```
+  ````
 
 **Checkpoint**: All four user stories independently verified.
 

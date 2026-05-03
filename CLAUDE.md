@@ -10,13 +10,13 @@ Auto-generated from all feature plans. Last updated: 2026-05-03
 
 ```text
 backend/
-frontend/
-tests/
+mobile/
+admin/
 ```
 
 ## Commands
 
-npm test && npm run lint
+npm test && npx tsc --noEmit
 
 ## Code Style
 
