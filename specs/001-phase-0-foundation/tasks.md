@@ -882,21 +882,21 @@ description: "Phase 0 Foundation — implementation tasks"
 > with a degraded path. The remaining US4 work is verification + operator
 > documentation.
 
-- [ ] T047 [US4] Verify the normal-condition response time. From `<repo>` (with backend running and DB reachable) run:
+- [X] T047 [US4] Verify the normal-condition response time. From `<repo>` (with backend running and DB reachable) run:
   ```powershell
   Measure-Command { Invoke-WebRequest -Uri http://localhost:3000/api/v1/health -UseBasicParsing }
   ```
   Expected: `TotalMilliseconds` < 1000.
 
-- [ ] T048 [US4] Verify the degraded-path response time. Edit `<repo>\backend\.env` and change `DATABASE_URL` to a deliberately-bad host (e.g., change the project subdomain to `db.invalid.supabase.co`). Restart `docker compose -f docker-compose.dev.yml up backend` (Ctrl+C, then up again). Then run:
+- [X] T048 [US4] Verify the degraded-path response time. Edit `<repo>\backend\.env` and change `DATABASE_URL` to a deliberately-bad host (e.g., change the project subdomain to `db.invalid.supabase.co`). Restart `docker compose -f docker-compose.dev.yml up backend` (Ctrl+C, then up again). Then run:
   ```powershell
   Measure-Command { Invoke-WebRequest -Uri http://localhost:3000/api/v1/health -UseBasicParsing }
   ```
   Expected: `TotalMilliseconds` < 5000, response body contains `"status":"degraded"` and `"db":"down"`. Restore the correct `DATABASE_URL` and restart.
 
-- [ ] T049 [US4] Verify the version field is populated. The `version` field reads `process.env.npm_package_version`. When started via `npm run start:dev`, npm sets this from `backend/package.json`'s `version` field. Confirm `<repo>\backend\package.json` has `"version": "0.1.0"` (the scaffold defaults to this; if it's something else, change to `0.1.0`). The health response's `version` should match.
+- [X] T049 [US4] Verify the version field is populated. The `version` field reads `process.env.npm_package_version`. When started via `npm run start:dev`, npm sets this from `backend/package.json`'s `version` field. Confirm `<repo>\backend\package.json` has `"version": "0.1.0"` (the scaffold defaults to this; if it's something else, change to `0.1.0`). The health response's `version` should match.
 
-- [ ] T050 [US4] Append a new section to `<repo>\README.md` titled `## Operating the health endpoint` with the following exact content:
+- [X] T050 [US4] Append a new section to `<repo>\README.md` titled `## Operating the health endpoint` with the following exact content:
   ````markdown
   ## Operating the health endpoint
 
@@ -927,13 +927,13 @@ description: "Phase 0 Foundation — implementation tasks"
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T051 [P] Update `<repo>\CLAUDE.md`. From `<repo>` run:
+- [X] T051 [P] Update `<repo>\CLAUDE.md`. From `<repo>` run:
   ```powershell
   bash .specify/scripts/bash/update-agent-context.sh claude
   ```
   Confirm CLAUDE.md now reflects this feature (script reads `plan.md`).
 
-- [ ] T052 [P] Add a one-paragraph "Phase 0 conventions" note between the markers `<!-- MANUAL ADDITIONS START -->` and `<!-- MANUAL ADDITIONS END -->` in `<repo>\CLAUDE.md` with this exact content:
+- [X] T052 [P] Add a one-paragraph "Phase 0 conventions" note between the markers `<!-- MANUAL ADDITIONS START -->` and `<!-- MANUAL ADDITIONS END -->` in `<repo>\CLAUDE.md` with this exact content:
   ```markdown
   ## Phase 0 conventions (do not regress)
 
@@ -960,7 +960,7 @@ description: "Phase 0 Foundation — implementation tasks"
     no shared dev secret store.
   ```
 
-- [ ] T053 Run the full quickstart from a clean state to validate SC-001. With a stopwatch: clone the repo to a fresh folder, follow `specs/001-phase-0-foundation/quickstart.md` step by step, and confirm `curl http://localhost:3000/api/v1/health` returns `{"status":"ok",...}` in under five minutes (excluding pre-installed prerequisites). Document any step that took longer than expected as a follow-up improvement to the quickstart.
+- [X] T053 Run the full quickstart from a clean state to validate SC-001. With a stopwatch: clone the repo to a fresh folder, follow `specs/001-phase-0-foundation/quickstart.md` step by step, and confirm `curl http://localhost:3000/api/v1/health` returns `{"status":"ok",...}` in under five minutes (excluding pre-installed prerequisites). Document any step that took longer than expected as a follow-up improvement to the quickstart.
 
 ---
 
