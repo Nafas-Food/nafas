@@ -24,8 +24,14 @@ Short version:
 3. `cd backend && cp .env.example .env`, fill in `DATABASE_URL`,
    `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
 4. `npm install && npx prisma migrate dev --name init`
-5. `cd .. && docker compose -f docker-compose.dev.yml up backend`
-6. `curl http://localhost:3000/api/v1/health` → `{ "status": "ok", ... }`
+5. In Supabase Storage, create four **public** buckets: `chef-logos`,
+   `chef-banners`, `item-images`, `review-images`. Upload
+   `backend/assets/defaults/default-logo.png` → `chef-logos` and
+   `backend/assets/defaults/default-banner.png` → `chef-banners`, then
+   paste the public URLs into `.env` as `DEFAULT_CHEF_LOGO_URL` and
+   `DEFAULT_CHEF_BANNER_URL` (see `quickstart.md` Step 5 for details)
+6. `cd .. && docker compose -f docker-compose.dev.yml up backend`
+7. `curl http://localhost:3000/api/v1/health` → `{ "status": "ok", ... }`
 
 ## Constitution
 
