@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { api, _setAccessTokenGetter } from '../services/api';
+import { api, _setAccessTokenGetter, _setRefreshHook } from '../services/api';
+import { refresh, getMe } from '../services/auth';
 
 const REFRESH_KEY = 'nafas.refreshToken';
 
@@ -54,8 +55,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getRefreshToken = useCallback(() => SecureStore.getItemAsync(REFRESH_KEY), []);
 
   useEffect(() => {
-    // T072 will replace this stub with a silent-restore call to /auth/me.
-    setIsLoading(false);
+    _setRefreshHook(
+      async () => {
+        const stored = await SecureStore.getItemAsync(REFRESH_KEY);
+        if (!stored) throw new Error('NO_REFRESH_TOKEN');
+        const next = await refresh(stored);
+        accessRef.current = next.accessToken;
+        await SecureStore.setItemAsync(REFRESH_KEY, next.refreshToken);
+        // user remains the same; getMe will be re-fetched on next demand if needed
+        return { accessToken: next.accessToken, refreshToken: next.refreshToken };
+      },
+      () => {
+        accessRef.current = null;
+        SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => {});
+        setUser(null);
+      },
+    );
+
+    (async () => {
+      try {
+        const stored = await SecureStore.getItemAsync(REFRESH_KEY);
+        if (!stored) {
+          setIsLoading(false);
+          return;
+        }
+        // Use the refresh credential to mint a fresh access credential, then load the user.
+        const session = await refresh(stored);
+        accessRef.current = session.accessToken;
+        await SecureStore.setItemAsync(REFRESH_KEY, session.refreshToken);
+        const me = await getMe();
+        setUser(me.user);
+      } catch {
+        accessRef.current = null;
+        await SecureStore.deleteItemAsync(REFRESH_KEY);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   return (

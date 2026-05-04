@@ -8,7 +8,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 // NOTE: When testing from a physical device you must also add the same
 // origin to the backend ALLOWED_ORIGINS env var or CORS will block it.
 const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.2:3000/api/v1';
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.3:3000/api/v1';
 
 /**
  * The single shared Axios instance for every backend call.
@@ -45,3 +45,61 @@ export function errorCodeOf(err: unknown): string {
   }
   return 'UNKNOWN';
 }
+
+// ---- Single-flight refresh (research R8, delivers SC-005) ----
+
+type RefreshHook = () => Promise<{ accessToken: string; refreshToken: string }>;
+
+let refreshHook: RefreshHook | null = null;
+let onRefreshFailure: () => void = () => {};
+/** Called once at startup from AuthContext (T060). */
+export function _setRefreshHook(hook: RefreshHook, onFail: () => void) {
+  refreshHook = hook;
+  onRefreshFailure = onFail;
+}
+
+let inflight: Promise<void> | null = null;
+let failureFired = false;
+
+api.interceptors.response.use(
+  (resp) => resp,
+  async (error) => {
+    const original = error.config as
+      | (InternalAxiosRequestConfig & { _retried?: boolean })
+      | undefined;
+    // Cancelled / network-layer aborts have no config — pass through.
+    if (!original) throw error;
+
+    const status = (error.response?.status as number | undefined) ?? 0;
+
+    // Only handle 401 once, and never on the refresh request itself.
+    const isRefreshRequest = original.url === '/auth/refresh';
+    if (status !== 401 || original._retried || isRefreshRequest || !refreshHook) {
+      throw error;
+    }
+
+    original._retried = true;
+    try {
+      if (!inflight) {
+        failureFired = false;
+        inflight = (async () => {
+          await refreshHook!();
+        })().finally(() => {
+          // Allow the next 401 burst (after a future expiry) to start a new refresh.
+          // Reset only AFTER all queued retries observe the new credential.
+          setTimeout(() => { inflight = null; }, 0);
+        });
+      }
+      await inflight;
+      return api(original); // retry with the new credential (request interceptor reads accessTokenGetter)
+    } catch {
+      // Queued retries all observe the same rejected promise — fire the
+      // failure hook once for the burst.
+      if (!failureFired) {
+        failureFired = true;
+        onRefreshFailure();
+      }
+      throw error;
+    }
+  },
+);

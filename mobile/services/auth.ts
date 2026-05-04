@@ -27,6 +27,14 @@ export async function signIn(phone: string, password: string): Promise<SessionRe
   return data;
 }
 
-// Phase 5 (T076): export async function refresh(refreshToken)
-// Phase 5 (T078): export async function getMe()
+export async function refresh(refreshToken: string): Promise<SessionResponse> {
+  const { data } = await api.post<SessionResponse>('/auth/refresh', { refreshToken });
+  return data;
+}
+
+export async function getMe(): Promise<{ user: AuthUser }> {
+  const { data } = await api.get<{ user: AuthUser }>('/auth/me');
+  return data;
+}
+
 // Phase 7 (T103): export async function signOut(refreshToken)

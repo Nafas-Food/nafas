@@ -1675,7 +1675,7 @@ yet.
 
 ### Backend
 
-- [ ] T054 [P] [US3] Create `<repo>\backend\src\modules\auth\dto\refresh.dto.ts` with this exact content:
+- [X] T054 [P] [US3] Create `<repo>\backend\src\modules\auth\dto\refresh.dto.ts` with this exact content:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsJWT, IsString } from 'class-validator';
@@ -1688,7 +1688,7 @@ yet.
   }
   ```
 
-- [ ] T055 [US3] In `<repo>\backend\src\modules\auth\auth.service.ts` add the `refresh` and `getMe` methods (and add the `Inject` import for `JwtService` if not present):
+- [X] T055 [US3] In `<repo>\backend\src\modules\auth\auth.service.ts` add the `refresh` and `getMe` methods (and add the `Inject` import for `JwtService` if not present):
   ```ts
   async refresh(currentPayload: { sub: string; role: Role; jti: string; exp: number }) {
     // Reject if already revoked or rotated.
@@ -1747,7 +1747,7 @@ yet.
   }
   ```
 
-- [ ] T056 [US3] In `<repo>\backend\src\modules\auth\auth.controller.ts` add the refresh and me handlers below `signIn`:
+- [X] T056 [US3] In `<repo>\backend\src\modules\auth\auth.controller.ts` add the refresh and me handlers below `signIn`:
   ```ts
   @Public()
   @UseGuards(AuthGuard('jwt-refresh'))
@@ -1781,7 +1781,7 @@ yet.
 
   **Apply rate-limiting on `/auth/refresh`**: it inherits the global `default` tier (10/15min/IP) from the `ThrottlerModule.forRoot` config in T028 — no `@Throttle` decorator needed on the handler.
 
-- [ ] T057 [US3] Smoke-test refresh + replay (quickstart.md Step 6):
+- [X] T057 [US3] Smoke-test refresh + replay (quickstart.md Step 6):
   ```powershell
   # Sign in to get a session
   $session = (curl -X POST http://localhost:3000/api/v1/auth/sign-in `
@@ -1801,9 +1801,11 @@ yet.
   ```
   Expected: first refresh returns 200 with a new pair; replay returns 401 with `code: AUTH_REFRESH_REUSED`. Backend log shows one `auth.refresh outcome=success` and one `auth.refresh outcome=rotated_replay`.
 
+  Also verify: a malformed body or missing `refreshToken` returns 401 with `code: AUTH_REFRESH_INVALID` (not 400 — body validation runs inside `JwtRefreshGuard`). And: soft-delete a signed-in user via `UPDATE users SET deleted_at = NOW() WHERE id = '<uuid>'`, then refresh with their stored credential → 401 `AUTH_REFRESH_INVALID`, log line `auth.refresh outcome=soft_deleted_account` (FR-008/SC-008 parity).
+
 ### Mobile — single-flight refresh interceptor + silent restore
 
-- [ ] T058 [US3] In `<repo>\mobile\services\auth.ts` add:
+- [X] T058 [US3] In `<repo>\mobile\services\auth.ts` add:
   ```ts
   export async function refresh(refreshToken: string): Promise<SessionResponse> {
     const { data } = await api.post<SessionResponse>('/auth/refresh', { refreshToken });
@@ -1816,7 +1818,7 @@ yet.
   }
   ```
 
-- [ ] T059 [US3] In `<repo>\mobile\services\api.ts`, append the **single-flight refresh response interceptor** (research R8). Add at the bottom of the file:
+- [X] T059 [US3] In `<repo>\mobile\services\api.ts`, append the **single-flight refresh response interceptor** (research R8). Add at the bottom of the file:
   ```ts
   // ---- Single-flight refresh (research R8, delivers SC-005) ----
 
@@ -1866,7 +1868,7 @@ yet.
   );
   ```
 
-- [ ] T060 [US3] Open `<repo>\mobile\context\AuthContext.tsx`. Replace the silent-restore stub (the `useEffect` that just sets `setIsLoading(false)`) with a call to `getMe()` plus wire the refresh hook. Also update the imports and add a refresh helper:
+- [X] T060 [US3] Open `<repo>\mobile\context\AuthContext.tsx`. Replace the silent-restore stub (the `useEffect` that just sets `setIsLoading(false)`) with a call to `getMe()` plus wire the refresh hook. Also update the imports and add a refresh helper:
   ```tsx
   import { _setRefreshHook } from '../services/api';
   import { refresh, getMe } from '../services/auth';
@@ -1915,7 +1917,7 @@ yet.
   }, []);
   ```
 
-- [ ] T061 [US3] Make `<repo>\mobile\app\_layout.tsx` route based on auth state. Replace the existing `RootLayout` body with this exact content:
+- [X] T061 [US3] Make `<repo>\mobile\app\_layout.tsx` route based on auth state. Replace the existing `RootLayout` body with this exact content:
   ```tsx
   import React from 'react';
   import { Slot, useRouter, useSegments } from 'expo-router';
@@ -1973,7 +1975,7 @@ yet.
   }
   ```
 
-- [ ] T062 [US3] Verify silent restore on a real device. Sign in (US2), force-quit the app, reopen. Expected: app boots → splash → directly into the (tabs) home screen, no welcome screen, no password prompt. Backend logs show one `auth.refresh outcome=success` line per cold start with a stored refresh credential.
+- [X] T062 [US3] Verify silent restore on a real device. Sign in (US2), force-quit the app, reopen. Expected: app boots → splash → directly into the (tabs) home screen, no welcome screen, no password prompt. Backend logs show one `auth.refresh outcome=success` line per cold start with a stored refresh credential.
 
 **Checkpoint**: Sessions persist silently, refresh rotates, replays rejected.
 

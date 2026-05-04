@@ -5,6 +5,7 @@ export interface CurrentUserPayload {
   role: 'CUSTOMER' | 'CHEF' | 'ADMIN' | 'DRIVER';
   type: 'access' | 'refresh';
   jti?: string; // present on refresh credentials
+  exp?: number; // populated by passport-jwt on validated tokens
 }
 
 /**
