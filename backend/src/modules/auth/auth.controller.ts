@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -6,6 +13,10 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { CurrentUserPayload } from '../../common/decorators/current-user.decorator';
+import { JwtRefreshGuard } from '../../common/guards/jwt-refresh.guard';
+import { Role } from '@prisma/client';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -51,7 +62,36 @@ export class AuthController {
     return this.auth.signIn(dto.phone, dto.password);
   }
 
-  // Phase 5 (T071): @Post('refresh')
-  // Phase 5 (T073): @Get('me')
+  @Public()
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Rotate the refresh credential and mint a new session pair.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Rotation succeeded; new pair issued.',
+  })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Refresh credential failed verification or has been previously used.',
+  })
+  async refresh(@CurrentUser() payload: CurrentUserPayload) {
+    return this.auth.refresh({
+      sub: payload.sub,
+      role: payload.role as Role,
+      jti: payload.jti!,
+      exp: payload.exp!,
+    });
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Return the currently authenticated customer.' })
+  async getMe(@CurrentUser() payload: CurrentUserPayload) {
+    return this.auth.getMe(payload.sub);
+  }
+
   // Phase 7 (T101): @Post('sign-out')
 }

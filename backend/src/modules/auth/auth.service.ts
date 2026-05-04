@@ -193,7 +193,91 @@ export class AuthService {
     return { user: this.serializeUser(user), ...tokens };
   }
 
-  // Phase 5 (T070): refresh(currentRefreshPayload, rawToken)
-  // Phase 5 (T072): getMe(userId)
+  async refresh(currentPayload: {
+    sub: string;
+    role: Role;
+    jti: string;
+    exp: number;
+  }) {
+    // Reject if already revoked or rotated.
+    const blacklisted = await this.prisma.invalidatedToken.findUnique({
+      where: { jti: currentPayload.jti },
+    });
+    if (blacklisted) {
+      this.events.emit({
+        event: 'auth.refresh',
+        outcome: 'rotated_replay',
+        actorId: currentPayload.sub,
+        extra: { jti: currentPayload.jti },
+      });
+      throw new UnauthorizedException({
+        code: 'AUTH_REFRESH_REUSED',
+        message: 'Refresh credential has already been used.',
+      });
+    }
+
+    // Reject soft-deleted accounts.
+    const user = await this.users.findById(currentPayload.sub);
+    if (!user) {
+      this.events.emit({
+        event: 'auth.refresh',
+        outcome: 'soft_deleted_account',
+        actorId: currentPayload.sub,
+      });
+      throw new UnauthorizedException({
+        code: 'AUTH_REFRESH_INVALID',
+        message: 'Refresh credential is invalid.',
+      });
+    }
+
+    // Atomic rotate: insert blacklist row + return new pair.
+    try {
+      const tokens = await this.prisma.$transaction(async (tx) => {
+        await tx.invalidatedToken.create({
+          data: {
+            jti: currentPayload.jti,
+            userId: currentPayload.sub,
+            expiresAt: new Date(currentPayload.exp * 1000),
+          },
+        });
+        return this.issueSession(currentPayload.sub, user.role);
+      });
+
+      this.events.emit({
+        event: 'auth.refresh',
+        outcome: 'success',
+        actorId: currentPayload.sub,
+      });
+      return tokens;
+    } catch (err) {
+      const e = err as { code?: string };
+      if (e.code === 'P2002') {
+        // Concurrent rotation raced — another request already blacklisted this jti.
+        this.events.emit({
+          event: 'auth.refresh',
+          outcome: 'rotated_replay',
+          actorId: currentPayload.sub,
+          extra: { jti: currentPayload.jti },
+        });
+        throw new UnauthorizedException({
+          code: 'AUTH_REFRESH_REUSED',
+          message: 'Refresh credential has already been used.',
+        });
+      }
+      throw err;
+    }
+  }
+
+  async getMe(userId: string) {
+    const user = await this.users.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'User not found.',
+      });
+    }
+    return { user: this.serializeUser(user) };
+  }
+
   // Phase 7 (T100): signOut(currentRefreshPayload)
 }

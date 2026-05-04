@@ -175,13 +175,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SessionResponse" }
-        "400":
-          description: Validation error (e.g., malformed or missing `refreshToken`).
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
         "401":
-          description: Refresh credential failed verification or has been previously used/signed-out. Stable codes — `AUTH_REFRESH_INVALID` (signature/expiry failure) and `AUTH_REFRESH_REUSED` (the credential's `jti` is in the revocation list; covers BOTH the rotated-replay case from FR-008 and the signed-out case from FR-009 — the platform does not distinguish them externally).
+          description: Refresh credential is missing, malformed, expired, failed verification, or has been previously used/signed-out. Stable codes — `AUTH_REFRESH_INVALID` (missing field, malformed, signature/expiry failure, wrong token type) and `AUTH_REFRESH_REUSED` (the credential's `jti` is in the revocation list; covers BOTH the rotated-replay case from FR-008 and the signed-out case from FR-009 — the platform does not distinguish them externally). Note — body validation runs inside the refresh guard, so a missing/malformed `refreshToken` surfaces as 401 `AUTH_REFRESH_INVALID` rather than 400.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }

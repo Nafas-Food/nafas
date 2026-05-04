@@ -77,7 +77,7 @@ export default function VerifyOtpScreen() {
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
       });
-      router.replace('/(tabs)');
+      // Navigation is handled by RouteGuard in app/_layout.tsx.
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
     } finally {

@@ -24,7 +24,8 @@ export default function SignInScreen() {
     try {
       const response = await signIn(tel, password);
       await auth.setSession(response);
-      router.replace('/(tabs)');
+      // Navigation is handled by RouteGuard in app/_layout.tsx, which
+      // routes the user based on their role once `user` is set.
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
     } finally {
