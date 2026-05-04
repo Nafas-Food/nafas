@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-05-04
 
 ## Active Technologies
+- TypeScript 5.x across all three workspaces (unchanged — 002-phase-1-auth)
+- PostgreSQL 15 via Supabase (per-contributor projects, Phase 0 — 002-phase-1-auth)
 
 - TypeScript 5.x across all three workspaces (001-phase-0-foundation)
 - Backend: Node.js 20 LTS, NestJS 10, Prisma 5, `@nestjs/swagger`, `@nestjs/throttler`, `@nestjs/schedule`, `@nestjs/terminus`, `helmet`, `class-validator`, `class-transformer`, `decimal.js`
@@ -58,6 +60,7 @@ npm run build       # Next.js build
 TypeScript 5.x across all three workspaces: Follow standard conventions. All monetary math uses `decimal.js`; never call `Number()` on a Decimal field.
 
 ## Recent Changes
+- 002-phase-1-auth: Added TypeScript 5.x across all three workspaces (unchanged
 
 - 001-phase-0-foundation: Scaffolded backend (NestJS), mobile (Expo), admin (Next.js)
 - 001-phase-0-foundation: Added canonical Prisma schema with 17 tables, soft-delete extension, CI gate, health endpoint, scheduled cleanup job, default placeholders

@@ -1,11 +1,30 @@
-FROM node:20-alpine
+FROM node:20-slim
+
+# Create non-root user/group before installing packages
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
 WORKDIR /app
 
+# Install openssl so Prisma can detect the correct query engine binary.
+# --no-install-recommends keeps the image small; clean apt cache afterwards.
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency manifests and install as root (npm ci may need write
+# permissions to node_modules during native compilation)
 COPY package.json package-lock.json ./
 RUN npm ci
 
+# Copy source and generate Prisma client
 COPY . .
 RUN npx prisma generate
+
+# Hand ownership of /app to the non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user for runtime
+USER appuser
 
 EXPOSE 3000
 CMD ["npm", "run", "start:dev"]
