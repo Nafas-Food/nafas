@@ -1,7 +1,11 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
+// URL cheat-sheet for local development:
+//   iOS Simulator  -> http://localhost:3000/api/v1
+//   Android Emulator -> http://10.0.2.2:3000/api/v1
+//   Physical device  -> http://<your-machine-ip>:3000/api/v1
 const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.2:3000/api/v1';
 
 /**
  * The single shared Axios instance for every backend call.

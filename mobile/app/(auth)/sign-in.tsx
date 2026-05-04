@@ -46,7 +46,7 @@ export default function SignInScreen() {
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
-          placeholder="+20..."
+          placeholder={t('signIn.phonePlaceholder')}
           placeholderTextColor={Colors.mutedForeground}
           autoComplete="tel"
           textContentType="telephoneNumber"
