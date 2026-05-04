@@ -4,6 +4,9 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 //   iOS Simulator  -> http://localhost:3000/api/v1
 //   Android Emulator -> http://10.0.2.2:3000/api/v1
 //   Physical device  -> http://<your-machine-ip>:3000/api/v1
+//
+// NOTE: When testing from a physical device you must also add the same
+// origin to the backend ALLOWED_ORIGINS env var or CORS will block it.
 const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.2:3000/api/v1';
 
