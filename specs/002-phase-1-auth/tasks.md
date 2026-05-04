@@ -1989,7 +1989,7 @@ yet.
 
 ### Backend — DTOs
 
-- [ ] T063 [P] [US4] Create `<repo>\backend\src\modules\users\dto\update-profile.dto.ts`:
+- [X] T063 [P] [US4] Create `<repo>\backend\src\modules\users\dto\update-profile.dto.ts`:
   ```ts
   import { ApiPropertyOptional } from '@nestjs/swagger';
   import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
@@ -2008,7 +2008,7 @@ yet.
   }
   ```
 
-- [ ] T064 [P] [US4] Create `<repo>\backend\src\modules\users\dto\change-phone-start.dto.ts`:
+- [X] T064 [P] [US4] Create `<repo>\backend\src\modules\users\dto\change-phone-start.dto.ts`:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsString, Matches } from 'class-validator';
@@ -2021,7 +2021,7 @@ yet.
   }
   ```
 
-- [ ] T065 [P] [US4] Create `<repo>\backend\src\modules\users\dto\change-phone-verify.dto.ts`:
+- [X] T065 [P] [US4] Create `<repo>\backend\src\modules\users\dto\change-phone-verify.dto.ts`:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsString, Matches } from 'class-validator';
@@ -2039,7 +2039,7 @@ yet.
   }
   ```
 
-- [ ] T066 [P] [US4] Create `<repo>\backend\src\modules\users\dto\fcm-token.dto.ts`:
+- [X] T066 [P] [US4] Create `<repo>\backend\src\modules\users\dto\fcm-token.dto.ts`:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsString, Length } from 'class-validator';
@@ -2054,7 +2054,7 @@ yet.
 
 ### Backend — service methods
 
-- [ ] T067 [US4] Open `<repo>\backend\src\modules\users\users.service.ts`. Add the four methods below:
+- [X] T067 [US4] Open `<repo>\backend\src\modules\users\users.service.ts`. Add the four methods below:
   ```ts
   import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
@@ -2130,7 +2130,7 @@ yet.
 
 ### Backend — controller handlers
 
-- [ ] T068 [US4] Open `<repo>\backend\src\modules\users\users.controller.ts`. Replace the file with this exact content:
+- [X] T068 [US4] Open `<repo>\backend\src\modules\users\users.controller.ts`. Replace the file with this exact content:
   ```ts
   import { Body, Controller, HttpCode, Patch, Post } from '@nestjs/common';
   import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -2178,7 +2178,7 @@ yet.
   }
   ```
 
-- [ ] T069 [US4] Smoke-test profile flows (you need a valid access token from a register/sign-in run; capture it as `$at`):
+- [X] T069 [US4] Smoke-test profile flows (you need a valid access token from a register/sign-in run; capture it as `$at`):
   ```powershell
   # Update name
   curl -i -X PATCH http://localhost:3000/api/v1/users/me `
@@ -2199,7 +2199,7 @@ yet.
 
 ### Mobile — services/users.ts and FCM registration on auth
 
-- [ ] T070 [US4] Create `<repo>\mobile\services\users.ts` with this exact content:
+- [X] T070 [US4] Create `<repo>\mobile\services\users.ts` with this exact content:
   ```ts
   import { api } from './api';
   import type { AuthUser } from '../context/AuthContext';
@@ -2223,7 +2223,7 @@ yet.
   }
   ```
 
-- [ ] T071 [US4] Wire push-token registration after auth resolves. In `<repo>\mobile\context\AuthContext.tsx`, **only when `user` becomes non-null for the first time after a session is established**, call `Notifications.requestPermissionsAsync` and on grant call `Notifications.getExpoPushTokenAsync` then `registerFcmToken(token.data)`. If permission is denied, do nothing — the app continues without FCM (edge case "customer denies push-notification permission"). Use a `useEffect` keyed on `user?.id`. **Note**: `expo-notifications` is already in the Phase 0 dependency list per plan.md "Primary Dependencies"; verify with `npm ls expo-notifications` from `<repo>\mobile`.
+- [X] T071 [US4] Wire push-token registration after auth resolves. In `<repo>\mobile\context\AuthContext.tsx`, **only when `user` becomes non-null for the first time after a session is established**, call `Notifications.requestPermissionsAsync` and on grant call `Notifications.getExpoPushTokenAsync` then `registerFcmToken(token.data)`. If permission is denied, do nothing — the app continues without FCM (edge case "customer denies push-notification permission"). Use a `useEffect` keyed on `user?.id`. **Note**: `expo-notifications` is already in the Phase 0 dependency list per plan.md "Primary Dependencies"; verify with `npm ls expo-notifications` from `<repo>\mobile`.
 
   Sketch:
   ```tsx
