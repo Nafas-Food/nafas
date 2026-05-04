@@ -188,15 +188,20 @@ paths:
       operationId: signOut
       summary: Revoke the customer's current refresh credential.
       description: |
-        Authenticated. Records the presented refresh credential's `jti`
-        in `InvalidatedToken` (FR-009) and clears the customer's
+        Authenticated **via the `refreshToken` field in the body** (not
+        via a Bearer access token) — sign-out runs through the same
+        `JwtRefreshGuard` as `/auth/refresh`, since the refresh
+        credential is the identifier of the session being revoked.
+        Records the presented refresh credential's `jti` in
+        `InvalidatedToken` (FR-009) and clears the customer's
         access-credential server-side state (currently a no-op since
         access credentials are stateless). Idempotent — calling sign-out
         twice with the same refresh credential returns 204 the second
-        time as well.
+        time as well. Note — body validation runs inside the refresh
+        guard, so a missing/malformed `refreshToken` surfaces as 401
+        `AUTH_REFRESH_INVALID` rather than 400.
       tags: [Auth]
-      security:
-        - bearerAuth: []
+      security: []
       requestBody:
         required: true
         content:
@@ -205,14 +210,9 @@ paths:
               $ref: "#/components/schemas/SignOutRequest"
       responses:
         "204":
-          description: Refresh credential revoked.
-        "400":
-          description: Validation error (e.g., malformed or missing `refreshToken`).
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+          description: Refresh credential revoked (or already revoked — sign-out is idempotent).
         "401":
-          description: Access credential missing, malformed, or expired.
+          description: Refresh credential is missing, malformed, expired, or failed verification (`AUTH_REFRESH_INVALID`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }

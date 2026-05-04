@@ -44,6 +44,9 @@ export const en = {
   profile: {
     signOut: 'Sign out',
   },
+  home: {
+    greeting: 'Hello, {name}',
+  },
   errors: {
     AUTH_OTP_INVALID: 'The code is incorrect or has expired. Try again.',
     AUTH_INVALID_CREDENTIALS: 'Phone or password is incorrect.',
