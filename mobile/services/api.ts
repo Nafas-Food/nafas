@@ -1,0 +1,40 @@
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+
+/**
+ * The single shared Axios instance for every backend call.
+ * Phase 1 wires:
+ *   - Request interceptor that attaches the access credential (T034 will set it).
+ *   - Response interceptor for the single-flight refresh (T074).
+ */
+export const api: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 15_000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+let accessTokenGetter: () => string | null = () => null;
+export function _setAccessTokenGetter(fn: () => string | null) {
+  accessTokenGetter = fn;
+}
+
+api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
+  const token = accessTokenGetter();
+  if (token) {
+    cfg.headers.Authorization = `Bearer ${token}`;
+  }
+  return cfg;
+});
+
+/** Maps an Axios error to a stable error code the i18n dictionary knows about. */
+export function errorCodeOf(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const ax = err as AxiosError<{ code?: string }>;
+    if (!ax.response) return 'NETWORK';
+    const code = ax.response.data?.code;
+    if (typeof code === 'string') return code;
+  }
+  return 'UNKNOWN';
+}

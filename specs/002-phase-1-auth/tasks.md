@@ -131,7 +131,7 @@ yet.
 
 ### Backend — error codes, decorators, logging, guards
 
-- [ ] T007 [P] Create `<repo>\backend\src\common\errors\auth-error.codes.ts` with this exact content:
+- [X] T007 [P] Create `<repo>\backend\src\common\errors\auth-error.codes.ts` with this exact content:
   ```ts
   /**
    * Stable error codes returned by Phase 1 endpoints. The mobile client
@@ -159,7 +159,7 @@ yet.
   export type AuthErrorCode = (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
   ```
 
-- [ ] T008 [P] Create `<repo>\backend\src\common\decorators\public.decorator.ts` with this exact content:
+- [X] T008 [P] Create `<repo>\backend\src\common\decorators\public.decorator.ts` with this exact content:
   ```ts
   import { SetMetadata } from '@nestjs/common';
 
@@ -171,7 +171,7 @@ yet.
   export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
   ```
 
-- [ ] T009 [P] Create `<repo>\backend\src\common\decorators\roles.decorator.ts` with this exact content:
+- [X] T009 [P] Create `<repo>\backend\src\common\decorators\roles.decorator.ts` with this exact content:
   ```ts
   import { SetMetadata } from '@nestjs/common';
   import { Role } from '@prisma/client';
@@ -185,7 +185,7 @@ yet.
   export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
   ```
 
-- [ ] T010 [P] Create `<repo>\backend\src\common\decorators\current-user.decorator.ts` with this exact content:
+- [X] T010 [P] Create `<repo>\backend\src\common\decorators\current-user.decorator.ts` with this exact content:
   ```ts
   import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
@@ -208,7 +208,7 @@ yet.
   );
   ```
 
-- [ ] T011 Create `<repo>\backend\src\common\logging\correlation-id.context.ts` with this exact content:
+- [X] T011 Create `<repo>\backend\src\common\logging\correlation-id.context.ts` with this exact content:
   ```ts
   import { AsyncLocalStorage } from 'async_hooks';
 
@@ -228,7 +228,7 @@ yet.
   export const correlationStorage = new AsyncLocalStorage<CorrelationStore>();
   ```
 
-- [ ] T012 Create `<repo>\backend\src\common\logging\correlation-id.middleware.ts` with this exact content:
+- [X] T012 Create `<repo>\backend\src\common\logging\correlation-id.middleware.ts` with this exact content:
   ```ts
   import { Injectable, NestMiddleware } from '@nestjs/common';
   import { Request, Response, NextFunction } from 'express';
@@ -247,7 +247,7 @@ yet.
   }
   ```
 
-- [ ] T013 Create `<repo>\backend\src\common\logging\auth-event.logger.ts` with this exact content:
+- [X] T013 Create `<repo>\backend\src\common\logging\auth-event.logger.ts` with this exact content:
   ```ts
   import { Injectable, Logger } from '@nestjs/common';
   import { correlationStorage } from './correlation-id.context';
@@ -307,7 +307,7 @@ yet.
   }
   ```
 
-- [ ] T014 Create `<repo>\backend\src\common\logging\logging.module.ts` with this exact content:
+- [X] T014 Create `<repo>\backend\src\common\logging\logging.module.ts` with this exact content:
   ```ts
   import { Module, Global } from '@nestjs/common';
   import { AuthEventLogger } from './auth-event.logger';
@@ -320,7 +320,7 @@ yet.
   export class LoggingModule {}
   ```
 
-- [ ] T014a Create `<repo>\backend\src\common\errors\http-exception.filter.ts` with this exact content. **This filter delivers three things at once**: (a) normalises every error response to the contract shape `{ code, message, details? }` so `mobile/services/api.ts#errorCodeOf()` can read `data.code` reliably (analysis A6); (b) emits `auth.password_validation outcome=too_short` when the global `ValidationPipe` rejects a password length (analysis A3 / FR-020); (c) emits `auth.rate_limit outcome=tripped` when the global `ThrottlerGuard` throws (analysis A4 / FR-020).
+- [X] T014a Create `<repo>\backend\src\common\errors\http-exception.filter.ts` with this exact content. **This filter delivers three things at once**: (a) normalises every error response to the contract shape `{ code, message, details? }` so `mobile/services/api.ts#errorCodeOf()` can read `data.code` reliably (analysis A6); (b) emits `auth.password_validation outcome=too_short` when the global `ValidationPipe` rejects a password length (analysis A3 / FR-020); (c) emits `auth.rate_limit outcome=tripped` when the global `ThrottlerGuard` throws (analysis A4 / FR-020).
   ```ts
   import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
   import { ThrottlerException } from '@nestjs/throttler';
@@ -426,7 +426,7 @@ yet.
   ```
   Expected outcome: `npm run build` from `<repo>\backend` succeeds. The filter is registered as an `APP_FILTER` provider in T028 (next).
 
-- [ ] T015 Create `<repo>\backend\src\common\guards\jwt-auth.guard.ts` with this exact content:
+- [X] T015 Create `<repo>\backend\src\common\guards\jwt-auth.guard.ts` with this exact content:
   ```ts
   import { ExecutionContext, Injectable } from '@nestjs/common';
   import { Reflector } from '@nestjs/core';
@@ -454,7 +454,7 @@ yet.
   }
   ```
 
-- [ ] T016 Create `<repo>\backend\src\common\guards\roles.guard.ts` with this exact content:
+- [X] T016 Create `<repo>\backend\src\common\guards\roles.guard.ts` with this exact content:
   ```ts
   import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
   import { Reflector } from '@nestjs/core';
@@ -487,7 +487,7 @@ yet.
 
 ### Backend — TwilioModule (research R1)
 
-- [ ] T017 [P] Create `<repo>\backend\src\modules\twilio\twilio-verify.client.interface.ts` with this exact content:
+- [X] T017 [P] Create `<repo>\backend\src\modules\twilio\twilio-verify.client.interface.ts` with this exact content:
   ```ts
   /**
    * The narrow interface AuthService and UsersService talk to. The real
@@ -508,7 +508,7 @@ yet.
   export const TWILIO_VERIFY_CLIENT = Symbol('TWILIO_VERIFY_CLIENT');
   ```
 
-- [ ] T018 Create `<repo>\backend\src\modules\twilio\twilio-verify.service.ts` with this exact content:
+- [X] T018 Create `<repo>\backend\src\modules\twilio\twilio-verify.service.ts` with this exact content:
   ```ts
   import { Injectable, Logger } from '@nestjs/common';
   import { ConfigService } from '@nestjs/config';
@@ -554,7 +554,7 @@ yet.
   }
   ```
 
-- [ ] T019 Create `<repo>\backend\src\modules\twilio\twilio.module.ts` with this exact content:
+- [X] T019 Create `<repo>\backend\src\modules\twilio\twilio.module.ts` with this exact content:
   ```ts
   import { Module } from '@nestjs/common';
   import { ConfigModule } from '@nestjs/config';
@@ -574,7 +574,7 @@ yet.
 
 ### Backend — JWT strategies (research R3, R5, R8)
 
-- [ ] T020 Create `<repo>\backend\src\modules\auth\strategies\jwt.strategy.ts` with this exact content:
+- [X] T020 Create `<repo>\backend\src\modules\auth\strategies\jwt.strategy.ts` with this exact content:
   ```ts
   import { Injectable, UnauthorizedException } from '@nestjs/common';
   import { ConfigService } from '@nestjs/config';
@@ -612,7 +612,7 @@ yet.
   }
   ```
 
-- [ ] T021 Create `<repo>\backend\src\modules\auth\strategies\refresh.strategy.ts` with this exact content:
+- [X] T021 Create `<repo>\backend\src\modules\auth\strategies\refresh.strategy.ts` with this exact content:
   ```ts
   import { Injectable, UnauthorizedException } from '@nestjs/common';
   import { ConfigService } from '@nestjs/config';
@@ -658,7 +658,7 @@ yet.
 
 ### Backend — AuthModule and UsersModule shells
 
-- [ ] T022 Create `<repo>\backend\src\modules\auth\auth.service.ts` with this exact starter content (methods will be filled in by Phase 3+):
+- [X] T022 Create `<repo>\backend\src\modules\auth\auth.service.ts` with this exact starter content (methods will be filled in by Phase 3+):
   ```ts
   import { Injectable } from '@nestjs/common';
   import { JwtService } from '@nestjs/jwt';
@@ -713,7 +713,7 @@ yet.
   }
   ```
 
-- [ ] T023 Create `<repo>\backend\src\modules\auth\auth.controller.ts` with this exact starter content (route handlers will be added by Phase 3+):
+- [X] T023 Create `<repo>\backend\src\modules\auth\auth.controller.ts` with this exact starter content (route handlers will be added by Phase 3+):
   ```ts
   import { Controller } from '@nestjs/common';
   import { ApiTags } from '@nestjs/swagger';
@@ -733,7 +733,7 @@ yet.
   }
   ```
 
-- [ ] T024 Create `<repo>\backend\src\modules\auth\auth.module.ts` with this exact content:
+- [X] T024 Create `<repo>\backend\src\modules\auth\auth.module.ts` with this exact content:
   ```ts
   import { Module } from '@nestjs/common';
   import { JwtModule } from '@nestjs/jwt';
@@ -786,7 +786,7 @@ yet.
   export class AuthModule {}
   ```
 
-- [ ] T025 Create `<repo>\backend\src\modules\users\users.service.ts` with this exact starter content (methods filled in by Phase 6):
+- [X] T025 Create `<repo>\backend\src\modules\users\users.service.ts` with this exact starter content (methods filled in by Phase 6):
   ```ts
   import { Injectable, Inject } from '@nestjs/common';
   import { PrismaService } from '../../common/prisma/prisma.service';
@@ -819,7 +819,7 @@ yet.
   }
   ```
 
-- [ ] T026 Create `<repo>\backend\src\modules\users\users.controller.ts` with this exact starter content (handlers added by Phase 6):
+- [X] T026 Create `<repo>\backend\src\modules\users\users.controller.ts` with this exact starter content (handlers added by Phase 6):
   ```ts
   import { Controller } from '@nestjs/common';
   import { ApiTags } from '@nestjs/swagger';
@@ -837,7 +837,7 @@ yet.
   }
   ```
 
-- [ ] T027 Create `<repo>\backend\src\modules\users\users.module.ts` with this exact content:
+- [X] T027 Create `<repo>\backend\src\modules\users\users.module.ts` with this exact content:
   ```ts
   import { Module } from '@nestjs/common';
   import { UsersController } from './users.controller';
@@ -856,7 +856,7 @@ yet.
 
 ### Backend — wire it all into AppModule and main.ts
 
-- [ ] T028 Open `<repo>\backend\src\app.module.ts`. **Add** these imports at the top:
+- [X] T028 Open `<repo>\backend\src\app.module.ts`. **Add** these imports at the top:
   ```ts
   import { APP_GUARD, APP_FILTER } from '@nestjs/core';
   import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -895,7 +895,7 @@ yet.
   ```
   Expected outcome: `npm run build` from `<repo>\backend` succeeds with zero TypeScript errors.
 
-- [ ] T029 Sanity-check the foundational layer compiles and the app boots. From `<repo>\backend` run:
+- [X] T029 Sanity-check the foundational layer compiles and the app boots. From `<repo>\backend` run:
   ```powershell
   npm run build
   npm run start:dev
@@ -904,7 +904,7 @@ yet.
 
 ### Mobile — i18n dictionaries and LanguageContext (research R9)
 
-- [ ] T030 [P] Create `<repo>\mobile\constants\i18n\en.ts` with this exact content (Phase 1 keys; later phases append more):
+- [X] T030 [P] Create `<repo>\mobile\constants\i18n\en.ts` with this exact content (Phase 1 keys; later phases append more):
   ```ts
   /**
    * English strings for Phase 1 auth screens. Keys MUST match ar.ts exactly.
@@ -966,10 +966,20 @@ yet.
     },
   } as const;
 
-  export type I18nDict = typeof en;
+  /**
+   * `as const` makes every leaf in `en` a literal type (e.g. `'Sign in'`),
+   * which would prevent `ar.ts` from assigning Arabic strings of its own.
+   * `DeepStringify` widens leaves back to `string` while preserving the
+   * key shape, so both dictionaries share the same structural contract.
+   */
+  type DeepStringify<T> = {
+    [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
+  };
+
+  export type I18nDict = DeepStringify<typeof en>;
   ```
 
-- [ ] T031 [P] Create `<repo>\mobile\constants\i18n\ar.ts` with this exact content (Arabic translations; keys MUST match en.ts):
+- [X] T031 [P] Create `<repo>\mobile\constants\i18n\ar.ts` with this exact content (Arabic translations; keys MUST match en.ts):
   ```ts
   import type { I18nDict } from './en';
 
@@ -1029,7 +1039,7 @@ yet.
   };
   ```
 
-- [ ] T032 Create `<repo>\mobile\context\LanguageContext.tsx` with this exact content:
+- [X] T032 Create `<repo>\mobile\context\LanguageContext.tsx` with this exact content:
   ```tsx
   import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
   import { I18nManager } from 'react-native';
@@ -1126,7 +1136,7 @@ yet.
 
 ### Mobile — services/api.ts shell + AuthContext shell (filled in US3)
 
-- [ ] T033 Create `<repo>\mobile\services\api.ts` with this exact starter content (single-flight refresh interceptor lands in T074):
+- [X] T033 Create `<repo>\mobile\services\api.ts` with this exact starter content (single-flight refresh interceptor lands in T074):
   ```ts
   import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
@@ -1170,7 +1180,7 @@ yet.
   }
   ```
 
-- [ ] T034 Create `<repo>\mobile\context\AuthContext.tsx` with this exact starter content (silent restore + sign-out wiring lands in later tasks):
+- [X] T034 Create `<repo>\mobile\context\AuthContext.tsx` with this exact starter content (silent restore + sign-out wiring lands in later tasks):
   ```tsx
   import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
   import * as SecureStore from 'expo-secure-store';
@@ -1246,7 +1256,7 @@ yet.
   }
   ```
 
-- [ ] T035 Create `<repo>\mobile\services\auth.ts` with this exact starter content (functions are filled in by their respective story phases — body is intentionally empty until then):
+- [X] T035 Create `<repo>\mobile\services\auth.ts` with this exact starter content (functions are filled in by their respective story phases — body is intentionally empty until then):
   ```ts
   import { api } from './api';
   import type { AuthUser } from '../context/AuthContext';
@@ -1267,7 +1277,7 @@ yet.
   export {}; // placeholder to keep this a module until Phase 3
   ```
 
-- [ ] T036 Open `<repo>\mobile\app\_layout.tsx`. Replace whatever Expo Router scaffolded with this exact content:
+- [X] T036 Open `<repo>\mobile\app\_layout.tsx`. Replace whatever Expo Router scaffolded with this exact content:
   ```tsx
   import React from 'react';
   import { Slot } from 'expo-router';
