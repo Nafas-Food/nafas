@@ -1,10 +1,10 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export interface CurrentUserPayload {
-  sub: string;        // User.id
+  sub: string; // User.id
   role: 'CUSTOMER' | 'CHEF' | 'ADMIN' | 'DRIVER';
   type: 'access' | 'refresh';
-  jti?: string;       // present on refresh credentials
+  jti?: string; // present on refresh credentials
 }
 
 /**

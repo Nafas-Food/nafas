@@ -12,7 +12,9 @@ export class TwilioVerifyService implements TwilioVerifyClient {
   constructor(private readonly config: ConfigService) {
     const sid = this.config.getOrThrow<string>('TWILIO_ACCOUNT_SID');
     const token = this.config.getOrThrow<string>('TWILIO_AUTH_TOKEN');
-    this.serviceSid = this.config.getOrThrow<string>('TWILIO_VERIFY_SERVICE_SID');
+    this.serviceSid = this.config.getOrThrow<string>(
+      'TWILIO_VERIFY_SERVICE_SID',
+    );
     this.client = twilio(sid, token);
   }
 
@@ -23,12 +25,16 @@ export class TwilioVerifyService implements TwilioVerifyClient {
 
   async sendOtp(phone: string): Promise<void> {
     try {
-      await this.client.verify.v2.services(this.serviceSid).verifications.create({
-        to: phone,
-        channel: 'sms',
-      });
+      await this.client.verify.v2
+        .services(this.serviceSid)
+        .verifications.create({
+          to: phone,
+          channel: 'sms',
+        });
     } catch (err) {
-      this.log.error(`Twilio sendOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`);
+      this.log.error(
+        `Twilio sendOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`,
+      );
       throw err;
     }
   }
@@ -40,7 +46,9 @@ export class TwilioVerifyService implements TwilioVerifyClient {
         .verificationChecks.create({ to: phone, code });
       return result.status === 'approved';
     } catch (err) {
-      this.log.error(`Twilio checkOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`);
+      this.log.error(
+        `Twilio checkOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`,
+      );
       return false;
     }
   }

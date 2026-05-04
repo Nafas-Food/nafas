@@ -8,6 +8,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshStrategy } from './strategies/refresh.strategy';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { TwilioModule } from '../twilio/twilio.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TwilioModule } from '../twilio/twilio.module';
     }),
     PrismaModule,
     TwilioModule,
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, RefreshStrategy],

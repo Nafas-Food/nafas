@@ -16,7 +16,8 @@ export class RegisterDto {
   @ApiProperty({
     example: 'a-strong-passphrase',
     minLength: 8,
-    description: 'Password. Minimum length 8, no character-class rules (FR-006a).',
+    description:
+      'Password. Minimum length 8, no character-class rules (FR-006a).',
   })
   @IsString()
   @MinLength(8)

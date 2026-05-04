@@ -4,6 +4,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { RegisterDto } from './dto/register.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Auth')
@@ -16,7 +17,10 @@ export class AuthController {
   @Post('send-otp')
   @HttpCode(204)
   @ApiOperation({ summary: 'Request a phone-verification code.' })
-  @ApiResponse({ status: 204, description: 'Code dispatched to the verification provider.' })
+  @ApiResponse({
+    status: 204,
+    description: 'Code dispatched to the verification provider.',
+  })
   async sendOtp(@Body() dto: SendOtpDto): Promise<void> {
     await this.auth.sendOtp(dto.phone);
   }
@@ -24,15 +28,29 @@ export class AuthController {
   @Public()
   @Post('register')
   @HttpCode(201)
-  @ApiOperation({ summary: 'Create a customer account after phone-OTP verification.' })
+  @ApiOperation({
+    summary: 'Create a customer account after phone-OTP verification.',
+  })
   @ApiResponse({ status: 201, description: 'Account created and signed in.' })
-  @ApiResponse({ status: 401, description: 'OTP code does not match or has expired.' })
+  @ApiResponse({
+    status: 401,
+    description: 'OTP code does not match or has expired.',
+  })
   @ApiResponse({ status: 409, description: 'Phone already in use.' })
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
-  // Phase 4 (T061): @Post('sign-in')
+  @Public()
+  @Post('sign-in')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Authenticate with phone and password.' })
+  @ApiResponse({ status: 200, description: 'Sign-in succeeded.' })
+  @ApiResponse({ status: 401, description: 'Credentials invalid (generic).' })
+  async signIn(@Body() dto: SignInDto) {
+    return this.auth.signIn(dto.phone, dto.password);
+  }
+
   // Phase 5 (T071): @Post('refresh')
   // Phase 5 (T073): @Get('me')
   // Phase 7 (T101): @Post('sign-out')

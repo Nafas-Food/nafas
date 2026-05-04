@@ -22,7 +22,11 @@ export async function register(input: {
   return data;
 }
 
-// Phase 4 (T064): export async function signIn(phone, password)
+export async function signIn(phone: string, password: string): Promise<SessionResponse> {
+  const { data } = await api.post<SessionResponse>('/auth/sign-in', { phone, password });
+  return data;
+}
+
 // Phase 5 (T076): export async function refresh(refreshToken)
 // Phase 5 (T078): export async function getMe()
 // Phase 7 (T103): export async function signOut(refreshToken)
