@@ -22,7 +22,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'default', ttl: 900_000, limit: 10 },  // FR-016a applies globally; per-route @Throttle overrides for FR-016
+      { name: 'default', ttl: 900_000, limit: 10 }, // FR-016a applies globally; per-route @Throttle overrides for FR-016
     ]),
     AdminContextModule,
     PrismaModule,

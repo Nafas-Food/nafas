@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { AdminContextService } from '../admin-context/admin-context.service';
 
@@ -98,7 +103,10 @@ function buildExtended(base: PrismaClient, adminContext: AdminContextService) {
       $allModels: {
         async softDelete<T>(this: T, where: unknown): Promise<unknown> {
           const ctx = Prisma.getExtensionContext(this) as unknown as {
-            update: (args: { where: unknown; data: { deletedAt: Date } }) => Promise<unknown>;
+            update: (args: {
+              where: unknown;
+              data: { deletedAt: Date };
+            }) => Promise<unknown>;
             name: string;
           };
           if (!SOFT_DELETE_MODELS.has(ctx.name)) {
@@ -114,7 +122,10 @@ function buildExtended(base: PrismaClient, adminContext: AdminContextService) {
 }
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
   public readonly extended: ExtendedClient;
 
@@ -128,7 +139,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         if (prop === '$disconnect') return target.$disconnect.bind(target);
         if (prop === '$queryRaw') return target.$queryRaw.bind(target);
         if (prop === 'onModuleInit') return target.onModuleInit.bind(target);
-        if (prop === 'onModuleDestroy') return target.onModuleDestroy.bind(target);
+        if (prop === 'onModuleDestroy')
+          return target.onModuleDestroy.bind(target);
         if (prop === 'logger') return target.logger;
         if (typeof prop === 'string' && prop.startsWith('$')) {
           return (target as any)[prop];

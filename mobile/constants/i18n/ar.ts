@@ -20,7 +20,7 @@ export const ar: I18nDict = {
     phonePlaceholder: '+20...',
     passwordLabel: 'كلمة المرور',
     submit: 'دخول',
-    forgotPassword: 'نسيت كلمة المرور؟',
+    createAccountLink: 'لسه ما عندكش حساب؟ سجّل دلوقتي',
   },
   register: {
     title: 'إنشاء حسابك',

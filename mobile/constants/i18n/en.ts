@@ -23,7 +23,7 @@ export const en = {
     phonePlaceholder: '+20...',
     passwordLabel: 'Password',
     submit: 'Sign in',
-    forgotPassword: 'Forgot your password?',
+    createAccountLink: 'New here? Create an account',
   },
   register: {
     title: 'Create your account',

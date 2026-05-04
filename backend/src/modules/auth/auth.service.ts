@@ -1,14 +1,19 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { TWILIO_VERIFY_CLIENT } from '../twilio/twilio-verify.client.interface';
 import type { TwilioVerifyClient } from '../twilio/twilio-verify.client.interface';
 import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 import { Role } from '@prisma/client';
+import { UsersService } from '../users/users.service';
 
 export interface SessionPair {
   accessToken: string;
@@ -23,11 +28,18 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly events: AuthEventLogger,
     @Inject(TWILIO_VERIFY_CLIENT) private readonly twilio: TwilioVerifyClient,
+    private readonly users: UsersService,
   ) {}
 
   async issueSession(userId: string, role: Role): Promise<SessionPair> {
-    const accessTtl = parseInt(this.config.getOrThrow<string>('JWT_ACCESS_TTL'), 10);
-    const refreshTtl = parseInt(this.config.getOrThrow<string>('JWT_REFRESH_TTL'), 10);
+    const accessTtl = parseInt(
+      this.config.getOrThrow<string>('JWT_ACCESS_TTL'),
+      10,
+    );
+    const refreshTtl = parseInt(
+      this.config.getOrThrow<string>('JWT_REFRESH_TTL'),
+      10,
+    );
     const accessToken = await this.jwt.signAsync(
       { sub: userId, role, type: 'access' },
       { expiresIn: accessTtl },
@@ -47,9 +59,17 @@ export class AuthService {
   async sendOtp(phone: string): Promise<void> {
     try {
       await this.twilio.sendOtp(phone);
-      this.events.emit({ event: 'otp.send', outcome: 'success', extra: { phone: this.maskPhone(phone) } });
+      this.events.emit({
+        event: 'otp.send',
+        outcome: 'success',
+        extra: { phone: this.maskPhone(phone) },
+      });
     } catch (err) {
-      this.events.emit({ event: 'otp.send', outcome: 'provider_failure', extra: { phone: this.maskPhone(phone) } });
+      this.events.emit({
+        event: 'otp.send',
+        outcome: 'provider_failure',
+        extra: { phone: this.maskPhone(phone) },
+      });
       throw err;
     }
   }
@@ -63,13 +83,21 @@ export class AuthService {
   }) {
     const verified = await this.twilio.checkOtp(dto.phone, dto.otpCode);
     if (!verified) {
-      this.events.emit({ event: 'otp.verify', outcome: 'mismatch', extra: { phone: this.maskPhone(dto.phone) } });
+      this.events.emit({
+        event: 'otp.verify',
+        outcome: 'mismatch',
+        extra: { phone: this.maskPhone(dto.phone) },
+      });
       throw new UnauthorizedException({
         code: 'AUTH_OTP_INVALID',
         message: 'OTP code does not match or has expired.',
       });
     }
-    this.events.emit({ event: 'otp.verify', outcome: 'success', extra: { phone: this.maskPhone(dto.phone) } });
+    this.events.emit({
+      event: 'otp.verify',
+      outcome: 'success',
+      extra: { phone: this.maskPhone(dto.phone) },
+    });
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
@@ -90,13 +118,23 @@ export class AuthService {
     } catch (err) {
       const e = err as { code?: string; meta?: { target?: string[] } };
       if (e.code === 'P2002' && e.meta?.target?.includes('phone')) {
-        throw new ConflictException({ code: 'PHONE_IN_USE', message: 'Phone is already in use.' });
+        throw new ConflictException({
+          code: 'PHONE_IN_USE',
+          message: 'Phone is already in use.',
+        });
       }
       throw err;
     }
   }
 
-  private serializeUser(u: { id: string; phone: string; email: string | null; fullName: string; role: Role; phoneVerified: boolean }) {
+  private serializeUser(u: {
+    id: string;
+    phone: string;
+    email: string | null;
+    fullName: string;
+    role: Role;
+    phoneVerified: boolean;
+  }) {
     return {
       id: u.id,
       phone: u.phone,
@@ -107,7 +145,54 @@ export class AuthService {
     };
   }
 
-  // Phase 4 (T060): signIn(phone, password)
+  private dummyHashPromise: Promise<string> | null = null;
+  private getDummyHash(): Promise<string> {
+    if (!this.dummyHashPromise) {
+      this.dummyHashPromise = bcrypt.hash(
+        'dummy-password-for-timing-equalization',
+        12,
+      );
+    }
+    return this.dummyHashPromise;
+  }
+
+  async signIn(phone: string, password: string) {
+    const user = await this.users.findByPhone(phone);
+    if (!user) {
+      // Equalize response time with the password-failure branch so callers
+      // cannot enumerate registered phones via timing (FR-017 / SC-012).
+      await bcrypt.compare(password, await this.getDummyHash());
+      this.events.emit({
+        event: 'auth.sign_in',
+        outcome: 'unknown_phone',
+        extra: { phone: this.maskPhone(phone) },
+      });
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'Phone or password is incorrect.',
+      });
+    }
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) {
+      this.events.emit({
+        event: 'auth.sign_in',
+        outcome: 'password_failure',
+        actorId: user.id,
+      });
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'Phone or password is incorrect.',
+      });
+    }
+    const tokens = await this.issueSession(user.id, user.role);
+    this.events.emit({
+      event: 'auth.sign_in',
+      outcome: 'success',
+      actorId: user.id,
+    });
+    return { user: this.serializeUser(user), ...tokens };
+  }
+
   // Phase 5 (T070): refresh(currentRefreshPayload, rawToken)
   // Phase 5 (T072): getMe(userId)
   // Phase 7 (T100): signOut(currentRefreshPayload)

@@ -1,16 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { TWILIO_VERIFY_CLIENT } from '../twilio/twilio-verify.client.interface';
-import type { TwilioVerifyClient } from '../twilio/twilio-verify.client.interface';
-import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly events: AuthEventLogger,
-    @Inject(TWILIO_VERIFY_CLIENT) private readonly twilio: TwilioVerifyClient,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /** Used by AuthService for sign-in lookups. */
   findByPhone(phone: string) {

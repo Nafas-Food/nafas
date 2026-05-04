@@ -1575,7 +1575,7 @@ yet.
 
 ### Backend
 
-- [ ] T048 [P] [US2] Create `<repo>\backend\src\modules\auth\dto\sign-in.dto.ts` with this exact content:
+- [X] T048 [P] [US2] Create `<repo>\backend\src\modules\auth\dto\sign-in.dto.ts` with this exact content:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsString, Matches } from 'class-validator';
@@ -1592,7 +1592,7 @@ yet.
   }
   ```
 
-- [ ] T049 [US2] In `<repo>\backend\src\modules\auth\auth.service.ts`, inject `UsersService` (constructor parameter — see updated constructor below) and add a `signIn` method. The constructor MUST become:
+- [X] T049 [US2] In `<repo>\backend\src\modules\auth\auth.service.ts`, inject `UsersService` (constructor parameter — see updated constructor below) and add a `signIn` method. The constructor MUST become:
   ```ts
   constructor(
     private readonly prisma: PrismaService,
@@ -1629,7 +1629,7 @@ yet.
   ```
   **Why two `findByPhone` paths return the same external error**: FR-017. The internal log discriminates `unknown_phone` vs `password_failure`, but the response is identical (SC-012). Note: `findByPhone` uses `prisma.extended.user`, so a soft-deleted account returns `null` here, yielding the `unknown_phone` log line and the same generic external error (SC-008).
 
-- [ ] T050 [US2] In `<repo>\backend\src\modules\auth\auth.controller.ts`, add the sign-in handler below `register`:
+- [X] T050 [US2] In `<repo>\backend\src\modules\auth\auth.controller.ts`, add the sign-in handler below `register`:
   ```ts
   @Public()
   @Post('sign-in')
@@ -1643,7 +1643,7 @@ yet.
   ```
   Add the import: `import { SignInDto } from './dto/sign-in.dto';`.
 
-- [ ] T051 [US2] Smoke-test the sign-in endpoint:
+- [X] T051 [US2] Smoke-test the sign-in endpoint:
   ```powershell
   curl -i -X POST http://localhost:3000/api/v1/auth/sign-in `
     -H "Content-Type: application/json" `
@@ -1653,7 +1653,7 @@ yet.
 
 ### Mobile
 
-- [ ] T052 [US2] In `<repo>\mobile\services\auth.ts`, add:
+- [X] T052 [US2] In `<repo>\mobile\services\auth.ts`, add:
   ```ts
   export async function signIn(phone: string, password: string): Promise<SessionResponse> {
     const { data } = await api.post<SessionResponse>('/auth/sign-in', { phone, password });
@@ -1661,7 +1661,7 @@ yet.
   }
   ```
 
-- [ ] T053 [US2] Create `<repo>\mobile\app\(auth)\sign-in.tsx`. Form fields: phone, password. On submit call `signIn(phone, password)`; on success call `auth.setSession(response)` and navigate to `/(tabs)`. On error map `errorCodeOf(err)` to the matching `errors.*` key. All text via `t(...)`; consult `nafas-design-system` skill mockup.
+- [X] T053 [US2] Create `<repo>\mobile\app\(auth)\sign-in.tsx`. Form fields: phone, password. On submit call `signIn(phone, password)`; on success call `auth.setSession(response)` and navigate to `/(tabs)`. On error map `errorCodeOf(err)` to the matching `errors.*` key. All text via `t(...)`; consult `nafas-design-system` skill mockup.
 
 **Checkpoint**: User Story 2 fully functional. Both register and sign-in flows complete on real devices.
 

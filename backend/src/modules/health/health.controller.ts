@@ -24,7 +24,9 @@ export class HealthController {
     checks: { db: 'ok' | 'down' };
     version: string;
   }> {
-    const result = await this.health.check([() => this.prismaHealth.pingCheck('db')]);
+    const result = await this.health.check([
+      () => this.prismaHealth.pingCheck('db'),
+    ]);
     const dbOk = result.info?.db?.status === 'up';
     return {
       status: dbOk ? 'ok' : 'degraded',

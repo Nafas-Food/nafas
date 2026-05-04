@@ -1,4 +1,10 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthEventLogger } from '../logging/auth-event.logger';
@@ -34,26 +40,40 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       normalized.code === 'VALIDATION_ERROR' &&
       Array.isArray(normalized.details?.fields)
     ) {
-      const passwordTooShort = (normalized.details!.fields as string[]).some((m) =>
-        /password/i.test(m) && /(short|longer|at least|min)/i.test(m),
+      const passwordTooShort = (normalized.details!.fields as string[]).some(
+        (m) => /password/i.test(m) && /(short|longer|at least|min)/i.test(m),
       );
       if (passwordTooShort) {
-        this.events.emit({ event: 'auth.password_validation', outcome: 'too_short' });
+        this.events.emit({
+          event: 'auth.password_validation',
+          outcome: 'too_short',
+        });
       }
     }
 
     res.status(status).json(normalized);
   }
 
-  private normalize(exception: HttpException, status: number, raw: unknown): NormalizedError {
+  private normalize(
+    exception: HttpException,
+    status: number,
+    raw: unknown,
+  ): NormalizedError {
     // 1) ThrottlerException — uniform rate-limit code
     if (exception instanceof ThrottlerException) {
-      return { code: 'AUTH_RATE_LIMITED', message: 'Too many requests. Please retry later.' };
+      return {
+        code: 'AUTH_RATE_LIMITED',
+        message: 'Too many requests. Please retry later.',
+      };
     }
 
     // 2) Class-validator failure (NestJS ValidationPipe default shape):
     //    { statusCode, message: string[], error: 'Bad Request' }
-    if (status === HttpStatus.BAD_REQUEST && typeof raw === 'object' && raw !== null) {
+    if (
+      status === HttpStatus.BAD_REQUEST &&
+      typeof raw === 'object' &&
+      raw !== null
+    ) {
       const obj = raw as { message?: unknown };
       if (Array.isArray(obj.message)) {
         return {
@@ -70,7 +90,10 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       if (typeof obj.code === 'string') {
         return {
           code: obj.code,
-          message: typeof obj.message === 'string' ? obj.message : 'An error occurred.',
+          message:
+            typeof obj.message === 'string'
+              ? obj.message
+              : 'An error occurred.',
         };
       }
       if (typeof obj.message === 'string') {
