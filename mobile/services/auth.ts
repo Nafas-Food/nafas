@@ -7,11 +7,22 @@ export interface SessionResponse {
   refreshToken: string;
 }
 
-// Phase 3 (T053): export async function sendOtp(phone: string)
-// Phase 3 (T056): export async function register(...)
+export async function sendOtp(phone: string): Promise<void> {
+  await api.post('/auth/send-otp', { phone });
+}
+
+export async function register(input: {
+  fullName: string;
+  phone: string;
+  password: string;
+  birthdate: string;
+  otpCode: string;
+}): Promise<SessionResponse> {
+  const { data } = await api.post<SessionResponse>('/auth/register', input);
+  return data;
+}
+
 // Phase 4 (T064): export async function signIn(phone, password)
 // Phase 5 (T076): export async function refresh(refreshToken)
 // Phase 5 (T078): export async function getMe()
 // Phase 7 (T103): export async function signOut(refreshToken)
-
-export {}; // placeholder to keep this a module until Phase 3
