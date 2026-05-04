@@ -1322,7 +1322,7 @@ yet.
 
 ### Backend — DTOs
 
-- [ ] T037 [P] [US1] Create `<repo>\backend\src\modules\auth\dto\send-otp.dto.ts` with this exact content:
+- [X] T037 [P] [US1] Create `<repo>\backend\src\modules\auth\dto\send-otp.dto.ts` with this exact content:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsString, Matches } from 'class-validator';
@@ -1335,7 +1335,7 @@ yet.
   }
   ```
 
-- [ ] T038 [P] [US1] Create `<repo>\backend\src\modules\auth\dto\register.dto.ts` with this exact content:
+- [X] T038 [P] [US1] Create `<repo>\backend\src\modules\auth\dto\register.dto.ts` with this exact content:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { Type } from 'class-transformer';
@@ -1375,7 +1375,7 @@ yet.
 
 ### Backend — AuthService.sendOtp + register (research R1, R10, R12)
 
-- [ ] T039 [US1] Open `<repo>\backend\src\modules\auth\auth.service.ts`. Below `issueSession`, add this method:
+- [X] T039 [US1] Open `<repo>\backend\src\modules\auth\auth.service.ts`. Below `issueSession`, add this method:
   ```ts
   async sendOtp(phone: string): Promise<void> {
     try {
@@ -1393,7 +1393,7 @@ yet.
   import { ConflictException, UnauthorizedException } from '@nestjs/common';
   ```
 
-- [ ] T040 [US1] In the same file, add the `register` method below `sendOtp`:
+- [X] T040 [US1] In the same file, add the `register` method below `sendOtp`:
   ```ts
   async register(dto: {
     fullName: string;
@@ -1453,7 +1453,7 @@ yet.
 
 ### Backend — AuthController endpoints (contracts/auth.openapi.yaml /auth/send-otp + /auth/register)
 
-- [ ] T041 [US1] Open `<repo>\backend\src\modules\auth\auth.controller.ts`. Replace the file with this exact content (later tasks add more handlers):
+- [X] T041 [US1] Open `<repo>\backend\src\modules\auth\auth.controller.ts`. Replace the file with this exact content (later tasks add more handlers):
   ```ts
   import { Body, Controller, HttpCode, Post } from '@nestjs/common';
   import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -1496,7 +1496,7 @@ yet.
   }
   ```
 
-- [ ] T042 [US1] Smoke-test the backend register flow with curl. From `<repo>\backend` run `npm run start:dev`. In another terminal run:
+- [X] T042 [US1] Smoke-test the backend register flow with curl. From `<repo>\backend` run `npm run start:dev`. In another terminal run:
   ```powershell
   # Send OTP — replace +20... with a real number you control
   curl -i -X POST http://localhost:3000/api/v1/auth/send-otp `
@@ -1512,7 +1512,7 @@ yet.
 
 ### Mobile — services/auth.ts methods for US1
 
-- [ ] T043 [US1] Open `<repo>\mobile\services\auth.ts`. Add these two functions (keep existing imports):
+- [X] T043 [US1] Open `<repo>\mobile\services\auth.ts`. Add these two functions (keep existing imports):
   ```ts
   export async function sendOtp(phone: string): Promise<void> {
     await api.post('/auth/send-otp', { phone });
@@ -1533,15 +1533,15 @@ yet.
 
 ### Mobile — auth screens (consult `nafas-design-system` skill before composing)
 
-- [ ] T044 [US1] Create `<repo>\mobile\app\(auth)\welcome.tsx`. **Before writing any visual styles, invoke the `nafas-design-system` skill via `/nafas-design-system` to read the welcome-screen mockup and confirm token usage (colours, type scale, button radius, spacing).** Then write a screen with: the brand wordmark, the tagline (key `welcome.tagline`), a primary "Create account" button that routes to `/(auth)/register`, a secondary "Sign in" button to `/(auth)/sign-in`, and a small language toggle that calls `setLocale('ar')` or `setLocale('en')`. All visible text MUST come from `t(...)` (no string literals). All colours MUST use the design-system tokens — no hex literals. `flexDirection` MUST come from layout primitives that read `isRTL`, not be hardcoded.
+- [X] T044 [US1] Create `<repo>\mobile\app\(auth)\welcome.tsx`. **Before writing any visual styles, invoke the `nafas-design-system` skill via `/nafas-design-system` to read the welcome-screen mockup and confirm token usage (colours, type scale, button radius, spacing).** Then write a screen with: the brand wordmark, the tagline (key `welcome.tagline`), a primary "Create account" button that routes to `/(auth)/register`, a secondary "Sign in" button to `/(auth)/sign-in`, and a small language toggle that calls `setLocale('ar')` or `setLocale('en')`. All visible text MUST come from `t(...)` (no string literals). All colours MUST use the design-system tokens — no hex literals. `flexDirection` MUST come from layout primitives that read `isRTL`, not be hardcoded.
 
   Acceptance: the welcome screen renders correctly in both English (LTR) and Arabic (RTL) on a real device. SC-011 spot-check passes.
 
-- [ ] T045 [US1] Create `<repo>\mobile\app\(auth)\register.tsx`. Form fields: full name, phone (with `+20` country prefix shown), password (min 8), birthdate (date picker). On submit, call `sendOtp(phone)`; on success, navigate to `/(auth)/verify-otp?phone={phone}&fullName={fullName}&password={password}&birthdate={birthdate}` (pass the form state forward). Show a loading spinner while the request is in flight. On error, map `errorCodeOf(err)` to the matching `errors.*` i18n key and show it inline. All text via `t(...)`; all colours via design-system tokens; reference the `nafas-design-system` skill's form mockup before composition.
+- [X] T045 [US1] Create `<repo>\mobile\app\(auth)\register.tsx`. Form fields: full name, phone (with `+20` country prefix shown), password (min 8), birthdate (date picker). On submit, call `sendOtp(phone)`; on success, navigate to `/(auth)/verify-otp?phone={phone}&fullName={fullName}&password={password}&birthdate={birthdate}` (pass the form state forward). Show a loading spinner while the request is in flight. On error, map `errorCodeOf(err)` to the matching `errors.*` i18n key and show it inline. All text via `t(...)`; all colours via design-system tokens; reference the `nafas-design-system` skill's form mockup before composition.
 
-- [ ] T046 [US1] Create `<repo>\mobile\app\(auth)\verify-otp.tsx`. Read `phone, fullName, password, birthdate` from the route params. Render a 6-digit code input, a 60-second resend timer (button disabled until timer expires; tapping resend calls `sendOtp(phone)` again and resets the timer), and a Verify button. On Verify, call `register({...})`; on success, call `auth.setSession(response)` from `useAuth()` then navigate to `/(tabs)`. On error map the error code via the i18n dictionary. The subtitle uses `t('verifyOtp.subtitle', { phone })`. All text + colours via tokens; reference design-system OTP mockup.
+- [X] T046 [US1] Create `<repo>\mobile\app\(auth)\verify-otp.tsx`. Read `phone, fullName, password, birthdate` from the route params. Render a 6-digit code input, a 60-second resend timer (button disabled until timer expires; tapping resend calls `sendOtp(phone)` again and resets the timer), and a Verify button. On Verify, call `register({...})`; on success, call `auth.setSession(response)` from `useAuth()` then navigate to `/(tabs)`. On error map the error code via the i18n dictionary. The subtitle uses `t('verifyOtp.subtitle', { phone })`. All text + colours via tokens; reference design-system OTP mockup.
 
-- [ ] T047 [US1] Create the (tabs) and (chef) placeholder route groups so post-register navigation doesn't crash:
+- [X] T047 [US1] Create the (tabs) and (chef) placeholder route groups so post-register navigation doesn't crash:
   - `<repo>\mobile\app\(tabs)\_layout.tsx`:
     ```tsx
     import { Tabs } from 'expo-router';
