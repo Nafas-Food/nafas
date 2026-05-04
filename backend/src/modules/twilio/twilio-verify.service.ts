@@ -16,6 +16,11 @@ export class TwilioVerifyService implements TwilioVerifyClient {
     this.client = twilio(sid, token);
   }
 
+  private maskPhone(phone: string): string {
+    if (phone.length <= 4) return '****';
+    return phone.slice(0, -4).replace(/\d/g, '*') + phone.slice(-4);
+  }
+
   async sendOtp(phone: string): Promise<void> {
     try {
       await this.client.verify.v2.services(this.serviceSid).verifications.create({
@@ -23,7 +28,7 @@ export class TwilioVerifyService implements TwilioVerifyClient {
         channel: 'sms',
       });
     } catch (err) {
-      this.log.error(`Twilio sendOtp failed for ${phone}: ${(err as Error).message}`);
+      this.log.error(`Twilio sendOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`);
       throw err;
     }
   }
@@ -35,8 +40,8 @@ export class TwilioVerifyService implements TwilioVerifyClient {
         .verificationChecks.create({ to: phone, code });
       return result.status === 'approved';
     } catch (err) {
-      this.log.error(`Twilio checkOtp failed for ${phone}: ${(err as Error).message}`);
-      return false; // a transient Twilio error is treated as "not verified"
+      this.log.error(`Twilio checkOtp failed for ${this.maskPhone(phone)}: ${(err as Error).message}`);
+      return false;
     }
   }
 }

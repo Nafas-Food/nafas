@@ -1,6 +1,7 @@
 import { Controller, Get, HttpCode } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HealthCheckService } from '@nestjs/terminus';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaHealthIndicator } from './prisma.health';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -13,6 +14,7 @@ export class HealthController {
   ) {}
 
   @Public()
+  @SkipThrottle()
   @Get()
   @HttpCode(200)
   @ApiOperation({ summary: 'Service + database liveness probe' })

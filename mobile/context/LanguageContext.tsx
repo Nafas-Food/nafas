@@ -43,31 +43,40 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const stored = (await AsyncStorage.getItem(STORAGE_KEY)) as Locale | null;
-      if (stored === 'en' || stored === 'ar') {
-        setLocaleState(stored);
-        if (I18nManager.isRTL !== (stored === 'ar')) {
-          I18nManager.forceRTL(stored === 'ar');
+      try {
+        const stored = (await AsyncStorage.getItem(STORAGE_KEY)) as Locale | null;
+        if (stored === 'en' || stored === 'ar') {
+          setLocaleState(stored);
+          if (I18nManager.isRTL !== (stored === 'ar')) {
+            I18nManager.forceRTL(stored === 'ar');
+          }
+        } else {
+          const detected = Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
+          setLocaleState(detected);
+          if (I18nManager.isRTL !== (detected === 'ar')) {
+            I18nManager.forceRTL(detected === 'ar');
+          }
         }
-      } else {
-        const detected = Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
-        setLocaleState(detected);
-        if (I18nManager.isRTL !== (detected === 'ar')) {
-          I18nManager.forceRTL(detected === 'ar');
-        }
+      } catch {
+        setLocaleState('en');
+      } finally {
+        setReady(true);
       }
-      setReady(true);
     })();
   }, []);
 
   const setLocale = useCallback(async (next: Locale) => {
-    await AsyncStorage.setItem(STORAGE_KEY, next);
-    const wantRTL = next === 'ar';
-    if (I18nManager.isRTL !== wantRTL) {
-      I18nManager.forceRTL(wantRTL);
-      // Reload required for native primitives to flip direction (R9).
-      await Updates.reloadAsync();
-    } else {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, next);
+      const wantRTL = next === 'ar';
+      if (I18nManager.isRTL !== wantRTL) {
+        I18nManager.forceRTL(wantRTL);
+        // Reload required for native primitives to flip direction (R9).
+        await Updates.reloadAsync();
+      } else {
+        setLocaleState(next);
+      }
+    } catch {
       setLocaleState(next);
     }
   }, []);
