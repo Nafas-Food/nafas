@@ -3,21 +3,39 @@ import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { register } from '../../services/auth';
-import { sendOtp } from '../../services/auth';
+import { register, sendOtp } from '../../services/auth';
 import { errorCodeOf } from '../../services/api';
 import { Colors, FontSize, Spacing, Radius } from '../../constants/theme';
+import { pendingRegistration } from './register';
+
+function startTimer(
+  timerRef: React.MutableRefObject<ReturnType<typeof setInterval> | null>,
+  setResendTimer: React.Dispatch<React.SetStateAction<number>>,
+) {
+  if (timerRef.current) clearInterval(timerRef.current);
+  setResendTimer(60);
+  timerRef.current = setInterval(() => {
+    setResendTimer((prev) => {
+      if (prev <= 1) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+}
 
 export default function VerifyOtpScreen() {
   const { t } = useLanguage();
   const router = useRouter();
-  const { phone, fullName, password, birthdate } = useLocalSearchParams<{
-    phone: string;
-    fullName: string;
-    password: string;
-    birthdate: string;
-  }>();
+  const { phone: routePhone } = useLocalSearchParams<{ phone?: string }>();
   const { setSession } = useAuth();
+
+  const phone = pendingRegistration.phone || routePhone || '';
+  const fullName = pendingRegistration.fullName;
+  const password = pendingRegistration.password;
+  const birthdate = pendingRegistration.birthdate;
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,31 +44,18 @@ export default function VerifyOtpScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    if (!phone || !fullName || !password || !birthdate) {
+      router.replace('/(auth)/register');
+      return;
+    }
+    startTimer(timerRef, setResendTimer);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   const handleResend = async () => {
     try {
       await sendOtp(phone);
-      setResendTimer(60);
-      timerRef.current = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startTimer(timerRef, setResendTimer);
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
     }

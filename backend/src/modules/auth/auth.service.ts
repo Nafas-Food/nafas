@@ -39,12 +39,17 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  private maskPhone(phone: string): string {
+    if (phone.length <= 4) return '****';
+    return phone.slice(0, -4).replace(/\d/g, '*') + phone.slice(-4);
+  }
+
   async sendOtp(phone: string): Promise<void> {
     try {
       await this.twilio.sendOtp(phone);
-      this.events.emit({ event: 'otp.send', outcome: 'success', extra: { phone } });
+      this.events.emit({ event: 'otp.send', outcome: 'success', extra: { phone: this.maskPhone(phone) } });
     } catch (err) {
-      this.events.emit({ event: 'otp.send', outcome: 'provider_failure', extra: { phone } });
+      this.events.emit({ event: 'otp.send', outcome: 'provider_failure', extra: { phone: this.maskPhone(phone) } });
       throw err;
     }
   }
@@ -58,13 +63,13 @@ export class AuthService {
   }) {
     const verified = await this.twilio.checkOtp(dto.phone, dto.otpCode);
     if (!verified) {
-      this.events.emit({ event: 'otp.verify', outcome: 'mismatch', extra: { phone: dto.phone } });
+      this.events.emit({ event: 'otp.verify', outcome: 'mismatch', extra: { phone: this.maskPhone(dto.phone) } });
       throw new UnauthorizedException({
         code: 'AUTH_OTP_INVALID',
         message: 'OTP code does not match or has expired.',
       });
     }
-    this.events.emit({ event: 'otp.verify', outcome: 'success', extra: { phone: dto.phone } });
+    this.events.emit({ event: 'otp.verify', outcome: 'success', extra: { phone: this.maskPhone(dto.phone) } });
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 

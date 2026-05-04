@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -7,18 +7,14 @@ import { sendOtp } from '../../services/auth';
 import { errorCodeOf } from '../../services/api';
 import { Colors, FontSize, Spacing, Radius } from '../../constants/theme';
 
-const MIN_BIRTH_YEAR = new Date();
-MIN_BIRTH_YEAR.setFullYear(MIN_BIRTH_YEAR.getFullYear() - 120);
-
-const MAX_BIRTH_YEAR = new Date();
-MAX_BIRTH_YEAR.setFullYear(MAX_BIRTH_YEAR.getFullYear() - 13);
-
 function formatIsoDate(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 }
+
+export const pendingRegistration = { fullName: '', phone: '', password: '', birthdate: '' };
 
 export default function RegisterScreen() {
   const { t } = useLanguage();
@@ -37,10 +33,11 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await sendOtp(phone);
-      router.push({
-        pathname: '/(auth)/verify-otp',
-        params: { phone, fullName, password, birthdate: formatIsoDate(birthdate) },
-      });
+      pendingRegistration.fullName = fullName;
+      pendingRegistration.phone = phone;
+      pendingRegistration.password = password;
+      pendingRegistration.birthdate = formatIsoDate(birthdate);
+      router.push('/(auth)/verify-otp');
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
     } finally {
@@ -52,6 +49,11 @@ export default function RegisterScreen() {
     if (Platform.OS === 'android') setPickerOpen(false);
     if (event.type === 'set' && selected) setBirthdate(selected);
   };
+
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 120);
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 13);
 
   const isValid =
     fullName.length >= 2 && phone.length > 0 && password.length >= 8 && birthdate !== null;
@@ -103,11 +105,11 @@ export default function RegisterScreen() {
         </Pressable>
         {pickerOpen && (
           <DateTimePicker
-            value={birthdate ?? MAX_BIRTH_YEAR}
+            value={birthdate ?? maxDate}
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            minimumDate={MIN_BIRTH_YEAR}
-            maximumDate={MAX_BIRTH_YEAR}
+            minimumDate={minDate}
+            maximumDate={maxDate}
             onChange={handleDateChange}
           />
         )}
