@@ -31,10 +31,12 @@ export default function RegisterScreen() {
     if (!birthdate) return;
     setError(null);
     setLoading(true);
+    const name = fullName.trim();
+    const tel = phone.trim();
     try {
-      await sendOtp(phone);
-      pendingRegistration.fullName = fullName;
-      pendingRegistration.phone = phone;
+      await sendOtp(tel);
+      pendingRegistration.fullName = name;
+      pendingRegistration.phone = tel;
       pendingRegistration.password = password;
       pendingRegistration.birthdate = formatIsoDate(birthdate);
       router.push('/(auth)/verify-otp');
@@ -56,7 +58,7 @@ export default function RegisterScreen() {
   maxDate.setFullYear(maxDate.getFullYear() - 13);
 
   const isValid =
-    fullName.length >= 2 && phone.length > 0 && password.length >= 8 && birthdate !== null;
+    fullName.trim().length >= 2 && phone.trim().length > 0 && password.length >= 8 && birthdate !== null;
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
