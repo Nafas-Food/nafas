@@ -1,0 +1,544 @@
+openapi: 3.1.0
+info:
+  title: Nafas Authentication API
+  version: 0.2.0
+  description: |
+    Phase 1 ships the platform's identity substrate: phone-OTP-gated
+    customer registration, password sign-in, single-use rotating refresh
+    credentials, immediate sign-out revocation, profile maintenance with
+    a phone-change OTP, and a per-customer push-notification token.
+
+    The contract intentionally returns server-side error *codes* (stable
+    string identifiers like `AUTH_INVALID_CREDENTIALS`) rather than
+    user-facing messages. The mobile client maps codes to bilingual
+    messages on the device per Constitution Principle I — no language
+    leaks from the server.
+
+    Per FR-017, sign-in returns the same code/status for "wrong
+    password" and "unknown phone" so phone enumeration is not possible
+    through this endpoint.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: Auth
+    description: Public auth endpoints (register, sign-in, refresh, send-otp) and authenticated session endpoints (sign-out, me).
+  - name: Users
+    description: Authenticated profile maintenance and device-token registration.
+
+paths:
+  /api/v1/auth/send-otp:
+    post:
+      operationId: sendOtp
+      summary: Request a phone-verification code be delivered to a phone number.
+      description: |
+        Public; rate-limited to **≤ 3 requests / 60 s per source IP** per
+        FR-016. Beyond the threshold the platform returns `429
+        AUTH_RATE_LIMITED` with a `Retry-After` header and incurs no
+        third-party SMS cost.
+
+        Code generation, delivery, single-use semantics, and expiry are
+        owned by the verification provider per FR-002. The platform
+        never stores or echoes the code.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpRequest"
+      responses:
+        "204":
+          description: Code dispatched to the verification provider successfully.
+        "400":
+          description: Validation error (e.g., phone is not E.164).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: Verification provider unreachable. Client should retry after a short delay.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/auth/register:
+    post:
+      operationId: register
+      summary: Create a customer account after a successful phone-OTP verification.
+      description: |
+        Public; rate-limited to **≤ 10 requests / 15 min per source IP**
+        per FR-016a. Requires a fresh OTP code obtained from
+        `/auth/send-otp`. On success returns a session pair (access +
+        refresh credential) and the new customer.
+
+        Idempotency: the underlying `User.phone` column is unique; a
+        race that produces a duplicate registration receives `409
+        PHONE_IN_USE`.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Account created and signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionResponse" }
+        "400":
+          description: Validation error (e.g., password shorter than 8 — FR-006a).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: OTP code does not match or has expired (`AUTH_OTP_INVALID`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Phone already attached to a verified account (`PHONE_IN_USE`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/sign-in:
+    post:
+      operationId: signIn
+      summary: Authenticate with phone and password; receive a session pair.
+      description: |
+        Public; rate-limited to **≤ 10 requests / 15 min per source IP**
+        per FR-016a. Returns a generic credentials error (`401
+        AUTH_INVALID_CREDENTIALS`) for both wrong password and unknown
+        phone — the two cases are externally indistinguishable per
+        FR-017 (verified by SC-012). Soft-deleted accounts return the
+        same generic error.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        "200":
+          description: Sign-in succeeded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionResponse" }
+        "400":
+          description: Validation error (e.g., phone is not E.164).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Credentials invalid (`AUTH_INVALID_CREDENTIALS`). Generic; do not branch on this to discriminate phone vs password — see FR-017.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/refresh:
+    post:
+      operationId: refresh
+      summary: Exchange a refresh credential for a new session pair.
+      description: |
+        Public; rate-limited to **≤ 10 requests / 15 min per source IP**
+        per FR-016a. The presented refresh credential MUST verify, MUST
+        not be expired, and MUST NOT have been previously used or
+        signed-out (FR-008, FR-009). On success the platform records
+        the presented credential's `jti` as revoked in
+        `InvalidatedToken` and issues a new pair atomically.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Rotation succeeded; new pair issued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionResponse" }
+        "401":
+          description: Refresh credential failed verification or has been previously used/signed-out. Stable codes — `AUTH_REFRESH_INVALID` (signature/expiry failure) and `AUTH_REFRESH_REUSED` (the credential's `jti` is in the revocation list; covers BOTH the rotated-replay case from FR-008 and the signed-out case from FR-009 — the platform does not distinguish them externally).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/sign-out:
+    post:
+      operationId: signOut
+      summary: Revoke the customer's current refresh credential.
+      description: |
+        Authenticated. Records the presented refresh credential's `jti`
+        in `InvalidatedToken` (FR-009) and clears the customer's
+        access-credential server-side state (currently a no-op since
+        access credentials are stateless). Idempotent — calling sign-out
+        twice with the same refresh credential returns 204 the second
+        time as well.
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignOutRequest"
+      responses:
+        "204":
+          description: Refresh credential revoked.
+
+  /api/v1/auth/me:
+    get:
+      operationId: getMe
+      summary: Return the currently authenticated customer.
+      description: |
+        Authenticated. Returns the `User` resource for the JWT subject.
+        Used by the mobile client at boot to silently restore a session
+        (User Story 3 acceptance scenario 1).
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The authenticated customer.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+        "401":
+          description: Access credential missing, malformed, or expired.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/users/me:
+    patch:
+      operationId: updateProfile
+      summary: Update the customer's full name and/or email.
+      description: |
+        Authenticated. Per FR-012 / FR-013, this endpoint does **not**
+        update the phone number — phone changes go through the
+        `/users/me/change-phone/{start,verify}` pair so the new number
+        can be OTP-verified before the change is applied.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Email already attached to another verified account (`EMAIL_IN_USE`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/users/me/change-phone/start:
+    post:
+      operationId: changePhoneStart
+      summary: Begin a phone-number change by sending an OTP to the new number.
+      description: |
+        Authenticated. Per FR-013, the change is **not** applied here —
+        this step only sends a verification code to the proposed new
+        phone. The customer must then call
+        `/users/me/change-phone/verify` with the matching code to
+        commit the change. Inherits send-OTP rate-limiting (≤ 3/min/IP).
+        If the new phone is already attached to another verified
+        account, returns `409 PHONE_IN_USE` *before* incurring SMS cost.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePhoneStartRequest"
+      responses:
+        "204":
+          description: Verification code dispatched to the new phone.
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: New phone already attached to another verified account (`PHONE_IN_USE`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/users/me/change-phone/verify:
+    post:
+      operationId: changePhoneVerify
+      summary: Confirm a phone-number change by submitting the OTP delivered to the new number.
+      description: |
+        Authenticated. On a successful OTP check, the customer's `phone`
+        field is updated to the new number and `phoneVerified` stays
+        true. On a failed OTP check, the change is **not** applied
+        (FR-013).
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePhoneVerifyRequest"
+      responses:
+        "200":
+          description: Phone change committed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+        "401":
+          description: OTP code does not match or has expired (`AUTH_OTP_INVALID`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: New phone became attached to another account between start and verify (`PHONE_IN_USE`). Race-safe path.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/users/me/fcm-token:
+    post:
+      operationId: registerFcmToken
+      summary: Register or replace the push-notification token for the customer's current device.
+      description: |
+        Authenticated. Per FR-014 the platform stores at most one token
+        per customer; submitting a new token replaces any previously
+        stored one.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FcmTokenRequest"
+      responses:
+        "204":
+          description: Token stored.
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    RateLimited:
+      description: Source has exceeded the rate limit. Retry after the duration in `Retry-After`.
+      headers:
+        Retry-After:
+          schema: { type: integer, description: Seconds until the limit window resets. }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    SendOtpRequest:
+      type: object
+      required: [phone]
+      additionalProperties: false
+      properties:
+        phone:
+          type: string
+          description: E.164-formatted phone number, e.g., `+201234567890`.
+          pattern: "^\\+[1-9]\\d{7,14}$"
+
+    RegisterRequest:
+      type: object
+      required: [fullName, phone, password, birthdate, otpCode]
+      additionalProperties: false
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 80 }
+        phone:
+          type: string
+          pattern: "^\\+[1-9]\\d{7,14}$"
+        password:
+          type: string
+          minLength: 8
+          description: Minimum 8 characters; no character-class rules per FR-006a.
+        birthdate:
+          type: string
+          format: date
+          description: ISO 8601 (`YYYY-MM-DD`); must be in the past.
+        otpCode:
+          type: string
+          pattern: "^\\d{4,8}$"
+
+    SignInRequest:
+      type: object
+      required: [phone, password]
+      additionalProperties: false
+      properties:
+        phone:
+          type: string
+          pattern: "^\\+[1-9]\\d{7,14}$"
+        password:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      additionalProperties: false
+      properties:
+        refreshToken: { type: string }
+
+    SignOutRequest:
+      type: object
+      required: [refreshToken]
+      additionalProperties: false
+      properties:
+        refreshToken: { type: string }
+
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 80 }
+        email: { type: string, format: email }
+
+    ChangePhoneStartRequest:
+      type: object
+      required: [newPhone]
+      additionalProperties: false
+      properties:
+        newPhone:
+          type: string
+          pattern: "^\\+[1-9]\\d{7,14}$"
+
+    ChangePhoneVerifyRequest:
+      type: object
+      required: [newPhone, otpCode]
+      additionalProperties: false
+      properties:
+        newPhone:
+          type: string
+          pattern: "^\\+[1-9]\\d{7,14}$"
+        otpCode:
+          type: string
+          pattern: "^\\d{4,8}$"
+
+    FcmTokenRequest:
+      type: object
+      required: [fcmToken]
+      additionalProperties: false
+      properties:
+        fcmToken: { type: string, minLength: 1, maxLength: 4096 }
+
+    User:
+      type: object
+      required: [id, phone, fullName, role, phoneVerified]
+      properties:
+        id: { type: string, format: uuid }
+        phone: { type: string }
+        email: { type: string, nullable: true }
+        fullName: { type: string }
+        birthdate: { type: string, format: date, nullable: true }
+        role: { type: string, enum: [CUSTOMER, CHEF, ADMIN, DRIVER] }
+        phoneVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    SessionResponse:
+      type: object
+      required: [user, accessToken, refreshToken]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        accessToken:
+          type: string
+          description: RS256 JWT. Lifetime configured via `JWT_ACCESS_TTL` (default 15 min — see research R4).
+        refreshToken:
+          type: string
+          description: RS256 JWT carrying `type: "refresh"` and a unique `jti`. Lifetime configured via `JWT_REFRESH_TTL` (default 30 days — see research R4). Single-use; rotated on every `/auth/refresh`.
+
+    UserResponse:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: |
+            Stable error identifier, mapped to a localised message on
+            the client. Known codes for Phase 1: `AUTH_OTP_INVALID`,
+            `AUTH_INVALID_CREDENTIALS`, `AUTH_REFRESH_INVALID`,
+            `AUTH_REFRESH_REUSED`, `AUTH_RATE_LIMITED`, `PHONE_IN_USE`,
+            `EMAIL_IN_USE`, `VALIDATION_ERROR`.
+
+            `AUTH_REFRESH_REUSED` covers BOTH the rotated-replay case
+            (FR-008) and the signed-out-replay case (FR-009); the
+            platform does not distinguish them externally because both
+            produce the same row in the revocation list and the spec
+            opts to keep the schema unchanged in Phase 1 (FR-021).
+          enum:
+            - AUTH_OTP_INVALID
+            - AUTH_INVALID_CREDENTIALS
+            - AUTH_REFRESH_INVALID
+            - AUTH_REFRESH_REUSED
+            - AUTH_RATE_LIMITED
+            - PHONE_IN_USE
+            - EMAIL_IN_USE
+            - VALIDATION_ERROR
+        message:
+          type: string
+          description: |
+            English fallback message. The mobile client maps `code` to
+            its bilingual i18n dictionary; this field exists for
+            curl-level diagnostics only and MUST NOT be displayed to
+            customers without translation.
+        details:
+          type: object
+          description: Optional structured detail (e.g., field-level validation errors).
+          additionalProperties: true

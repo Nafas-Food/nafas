@@ -26,6 +26,9 @@ Thumbs.db
 # Per-user Claude Code settings (do not share)
 .claude/settings.local.json
 
+# OpenCode local skill cache
+.opencode/
+
 # Logs
 *.log
 npm-debug.log*
