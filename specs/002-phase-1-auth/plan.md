@@ -10,10 +10,11 @@ the way a person becomes a recognised customer of Nafas, the way the
 platform recognises them on subsequent visits, and the way the platform
 keeps that recognition safely alive. Concretely it delivers: (1) three new
 backend modules — `AuthModule`, `UsersModule`, and a thin `TwilioModule`
-wrapper around Twilio Verify — that expose the seven public auth routes
-(`/auth/send-otp`, `/auth/register`, `/auth/sign-in`, `/auth/refresh`,
-`/auth/sign-out`, `/auth/me`, plus `/users/me` profile and
-`/users/me/fcm-token` push-token endpoints); (2) RS256 access + refresh
+wrapper around Twilio Verify — that expose four **public** routes
+(`/auth/send-otp`, `/auth/register`, `/auth/sign-in`, `/auth/refresh`)
+and six **authenticated** routes (`/auth/sign-out`, `/auth/me`,
+`/users/me`, `/users/me/change-phone/start`, `/users/me/change-phone/verify`,
+`/users/me/fcm-token`); (2) RS256 access + refresh
 credentials with single-use refresh-token rotation backed by the existing
 `InvalidatedToken` table (Phase 0 migrated the table, scheduled the daily
 cleanup, and verified its no-op pass; Phase 1 starts populating it);
@@ -21,8 +22,11 @@ cleanup, and verified its no-op pass; Phase 1 starts populating it);
 opt-out and a `RolesGuard` + `@Roles()` decorator that future phases will
 consume; (4) `bcrypt(12)` password storage and a server-side ≥8-character
 length rule per FR-006/FR-006a (no character-class rules); (5) per-IP rate
-limiting via `@nestjs/throttler` configured at ≤3/min on `/auth/send-otp`
-and ≤10/15min on the remaining auth endpoints, matching Constitution
+limiting via `@nestjs/throttler` configured with a **route-level**
+`@Throttle({ default: { limit: 3, ttl: 60_000 } })` override on
+`/auth/send-otp` and `/users/me/change-phone/start` (both dispatch SMS),
+and a shared default of ≤10/15min on all remaining auth endpoints, matching
+Constitution
 §Security gates and FR-016/FR-016a; (6) a structured-log auth-event surface
 (NestJS `Logger` with JSON output + a request correlation ID) for every
 significant auth event named in FR-020, with FR-021 deliberately keeping
@@ -52,8 +56,7 @@ from Phase 0).
   `bcrypt`, `twilio`, `nestjs-pino` (or built-in `Logger` configured with
   a JSON formatter), `uuid` (for refresh-credential `jti`).
 - Mobile: `expo-secure-store`, `expo-localization`, `axios`,
-  `@react-native-async-storage/async-storage`, `expo-haptics` (already
-  scaffolded in Phase 0; Phase 1 begins consuming them).
+  `@react-native-async-storage/async-storage`.
 
 **Storage**: PostgreSQL 15 via Supabase (per-contributor projects, Phase 0
 convention). Phase 1 reads/writes only the `User` table (already migrated
