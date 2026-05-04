@@ -8,7 +8,22 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
-  app.enableCors({ origin: true, credentials: true });
+
+  const allowedOrigins = new Set(
+    (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000,http://localhost:3001')
+      .split(',')
+      .map((o) => o.trim()),
+  );
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked origin: ${origin}`), false);
+      }
+    },
+    credentials: true,
+  });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

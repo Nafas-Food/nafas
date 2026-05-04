@@ -17,6 +17,7 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    if (loading) return;
     setError(null);
     setLoading(true);
     const tel = phone.trim();
