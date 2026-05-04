@@ -278,8 +278,12 @@ routes the customer to `(auth)/welcome`.
 
 - One module-level `Promise<RefreshResult> | null` held in a closure.
 - Response interceptor: `if (status === 401 && !isRefreshRequest)`,
-  await the in-flight promise (or start one if `null`), then retry
-  with new credential.
+  **additionally verify the original request carried a bearer token**
+  (`originalRequest.headers?.Authorization?.startsWith('Bearer ')`).
+  Only then await the in-flight promise (or start one if `null`) and
+  retry with the new credential.  Public-auth 401s (e.g., from
+  `/auth/sign-in` or `/auth/register`) surface to the caller instead of
+  triggering a refresh attempt.
 - Single-flight guarantees SC-005: N parallel 401s → exactly one
   refresh exchange.
 

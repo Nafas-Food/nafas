@@ -130,19 +130,33 @@ retries.
 
 ## Step 6 — Replay the old refresh credential (SC-004)
 
-Capture the refresh credential the app held *before* step 5's refresh
-exchange (`adb logcat` or the React Native debug bridge). After the
-refresh exchange completes, present that captured credential to `POST
-/auth/refresh`:
+> **Local debugging only.**  This step uses a dev-only test hook that
+> must NOT be enabled in production.
+
+If the backend is running with `DEV_MODE=true`, issue a short-lived test
+refresh credential for the customer you created in Step 3:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/test/issue-refresh \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"<customer-id-from-step-3>"}'
+```
+
+Save the returned `refreshToken`.  After the normal refresh exchange in
+Step 5 completes, present that saved credential to `POST /auth/refresh`:
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/auth/refresh \
   -H "Content-Type: application/json" \
-  -d '{"refreshToken":"<the captured rotated credential>"}'
+  -d '{"refreshToken":"<the saved test credential>"}'
 ```
 
 Expected response: `401 { "code": "AUTH_REFRESH_REUSED", ... }`.
 Backend log: `auth.refresh outcome=rotated_replay`.
+
+If `DEV_MODE` is not set, obtain the pre-rotation credential from the
+mobile client's in-memory state via the React Native debugger (never via
+`adb logcat` in production builds).
 
 ---
 

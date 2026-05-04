@@ -62,7 +62,7 @@ paths:
         "429":
           $ref: "#/components/responses/RateLimited"
         "503":
-          description: Verification provider unreachable. Client should retry after a short delay.
+          description: Verification provider unreachable (`PROVIDER_UNAVAILABLE`). Client should retry after a short delay.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -175,6 +175,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SessionResponse" }
+        "400":
+          description: Validation error (e.g., malformed or missing `refreshToken`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "401":
           description: Refresh credential failed verification or has been previously used/signed-out. Stable codes — `AUTH_REFRESH_INVALID` (signature/expiry failure) and `AUTH_REFRESH_REUSED` (the credential's `jti` is in the revocation list; covers BOTH the rotated-replay case from FR-008 and the signed-out case from FR-009 — the platform does not distinguish them externally).
           content:
@@ -206,6 +211,16 @@ paths:
       responses:
         "204":
           description: Refresh credential revoked.
+        "400":
+          description: Validation error (e.g., malformed or missing `refreshToken`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Access credential missing, malformed, or expired.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/v1/auth/me:
     get:
@@ -294,6 +309,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Access credential missing, malformed, or expired.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "409":
           description: New phone already attached to another verified account (`PHONE_IN_USE`).
           content:
@@ -326,6 +346,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/UserResponse" }
+        "400":
+          description: Validation error (e.g., malformed `newPhone` or `otpCode`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "401":
           description: OTP code does not match or has expired (`AUTH_OTP_INVALID`).
           content:
@@ -359,6 +384,11 @@ paths:
           description: Token stored.
         "400":
           description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Access credential missing, malformed, or expired.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -496,7 +526,10 @@ components:
           description: RS256 JWT. Lifetime configured via `JWT_ACCESS_TTL` (default 15 min — see research R4).
         refreshToken:
           type: string
-          description: RS256 JWT carrying `type: "refresh"` and a unique `jti`. Lifetime configured via `JWT_REFRESH_TTL` (default 30 days — see research R4). Single-use; rotated on every `/auth/refresh`.
+          description: >
+            RS256 JWT carrying `type: "refresh"` and a unique `jti`.
+            Lifetime configured via `JWT_REFRESH_TTL` (default 30 days — see research R4).
+            Single-use; rotated on every `/auth/refresh`.
 
     UserResponse:
       type: object
@@ -531,6 +564,7 @@ components:
             - PHONE_IN_USE
             - EMAIL_IN_USE
             - VALIDATION_ERROR
+            - PROVIDER_UNAVAILABLE
         message:
           type: string
           description: |

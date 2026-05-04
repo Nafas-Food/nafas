@@ -26,11 +26,13 @@ no field definitions in this document override that schema.
   Foundation soft-delete marker `deletedAt`. `InvalidatedToken` carries
   `createdAt` only (no soft-delete; rows are pruned by the daily cleanup
   job once `expiresAt < now()`).
-- **Reads on `User`**: All Phase 1 reads go through
-  `prismaService.extended.user.*`. The Phase 0 Client Extension default-
-  filters `deletedAt: null`, so a soft-deleted account is invisible to
-  sign-in, refresh, and `/auth/me` lookups by construction (delivers
-  SC-008).
+- **Reads on `User`**: Sign-in and `/auth/me` use
+  `prismaService.extended.user.*` so soft-deleted accounts are invisible
+  by construction (delivers SC-008). The refresh path
+  (`auth.refresh`) uses the bare `prismaService.user.findUnique({ where:
+  { id } })` (via `adminContext.run({ includeDeleted: true }, …)`) so
+  that a soft-deleted row can still be detected after JWT verification
+  and the service can return the `soft_deleted_account` outcome.
 - **Writes on `InvalidatedToken`**: Hard-delete entity (no `deletedAt`),
   so writes use the bare client `prismaService.invalidatedToken.create({ data })`.
   CI grep gate is unaffected (the gate only blocks `prisma.<model>.delete(`

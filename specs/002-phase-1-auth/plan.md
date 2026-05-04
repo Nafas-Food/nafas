@@ -77,7 +77,7 @@ constitution amendment is the prerequisite.
 
 **Target Platform**:
 
-- Backend: Linux container (Node 20-alpine), `docker-compose.dev.yml`
+- Backend: Linux container (`node:20-slim`), `docker-compose.dev.yml`
   bring-up unchanged from Phase 0.
 - Mobile: iOS 15+ / Android API 24+ via Expo SDK 54. Phase 1 is the first
   phase that ships customer-facing screens.
@@ -124,9 +124,10 @@ context modules, and the `services/{api,auth,users}.ts` ground floor.
 **Scale/Scope**:
 
 - Three new backend modules + four new mobile screens + two new mobile
-  context modules. Backend surface adds eight authenticated endpoints and
-  two unauthenticated endpoints (send-otp, sign-in/register routed via
-  rate-limited public). Two new common-layer pieces (`JwtAuthGuard`
+  context modules. Backend surface adds six authenticated endpoints
+  (sign-out, me, users/me, change-phone/start, change-phone/verify,
+  fcm-token) and four public/unauthenticated endpoints (send-otp,
+  register, sign-in, refresh). Two new common-layer pieces (`JwtAuthGuard`
   global default, `RolesGuard`). Twelve i18n strings on average per
   screen × four screens × two locales ≈ 100 localised strings to seed in
   `mobile/constants/i18n/{en,ar}.ts`.

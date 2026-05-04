@@ -3,8 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-05-04
 
 ## Active Technologies
-- TypeScript 5.x across all three workspaces (unchanged (002-phase-1-auth)
-- PostgreSQL 15 via Supabase (per-contributor projects, Phase 0 (002-phase-1-auth)
+- TypeScript 5.x across all three workspaces (unchanged — 002-phase-1-auth)
+- PostgreSQL 15 via Supabase (per-contributor projects, Phase 0 — 002-phase-1-auth)
 
 - TypeScript 5.x across all three workspaces (001-phase-0-foundation)
 - Backend: Node.js 20 LTS, NestJS 10, Prisma 5, `@nestjs/swagger`, `@nestjs/throttler`, `@nestjs/schedule`, `@nestjs/terminus`, `helmet`, `class-validator`, `class-transformer`, `decimal.js`

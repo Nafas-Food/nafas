@@ -252,8 +252,9 @@ The customer's phone is set to Arabic. They open the app for the first time
 and the welcome screen, the sign-in form, the registration form, the OTP
 screen, and every validation message they see along the way are all in
 Arabic, with right-to-left layout. Later they tap a language toggle to
-switch to English; the app remembers that override across restarts and even
-across reinstalls of the app on the same device-account pair.
+switch to English; the app remembers that override across app restarts
+( persisted in AsyncStorage — not across reinstalls, which would require
+account-backed storage out of Phase 1 scope).
 
 **Why this priority**: Lower priority than the auth flow itself (a customer
 can struggle through English to register), but the language infrastructure
@@ -405,9 +406,11 @@ restarts the app, and observes the override has stuck.
 #### Rate limiting & abuse resistance
 
 - **FR-015**: Public auth endpoints (request code, register, sign-in,
-  refresh) MUST be rate-limited per source — both per-IP and, where
-  applicable, per-phone-number — to resist credential-stuffing and
-  SMS-spam abuse.
+  refresh) MUST be rate-limited per source IP to resist credential-
+  stuffing and SMS-spam abuse.  Per-phone-number throttling is
+  documented as an optional hardening measure for Phase 2; the Phase 1
+  implementation uses a single per-IP tier (see research R7 and plan.md
+  analysis A1 for why two named tiers would compound and over-throttle).
 - **FR-016**: The send-code endpoint MUST throttle to no more than three
   requests per minute per source IP. Beyond that, the platform MUST
   refuse with a clear "wait and retry" message and MUST NOT incur any
