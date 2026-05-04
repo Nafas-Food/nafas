@@ -199,7 +199,7 @@ eleventh returns `429 AUTH_RATE_LIMITED` with a `Retry-After` header
 In the database, manually mark the test account as soft-deleted:
 
 ```sql
-UPDATE "User" SET "deletedAt" = NOW() WHERE phone = '+201234567890';
+UPDATE "users" SET "deleted_at" = NOW() WHERE phone = '+201234567890';
 ```
 
 Attempt to sign in with the same credentials. Expected: `401
@@ -212,7 +212,7 @@ distinction; the externally visible response is unchanged).
 Restore the row when done:
 
 ```sql
-UPDATE "User" SET "deletedAt" = NULL WHERE phone = '+201234567890';
+UPDATE "users" SET "deleted_at" = NULL WHERE phone = '+201234567890';
 ```
 
 ---
