@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import * as Notifications from 'expo-notifications';
 import { api, _setAccessTokenGetter, _setRefreshHook } from '../services/api';
 import { refresh, getMe } from '../services/auth';
+import { registerFcmToken } from '../services/users';
 
 const REFRESH_KEY = 'nafas.refreshToken';
 
@@ -94,6 +96,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })();
   }, []);
+
+  // Register FCM push token when a user session is established (FR-014).
+  // Tracks the last user id we registered for so we don't re-prompt on every
+  // re-render, and never re-prompts after the OS reports `denied` — that
+  // would mean asking again on every cold-start of the app on Android 13+.
+  const fcmRegisteredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user) {
+      fcmRegisteredForRef.current = null;
+      return;
+    }
+    if (fcmRegisteredForRef.current === user.id) return;
+    fcmRegisteredForRef.current = user.id;
+    (async () => {
+      const perm = await Notifications.getPermissionsAsync();
+      let status = perm.status;
+      if (status === 'undetermined') {
+        status = (await Notifications.requestPermissionsAsync()).status;
+      }
+      if (status === 'granted') {
+        try {
+          const token = await Notifications.getExpoPushTokenAsync();
+          await registerFcmToken(token.data);
+        } catch {
+          // ignore — registration is best-effort
+        }
+      }
+    })();
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{ user, isLoading, setSession, clearSession, getRefreshToken }}>

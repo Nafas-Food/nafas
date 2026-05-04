@@ -14,6 +14,7 @@ import type { TwilioVerifyClient } from '../twilio/twilio-verify.client.interfac
 import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 import { Role } from '@prisma/client';
 import { UsersService } from '../users/users.service';
+import { serializeUser } from '../users/user.serializer';
 
 export interface SessionPair {
   accessToken: string;
@@ -114,7 +115,7 @@ export class AuthService {
       });
 
       const tokens = await this.issueSession(user.id, user.role);
-      return { user: this.serializeUser(user), ...tokens };
+      return { user: serializeUser(user), ...tokens };
     } catch (err) {
       const e = err as { code?: string; meta?: { target?: string[] } };
       if (e.code === 'P2002' && e.meta?.target?.includes('phone')) {
@@ -125,24 +126,6 @@ export class AuthService {
       }
       throw err;
     }
-  }
-
-  private serializeUser(u: {
-    id: string;
-    phone: string;
-    email: string | null;
-    fullName: string;
-    role: Role;
-    phoneVerified: boolean;
-  }) {
-    return {
-      id: u.id,
-      phone: u.phone,
-      email: u.email,
-      fullName: u.fullName,
-      role: u.role,
-      phoneVerified: u.phoneVerified,
-    };
   }
 
   private dummyHashPromise: Promise<string> | null = null;
@@ -190,7 +173,7 @@ export class AuthService {
       outcome: 'success',
       actorId: user.id,
     });
-    return { user: this.serializeUser(user), ...tokens };
+    return { user: serializeUser(user), ...tokens };
   }
 
   async refresh(currentPayload: {
@@ -276,7 +259,7 @@ export class AuthService {
         message: 'User not found.',
       });
     }
-    return { user: this.serializeUser(user) };
+    return { user: serializeUser(user) };
   }
 
   // Phase 7 (T100): signOut(currentRefreshPayload)
