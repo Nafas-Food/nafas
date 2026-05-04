@@ -23,9 +23,9 @@ opt-out and a `RolesGuard` + `@Roles()` decorator that future phases will
 consume; (4) `bcrypt(12)` password storage and a server-side ≥8-character
 length rule per FR-006/FR-006a (no character-class rules); (5) per-IP rate
 limiting via `@nestjs/throttler` configured with a **route-level**
-`@Throttle({ default: { limit: 3, ttl: 60_000 } })` override on
+`@Throttle({ auth: { limit: 3, ttl: 60_000 } })` override on
 `/auth/send-otp` and `/users/me/change-phone/start` (both dispatch SMS),
-and a shared default of ≤10/15min on all remaining auth endpoints, matching
+and a shared `auth` tier of ≤10/15min on all remaining auth endpoints, matching
 Constitution
 §Security gates and FR-016/FR-016a; (6) a structured-log auth-event surface
 (NestJS `Logger` with JSON output + a request correlation ID) for every

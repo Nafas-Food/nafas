@@ -559,7 +559,8 @@ components:
             authenticated route), `AUTH_OTP_INVALID`,
             `AUTH_INVALID_CREDENTIALS`, `AUTH_REFRESH_INVALID`,
             `AUTH_REFRESH_REUSED`, `AUTH_RATE_LIMITED`, `PHONE_IN_USE`,
-            `EMAIL_IN_USE`, `VALIDATION_ERROR`.
+            `EMAIL_IN_USE`, `VALIDATION_ERROR`, `PROVIDER_UNAVAILABLE`
+            (verification provider unreachable on `/auth/send-otp`).
 
             `AUTH_REFRESH_REUSED` covers BOTH the rotated-replay case
             (FR-008) and the signed-out-replay case (FR-009); the
