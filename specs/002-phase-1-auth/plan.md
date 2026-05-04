@@ -204,13 +204,16 @@ nafas/
 │   │   │   ├── health/                                  # (Phase 0)
 │   │   │   ├── auth/                                    # NEW
 │   │   │   │   ├── auth.module.ts
-│   │   │   │   ├── auth.controller.ts                   # /auth/* routes
+│   │   │   │   ├── auth.controller.ts                   # public: send-otp,
+│   │   │   │   │                                        # register, sign-in, refresh;
+│   │   │   │   │                                        # auth'd: sign-out, me
 │   │   │   │   ├── auth.service.ts                      # register, sign-in,
 │   │   │   │   │                                        # refresh, sign-out, me
 │   │   │   │   ├── strategies/
-│   │   │   │   │   ├── jwt.strategy.ts                  # access verification
-│   │   │   │   │   └── refresh.strategy.ts              # refresh verification +
-│   │   │   │   │                                        # blacklist check
+│   │   │   │   │   └── jwt.strategy.ts                  # single strategy;
+│   │   │   │   │                                        # access vs refresh
+│   │   │   │   │                                        # distinguished by
+│   │   │   │   │                                        # `type` claim (R5)
 │   │   │   │   └── dto/
 │   │   │   │       ├── send-otp.dto.ts
 │   │   │   │       ├── register.dto.ts
@@ -219,11 +222,15 @@ nafas/
 │   │   │   ├── users/                                   # NEW
 │   │   │   │   ├── users.module.ts
 │   │   │   │   ├── users.controller.ts                  # PATCH /users/me,
+│   │   │   │   │                                        # POST /users/me/change-phone/start,
+│   │   │   │   │                                        # POST /users/me/change-phone/verify,
 │   │   │   │   │                                        # POST /users/me/fcm-token
 │   │   │   │   ├── users.service.ts                     # findByPhone, update,
 │   │   │   │   │                                        # changePhone (OTP-gated)
 │   │   │   │   └── dto/
 │   │   │   │       ├── update-profile.dto.ts
+│   │   │   │       ├── change-phone-start.dto.ts
+│   │   │   │       ├── change-phone-verify.dto.ts
 │   │   │   │       └── fcm-token.dto.ts
 │   │   │   └── twilio/                                  # NEW
 │   │   │       ├── twilio.module.ts

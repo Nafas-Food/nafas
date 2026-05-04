@@ -143,7 +143,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "401":
-          description: Credentials invalid (`AUTH_INVALID_CREDENTIALS`). Generic; do not branch on this to discriminate phone vs password — see FR-017.
+          description: Access credential missing, malformed, or expired (`AUTH_UNAUTHORIZED`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -240,7 +240,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/UserResponse" }
         "401":
-          description: Access credential missing, malformed, or expired.
+          description: Access credential missing, malformed, or expired (`AUTH_UNAUTHORIZED`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -310,7 +310,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "401":
-          description: Access credential missing, malformed, or expired.
+          description: Access credential missing, malformed, or expired (`AUTH_UNAUTHORIZED`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -352,7 +352,11 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "401":
-          description: OTP code does not match or has expired (`AUTH_OTP_INVALID`).
+          description: |
+            Either the access credential is missing, malformed, or expired
+            (`AUTH_UNAUTHORIZED`), or the OTP code does not match or has
+            expired (`AUTH_OTP_INVALID`). The `code` field in the response
+            body distinguishes the two cases.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -388,7 +392,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "401":
-          description: Access credential missing, malformed, or expired.
+          description: Access credential missing, malformed, or expired (`AUTH_UNAUTHORIZED`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -509,9 +513,9 @@ components:
       properties:
         id: { type: string, format: uuid }
         phone: { type: string }
-        email: { type: string, nullable: true }
+        email: { type: ["string", "null"], format: email }
         fullName: { type: string }
-        birthdate: { type: string, format: date, nullable: true }
+        birthdate: { type: ["string", "null"], format: date }
         role: { type: string, enum: [CUSTOMER, CHEF, ADMIN, DRIVER] }
         phoneVerified: { type: boolean }
         createdAt: { type: string, format: date-time }
@@ -545,7 +549,9 @@ components:
           type: string
           description: |
             Stable error identifier, mapped to a localised message on
-            the client. Known codes for Phase 1: `AUTH_OTP_INVALID`,
+            the client. Known codes for Phase 1: `AUTH_UNAUTHORIZED`
+            (access credential missing, malformed, or expired on any
+            authenticated route), `AUTH_OTP_INVALID`,
             `AUTH_INVALID_CREDENTIALS`, `AUTH_REFRESH_INVALID`,
             `AUTH_REFRESH_REUSED`, `AUTH_RATE_LIMITED`, `PHONE_IN_USE`,
             `EMAIL_IN_USE`, `VALIDATION_ERROR`.
@@ -556,6 +562,7 @@ components:
             produce the same row in the revocation list and the spec
             opts to keep the schema unchanged in Phase 1 (FR-021).
           enum:
+            - AUTH_UNAUTHORIZED
             - AUTH_OTP_INVALID
             - AUTH_INVALID_CREDENTIALS
             - AUTH_REFRESH_INVALID
