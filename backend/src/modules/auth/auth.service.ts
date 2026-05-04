@@ -231,23 +231,41 @@ export class AuthService {
     }
 
     // Atomic rotate: insert blacklist row + return new pair.
-    const tokens = await this.prisma.$transaction(async (tx) => {
-      await tx.invalidatedToken.create({
-        data: {
-          jti: currentPayload.jti,
-          userId: currentPayload.sub,
-          expiresAt: new Date(currentPayload.exp * 1000),
-        },
+    try {
+      const tokens = await this.prisma.$transaction(async (tx) => {
+        await tx.invalidatedToken.create({
+          data: {
+            jti: currentPayload.jti,
+            userId: currentPayload.sub,
+            expiresAt: new Date(currentPayload.exp * 1000),
+          },
+        });
+        return this.issueSession(currentPayload.sub, user.role);
       });
-      return this.issueSession(currentPayload.sub, user.role);
-    });
 
-    this.events.emit({
-      event: 'auth.refresh',
-      outcome: 'success',
-      actorId: currentPayload.sub,
-    });
-    return tokens;
+      this.events.emit({
+        event: 'auth.refresh',
+        outcome: 'success',
+        actorId: currentPayload.sub,
+      });
+      return tokens;
+    } catch (err) {
+      const e = err as { code?: string };
+      if (e.code === 'P2002') {
+        // Concurrent rotation raced — another request already blacklisted this jti.
+        this.events.emit({
+          event: 'auth.refresh',
+          outcome: 'rotated_replay',
+          actorId: currentPayload.sub,
+          extra: { jti: currentPayload.jti },
+        });
+        throw new UnauthorizedException({
+          code: 'AUTH_REFRESH_REUSED',
+          message: 'Refresh credential has already been used.',
+        });
+      }
+      throw err;
+    }
   }
 
   async getMe(userId: string) {

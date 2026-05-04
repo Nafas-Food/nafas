@@ -34,6 +34,17 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       </View>
     );
   }
+
+  // Synchronous guard: never flash protected UI for unsupported roles.
+  if (user && user.role !== 'CUSTOMER' && user.role !== 'CHEF') {
+    clearSession().catch(() => {});
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return <>{children}</>;
 }
 
