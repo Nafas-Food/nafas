@@ -221,6 +221,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /api/v1/auth/me:
     get:
@@ -244,6 +246,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /api/v1/users/me:
     patch:
@@ -284,6 +288,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /api/v1/users/me/change-phone/start:
     post:
@@ -370,6 +376,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /api/v1/users/me/fcm-token:
     post:
@@ -401,6 +409,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
 components:
   securitySchemes:
