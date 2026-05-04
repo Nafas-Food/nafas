@@ -253,7 +253,10 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.users.findById(userId);
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'User not found.',
+      });
     }
     return { user: this.serializeUser(user) };
   }

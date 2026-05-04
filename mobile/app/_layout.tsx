@@ -25,7 +25,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     } else if (user && inAuth) {
       router.replace(user.role === 'CHEF' ? '/(chef)' : '/(tabs)');
     }
-  }, [isLoading, user, segments]);
+  }, [isLoading, user, segments, router, clearSession]);
 
   if (isLoading) {
     return (

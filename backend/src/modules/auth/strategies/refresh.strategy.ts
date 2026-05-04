@@ -32,7 +32,11 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   }
 
   async validate(payload: CurrentUserPayload): Promise<CurrentUserPayload> {
-    if (payload.type !== 'refresh' || typeof payload.jti !== 'string') {
+    if (
+      payload.type !== 'refresh' ||
+      typeof payload.jti !== 'string' ||
+      typeof payload.exp !== 'number'
+    ) {
       throw new UnauthorizedException({
         code: 'AUTH_REFRESH_INVALID',
         message: 'Refresh credential is invalid.',
