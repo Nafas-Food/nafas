@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -22,14 +22,6 @@ function stripLeadingZero(text: string): string {
   return text.startsWith('0') ? text.slice(1) : text;
 }
 
-function extractLocalNumber(fullNumber: string, countryCode: string): string {
-  if (fullNumber.startsWith(countryCode)) {
-    return stripLeadingZero(fullNumber.slice(countryCode.length));
-  }
-  // If the number doesn't start with current country code, strip leading zero anyway
-  return stripLeadingZero(fullNumber);
-}
-
 export function PhoneInput({
   value,
   onChangeText,
@@ -41,6 +33,7 @@ export function PhoneInput({
   const [localNumber, setLocalNumber] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
   // Sync internal state from external value (initial load, parent reset, country change).
   // Safe against feedback loops: when the user edits, value is set to country.code+localNumber,
@@ -58,7 +51,6 @@ export function PhoneInput({
   }, [value]);
 
   const handleLocalChange = (text: string) => {
-    // Remove any non-digit characters, then strip leading trunk prefix (0)
     const digitsOnly = stripLeadingZero(text.replace(/\D/g, ''));
     setLocalNumber(digitsOnly);
     onChangeText(country.code + digitsOnly);
@@ -66,13 +58,13 @@ export function PhoneInput({
 
   const handleCountryChange = (newCountry: Country) => {
     setCountry(newCountry);
-    // Re-assemble with the new country code (localNumber already has no leading 0)
     onChangeText(newCountry.code + localNumber);
   };
 
   return (
     <View style={styles.wrapper}>
-      <View
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
         style={[
           styles.container,
           focused ? styles.containerFocused : undefined,
@@ -81,6 +73,7 @@ export function PhoneInput({
         <Pressable
           style={styles.countrySection}
           onPress={() => setShowPicker(true)}
+          hitSlop={6}
         >
           <TextInput
             style={styles.flag}
@@ -104,6 +97,7 @@ export function PhoneInput({
 
         <TextInput
           {...textInputProps}
+          ref={inputRef}
           style={styles.input}
           value={localNumber}
           onChangeText={handleLocalChange}
@@ -119,7 +113,7 @@ export function PhoneInput({
             textInputProps.onBlur?.(e);
           }}
         />
-      </View>
+      </Pressable>
 
       <CountryPicker
         visible={showPicker}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   TextInput,
@@ -22,9 +22,11 @@ export function Input({
 }: InputProps) {
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(!secureTextEntry);
+  const inputRef = useRef<TextInput>(null);
 
   return (
-    <View
+    <Pressable
+      onPress={() => inputRef.current?.focus()}
       style={[
         styles.container,
         focused ? styles.containerFocused : undefined,
@@ -40,6 +42,7 @@ export function Input({
       )}
       <TextInput
         {...textInputProps}
+        ref={inputRef}
         style={[
           styles.input,
           leftIcon ? styles.inputWithLeftIcon : undefined,
@@ -69,7 +72,7 @@ export function Input({
           />
         </Pressable>
       )}
-    </View>
+    </Pressable>
   );
 }
 

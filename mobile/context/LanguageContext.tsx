@@ -1,10 +1,21 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { I18nManager } from 'react-native';
+import { DevSettings, I18nManager } from 'react-native';
 import * as Localization from 'expo-localization';
 import * as Updates from 'expo-updates';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { en, type I18nDict } from '../constants/i18n/en';
 import { ar } from '../constants/i18n/ar';
+
+async function reloadApp(): Promise<void> {
+  // Updates.reloadAsync only works in production / EAS builds. In dev (Expo Go,
+  // dev client) it throws "Updates.reloadAsync is not available" — fall back to
+  // DevSettings.reload so the layout actually flips after I18nManager.forceRTL.
+  try {
+    await Updates.reloadAsync();
+  } catch {
+    DevSettings.reload();
+  }
+}
 
 type Locale = 'en' | 'ar';
 const STORAGE_KEY = '@nafas/lang';
@@ -45,17 +56,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const stored = (await AsyncStorage.getItem(STORAGE_KEY)) as Locale | null;
+        let next: Locale;
         if (stored === 'en' || stored === 'ar') {
-          setLocaleState(stored);
-          if (I18nManager.isRTL !== (stored === 'ar')) {
-            I18nManager.forceRTL(stored === 'ar');
-          }
+          next = stored;
         } else {
-          const detected = Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
-          setLocaleState(detected);
-          if (I18nManager.isRTL !== (detected === 'ar')) {
-            I18nManager.forceRTL(detected === 'ar');
-          }
+          next = Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
+        }
+        setLocaleState(next);
+        const wantRTL = next === 'ar';
+        if (I18nManager.isRTL !== wantRTL) {
+          I18nManager.allowRTL(wantRTL);
+          I18nManager.forceRTL(wantRTL);
+          // Direction was out of sync at boot — reload so native layout matches.
+          await reloadApp();
+          return;
         }
       } catch {
         setLocaleState('en');
@@ -70,9 +84,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem(STORAGE_KEY, next);
       const wantRTL = next === 'ar';
       if (I18nManager.isRTL !== wantRTL) {
+        I18nManager.allowRTL(wantRTL);
         I18nManager.forceRTL(wantRTL);
         // Reload required for native primitives to flip direction (R9).
-        await Updates.reloadAsync();
+        await reloadApp();
       } else {
         setLocaleState(next);
       }
