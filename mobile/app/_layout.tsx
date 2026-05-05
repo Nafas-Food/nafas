@@ -3,6 +3,13 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 function RouteGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, clearSession } = useAuth();
@@ -50,7 +57,16 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 function ProvidersInner({ children }: { children: React.ReactNode }) {
   const { ready } = useLanguage();
-  if (!ready) {
+  const [fontsLoaded, fontsError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  // If font loading errors out (e.g., offline first launch), don't block the
+  // app — fall back to system fonts so the user can still sign in.
+  if (!ready || (!fontsLoaded && !fontsError)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />

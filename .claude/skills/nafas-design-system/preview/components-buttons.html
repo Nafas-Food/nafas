@@ -5,46 +5,77 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
+  body { font-family: 'Inter', sans-serif; background: #FAF7F2; padding: 20px; }
   .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  .section-label { font-size: 10px; font-weight: 600; color: #7C7A9E; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #B8A898; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     border-radius: 16px; font-family: 'Inter', sans-serif; font-size: 15px;
-    font-weight: 700; height: 48px; padding: 0 22px; border: none; cursor: pointer;
+    font-weight: 700; height: 54px; padding: 0 24px; border: none; cursor: pointer;
+    transition: opacity .15s, transform .1s;
   }
-  .btn-primary { background: #4F46E5; color: #fff; }
-  .btn-ghost { background: transparent; border: 1.5px solid #4F46E5; color: #4F46E5; font-weight: 600; }
-  .btn-destructive { background: transparent; border: 1.5px solid #DC2626; color: #DC2626; font-size: 14px; font-weight: 600; }
-  .btn-small { background: #4F46E5; color: #fff; border-radius: 12px; font-size: 13px; font-weight: 600; height: 36px; padding: 0 14px; }
-  .btn-icon { background: #EEF2FF; border-radius: 10px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
-  .disabled { opacity: 0.5; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary   { background: #C4622D; color: #fff; }
+  .btn-primary:hover { background: #A8521F; }
+  .btn-ghost     { background: transparent; border: 1.5px solid #C4622D; color: #C4622D; font-weight: 600; }
+  .btn-ghost:hover { background: #F5ECD7; }
+  .btn-accent    { background: #D4944A; color: #fff; }
+  .btn-destructive { background: transparent; border: 1.5px solid #C0392B; color: #C0392B; font-size: 14px; font-weight: 600; }
+  .btn-small     { background: #C4622D; color: #fff; border-radius: 10px; font-size: 13px; font-weight: 600; height: 38px; padding: 0 16px; }
+  .btn-icon      { background: #F5ECD7; border-radius: 12px; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+  .btn-icon-ghost { background: transparent; border: 1.5px solid #EDE6DA; border-radius: 12px; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .disabled      { opacity: 0.45; pointer-events: none; }
+  .spinner       { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
+
 <div class="section-label">Primary</div>
 <div class="row">
-  <button class="btn btn-primary">Create Account</button>
+  <button class="btn btn-primary">Place Order</button>
   <button class="btn btn-primary disabled">Disabled</button>
+  <button class="btn btn-primary" style="opacity:.85">
+    <div class="spinner"></div> Signing in…
+  </button>
 </div>
+
 <div class="section-label">Ghost / Outline</div>
 <div class="row">
-  <button class="btn btn-ghost">Sign In</button>
+  <button class="btn btn-ghost">View Menu</button>
   <button class="btn btn-ghost disabled">Disabled</button>
 </div>
+
+<div class="section-label">Accent — Saffron</div>
+<div class="row">
+  <button class="btn btn-accent">New Dish</button>
+</div>
+
 <div class="section-label">Destructive</div>
 <div class="row">
   <button class="btn btn-destructive">Cancel Order</button>
 </div>
+
+<div class="section-label">Pill variants</div>
+<div class="row">
+  <button class="btn btn-primary" style="border-radius:100px">Order Now</button>
+  <button class="btn btn-ghost" style="border-radius:100px">Follow Chef</button>
+</div>
+
 <div class="section-label">Small + Icon</div>
 <div class="row">
   <button class="btn btn-small">+ Add Item</button>
+  <button class="btn btn-small" style="background:#D4944A">Confirm</button>
   <button class="btn btn-icon">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4622D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
-  <button class="btn btn-icon" style="background:#EF444418;">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  <button class="btn btn-icon-ghost">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8A898" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="btn btn-icon" style="background:#FEE2E2;border-radius:10px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
   </button>
 </div>
+
 </body>
 </html>

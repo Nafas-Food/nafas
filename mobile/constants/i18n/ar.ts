@@ -41,6 +41,9 @@ export const ar: I18nDict = {
   profile: {
     signOut: 'تسجيل الخروج',
   },
+  home: {
+    greeting: 'أهلاً، {name}',
+  },
   errors: {
     AUTH_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',
     AUTH_INVALID_CREDENTIALS: 'رقم الهاتف أو كلمة المرور غير صحيحة.',

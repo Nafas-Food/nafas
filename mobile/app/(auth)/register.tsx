@@ -1,11 +1,26 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView,
+  Dimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
 import { sendOtp } from '../../services/auth';
 import { errorCodeOf } from '../../services/api';
-import { Colors, FontSize, Spacing, Radius } from '../../constants/theme';
+import { Colors, Font, FontSize, Spacing, Radius } from '../../constants/theme';
+import { Input } from '../../components/Input';
+import { PhoneInput } from '../../components/PhoneInput';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 function formatIsoDate(d: Date): string {
   const yyyy = d.getFullYear();
@@ -17,8 +32,9 @@ function formatIsoDate(d: Date): string {
 export const pendingRegistration = { fullName: '', phone: '', password: '', birthdate: '' };
 
 export default function RegisterScreen() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -26,9 +42,13 @@ export default function RegisterScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async () => {
     if (!birthdate) return;
+    // Synchronous guard against double-tap before React re-renders disabled.
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setError(null);
     setLoading(true);
     const name = fullName.trim();
@@ -44,6 +64,7 @@ export default function RegisterScreen() {
       setError(t(`errors.${errorCodeOf(err)}`));
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -61,84 +82,106 @@ export default function RegisterScreen() {
     fullName.trim().length >= 2 && phone.trim().length > 0 && password.length >= 8 && birthdate !== null;
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>{t('register.title')}</Text>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>{t('register.fullNameLabel')}</Text>
-        <TextInput
-          style={styles.input}
-          value={fullName}
-          onChangeText={setFullName}
-          autoCapitalize="words"
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>{t('register.phoneLabel')}</Text>
-        <TextInput
-          style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-          placeholder="+20..."
-          placeholderTextColor={Colors.mutedForeground}
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>{t('register.passwordLabel')}</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>{t('register.birthdateLabel')}</Text>
-        <Pressable style={styles.input} onPress={() => setPickerOpen(true)}>
-          <Text style={birthdate ? styles.dateValue : styles.datePlaceholder}>
-            {birthdate ? formatIsoDate(birthdate) : 'YYYY-MM-DD'}
-          </Text>
-        </Pressable>
-        {pickerOpen && (
-          <DateTimePicker
-            value={birthdate ?? maxDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            minimumDate={minDate}
-            maximumDate={maxDate}
-            onChange={handleDateChange}
-          />
-        )}
-      </View>
-
-      <Pressable
-        style={[styles.primaryButton, (!isValid || loading) && styles.buttonDisabled]}
-        onPress={handleSubmit}
-        disabled={!isValid || loading}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: Colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        style={{ backgroundColor: Colors.background }}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        bounces={false}
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
       >
-        {loading ? <ActivityIndicator color={Colors.primaryForeground} /> : (
-          <Text style={styles.primaryButtonText}>{t('register.sendCode')}</Text>
-        )}
-      </Pressable>
-    </ScrollView>
+        <View
+          style={[
+            styles.inner,
+            { paddingTop: insets.top + Spacing.s7 },
+          ]}
+        >
+          <Text style={styles.title}>{t('register.title')}</Text>
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('register.fullNameLabel')}</Text>
+            <Input
+              leftIcon="user"
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('register.phoneLabel')}</Text>
+            <PhoneInput
+              value={phone}
+              onChangeText={setPhone}
+              locale={locale}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('register.passwordLabel')}</Text>
+            <Input
+              leftIcon="lock"
+              showToggle
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('register.birthdateLabel')}</Text>
+            <Pressable style={styles.dateInput} onPress={() => setPickerOpen(true)}>
+              <Text style={birthdate ? styles.dateValue : styles.datePlaceholder}>
+                {birthdate ? formatIsoDate(birthdate) : 'YYYY-MM-DD'}
+              </Text>
+            </Pressable>
+            {pickerOpen && (
+              <DateTimePicker
+                value={birthdate ?? maxDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                minimumDate={minDate}
+                maximumDate={maxDate}
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
+
+          <Pressable
+            style={[styles.primaryButton, (!isValid || loading) && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={!isValid || loading}
+          >
+            {loading ? <ActivityIndicator color={Colors.primaryForeground} /> : (
+              <Text style={styles.primaryButtonText}>{t('register.sendCode')}</Text>
+            )}
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingVertical: Spacing.s7,
-    paddingHorizontal: Spacing.s5,
     backgroundColor: Colors.background,
+  },
+  inner: {
+    minHeight: SCREEN_HEIGHT,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.s5,
+    paddingBottom: Spacing.s7,
   },
   title: {
     fontSize: FontSize.h1,
-    fontWeight: '700',
+    fontFamily: Font.bold,
     color: Colors.foreground,
     marginBottom: Spacing.s6,
   },
@@ -147,11 +190,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSize.bodySm,
-    fontWeight: '600',
+    fontFamily: Font.semibold,
     color: Colors.foreground,
     marginBottom: Spacing.s1,
   },
-  input: {
+  dateInput: {
     backgroundColor: Colors.card,
     borderWidth: 1.5,
     borderColor: Colors.border,
@@ -161,14 +204,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.body,
     color: Colors.foreground,
     justifyContent: 'center',
+    height: 50,
   },
   dateValue: {
     fontSize: FontSize.body,
+    fontFamily: Font.regular,
     color: Colors.foreground,
   },
   datePlaceholder: {
     fontSize: FontSize.body,
-    color: Colors.mutedForeground,
+    fontFamily: Font.regular,
+    color: Colors.sand,
   },
   primaryButton: {
     backgroundColor: Colors.primary,
@@ -181,7 +227,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: Colors.primaryForeground,
     fontSize: FontSize.bodyLg,
-    fontWeight: '700',
+    fontFamily: Font.bold,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -189,6 +235,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: Colors.destructive,
     fontSize: FontSize.bodySm,
+    fontFamily: Font.regular,
     marginBottom: Spacing.s3,
   },
 });

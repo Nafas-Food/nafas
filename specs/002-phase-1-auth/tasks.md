@@ -2261,7 +2261,7 @@ yet.
 
 **Independent Test**: quickstart.md Step 4 + an explicit replay attempt after sign-out.
 
-- [ ] T072 [P] [US5] Create `<repo>\backend\src\modules\auth\dto\sign-out.dto.ts`:
+- [X] T072 [P] [US5] Create `<repo>\backend\src\modules\auth\dto\sign-out.dto.ts`:
   ```ts
   import { ApiProperty } from '@nestjs/swagger';
   import { IsJWT, IsString } from 'class-validator';
@@ -2274,7 +2274,7 @@ yet.
   }
   ```
 
-- [ ] T073 [US5] In `<repo>\backend\src\modules\auth\auth.service.ts` add:
+- [X] T073 [US5] In `<repo>\backend\src\modules\auth\auth.service.ts` add:
   ```ts
   async signOut(payload: { sub: string; jti: string; exp: number }) {
     // Idempotent: if the row already exists from a prior sign-out, swallow the unique-violation.
@@ -2294,7 +2294,7 @@ yet.
   }
   ```
 
-- [ ] T074 [US5] In `<repo>\backend\src\modules\auth\auth.controller.ts` add the sign-out handler:
+- [X] T074 [US5] In `<repo>\backend\src\modules\auth\auth.controller.ts` add the sign-out handler:
   ```ts
   @Public()
   @UseGuards(AuthGuard('jwt-refresh'))
@@ -2310,7 +2310,7 @@ yet.
   }
   ```
 
-- [ ] T075 [US5] Smoke-test sign-out + replay refusal:
+- [X] T075 [US5] Smoke-test sign-out + replay refusal:
   ```powershell
   # $rt is the current refresh token from a sign-in
   curl -i -X POST http://localhost:3000/api/v1/auth/sign-out `
@@ -2325,14 +2325,16 @@ yet.
   ```
   Expected: sign-out returns 204; refresh returns 401 with `code: AUTH_REFRESH_REUSED` (the platform does not distinguish "rotated" from "revoked" externally — both surface via the rotation/replay path because both write the same row to `InvalidatedToken`). Backend log shows `auth.sign_out outcome=success` then `auth.refresh outcome=rotated_replay`.
 
-- [ ] T076 [US5] In `<repo>\mobile\services\auth.ts` add:
+  Also verify idempotency: re-running the sign-out command with the same `$rt` returns 204 again (the `P2002` unique-violation is swallowed) and emits a second `auth.sign_out outcome=success` line.
+
+- [X] T076 [US5] In `<repo>\mobile\services\auth.ts` add:
   ```ts
   export async function signOut(refreshToken: string): Promise<void> {
     await api.post('/auth/sign-out', { refreshToken });
   }
   ```
 
-- [ ] T077 [US5] Add a placeholder profile screen with sign-out. Replace `<repo>\mobile\app\(tabs)\index.tsx` with this content (or add a new `profile.tsx`; for Phase 1 a single signed-in screen suffices):
+- [X] T077 [US5] Add a placeholder profile screen with sign-out. Replace `<repo>\mobile\app\(tabs)\index.tsx` with this content (or add a new `profile.tsx`; for Phase 1 a single signed-in screen suffices):
   ```tsx
   import React from 'react';
   import { View, Text, Pressable } from 'react-native';

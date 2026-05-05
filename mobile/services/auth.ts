@@ -37,4 +37,6 @@ export async function getMe(): Promise<{ user: AuthUser }> {
   return data;
 }
 
-// Phase 7 (T103): export async function signOut(refreshToken)
+export async function signOut(refreshToken: string): Promise<void> {
+  await api.post('/auth/sign-out', { refreshToken });
+}

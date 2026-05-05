@@ -262,5 +262,24 @@ export class AuthService {
     return { user: serializeUser(user) };
   }
 
-  // Phase 7 (T100): signOut(currentRefreshPayload)
+  async signOut(payload: { sub: string; jti: string; exp: number }) {
+    // Idempotent: if the row already exists from a prior sign-out, swallow the unique-violation.
+    try {
+      await this.prisma.invalidatedToken.create({
+        data: {
+          jti: payload.jti,
+          userId: payload.sub,
+          expiresAt: new Date(payload.exp * 1000),
+        },
+      });
+    } catch (err) {
+      const e = err as { code?: string };
+      if (e.code !== 'P2002') throw err;
+    }
+    this.events.emit({
+      event: 'auth.sign_out',
+      outcome: 'success',
+      actorId: payload.sub,
+    });
+  }
 }

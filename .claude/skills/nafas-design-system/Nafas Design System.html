@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nafas — Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── NAFAS BRAND TOKENS ── */
+    :root {
+      /* Primary — Terracotta */
+      --primary:          #C4622D;
+      --primary-hover:    #A8521F;
+      --primary-light:    #F5ECD7;  /* cream */
+      --primary-fg:       #FFFFFF;
+
+      /* Accent — Saffron */
+      --accent:           #D4944A;
+      --accent-light:     #FDEEC8;  /* warm tint */
+      --accent-fg:        #FFFFFF;
+
+      /* Neutrals */
+      --umber:            #2C1F14;
+      --mocha:            #6B5040;
+      --sand:             #B8A898;
+      --cream:            #F5ECD7;
+
+      /* Surfaces */
+      --background:       #FAF7F2;
+      --card:             #FFFFFF;
+      --border:           #EDE6DA;
+      --muted-fill:       #F2EDE4;
+      --muted-fg:         #6B5040;   /* mocha */
+
+      /* Foreground */
+      --foreground:       #2C1F14;   /* umber */
+      --card-fg:          #2C1F14;
+
+      /* Semantic */
+      --success:          #16A34A;
+      --success-light:    #DCFCE7;
+      --success-fg:       #FFFFFF;
+      --destructive:      #C0392B;
+      --destructive-light:#FEE2E2;
+      --destructive-fg:   #FFFFFF;
+      --warning:          #D4944A;
+      --warning-light:    #FDEEC8;
+
+      /* Order status */
+      --s-pending:        #D4944A;
+      --s-confirmed:      #3B82F6;
+      --s-preparing:      #8B5CF6;
+      --s-ready:          #10B981;
+      --s-on-the-way:     #C4622D;
+      --s-delivered:      #16A34A;
+      --s-cancelled:      #C0392B;
+
+      /* Radii */
+      --radius-btn:   16px;
+      --radius-pill:  100px;
+      --radius-card:  16px;
+      --radius-input: 14px;
+      --radius-chip:  100px;
+
+      --shadow-card: 0 2px 8px rgba(44,31,20,.07), 0 0 0 1px var(--border);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-box {
+      width: 44px; height: 44px;
+      background: var(--primary);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--foreground); }
+    .badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 100px;
+      white-space: nowrap;
+    }
+    .badge.neutral {
+      background: var(--muted-fill);
+      color: var(--mocha);
+    }
+
+    /* ── LAYOUT ── */
+    .content {
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+
+    .section { display: flex; flex-direction: column; gap: 24px; }
+    .section-heading {
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+    .section-heading h2 {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--sand);
+    }
+    .section-heading .tag {
+      font-size: 11px; font-weight: 600;
+      color: var(--mocha); background: var(--muted-fill);
+      padding: 2px 8px; border-radius: 100px;
+    }
+
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+    .col { display: flex; flex-direction: column; gap: 8px; }
+    .label {
+      font-size: 11px; font-weight: 600;
+      color: var(--sand); letter-spacing: .04em; text-transform: uppercase;
+    }
+
+    .ds-card {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border);
+      padding: 28px;
+    }
+
+    .subgroup { display: flex; flex-direction: column; gap: 12px; }
+    .subgroup-title {
+      font-size: 12px; font-weight: 600; color: var(--sand);
+    }
+
+    /* ── COLOR SWATCHES ── */
+    .swatches {
+      display: flex; gap: 0;
+      border-radius: 14px; overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .swatch {
+      flex: 1; height: 80px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding-bottom: 8px; cursor: default;
+    }
+    .swatch-name { font-size: 10px; font-weight: 700; opacity: .75; white-space: nowrap; }
+    .swatch-hex  { font-size: 9px;  font-weight: 500; opacity: .55; }
+
+    .token-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .token-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--muted-fill); border-radius: 10px;
+      padding: 6px 12px 6px 6px;
+    }
+    .token-dot { width: 28px; height: 28px; border-radius: 7px; box-shadow: var(--shadow-card); flex-shrink: 0; }
+    .token-info { display: flex; flex-direction: column; gap: 1px; }
+    .token-name { font-size: 12px; font-weight: 600; color: var(--foreground); }
+    .token-val  { font-size: 10px; color: var(--mocha); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 16px;
+      height: 54px; padding: 0 28px;
+      border: none; border-radius: var(--radius-btn);
+      cursor: pointer; transition: opacity .15s, transform .1s, background .15s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-primary   { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary); font-weight: 600;
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--primary-light); }
+
+    .btn-destructive {
+      background: transparent;
+      border: 1.5px solid var(--destructive);
+      color: var(--destructive); font-weight: 600;
+    }
+    .btn-destructive:hover:not(:disabled) { background: var(--destructive-light); }
+
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover:not(:disabled) { background: #be8240; }
+
+    .btn-sm  { height: 38px; font-size: 13px; font-weight: 600; padding: 0 16px; border-radius: 10px; }
+    .btn-pill { border-radius: var(--radius-pill); }
+    .btn-icon {
+      width: 54px; padding: 0;
+      background: var(--primary-light); color: var(--primary);
+      border-radius: var(--radius-btn);
+    }
+    .btn-icon.ghost {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--sand);
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CHIPS ── */
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 8px 16px; border-radius: var(--radius-chip);
+      border: 1px solid var(--border);
+      background: var(--card); color: var(--foreground);
+      cursor: pointer;
+      transition: background .12s, border-color .12s, transform .1s;
+      white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--primary); }
+    .chip:active { transform: scale(.96); }
+    .chip.selected {
+      background: var(--primary); border-color: var(--primary);
+      color: #fff; font-weight: 600;
+    }
+    .chip .chip-badge {
+      width: 18px; height: 18px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .chip.selected .chip-badge { background: rgba(255,255,255,.28); color: #fff; }
+    .chip:not(.selected) .chip-badge { background: var(--primary-light); color: var(--primary); }
+
+    /* language toggle */
+    .lang-toggle {
+      display: flex; flex-direction: row;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-pill); padding: 3px; gap: 2px;
+    }
+    .lang-opt {
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--mocha); cursor: pointer;
+      transition: background .15s, color .15s;
+      border: none; background: transparent;
+    }
+    .lang-opt.active { background: var(--primary); color: #fff; }
+    .lang-opt:not(.active):hover { background: var(--muted-fill); }
+
+    /* ── INPUT FIELDS ── */
+    .input-group { display: flex; flex-direction: column; gap: 6px; width: 300px; }
+    .field-label { font-size: 13px; font-weight: 600; color: var(--foreground); }
+
+    .input-wrap {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius-input); padding: 13px 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-wrap:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(196,98,45,.13);
+    }
+    .input-wrap.error { border-color: var(--destructive); }
+    .input-wrap.error:focus-within { box-shadow: 0 0 0 3px rgba(192,57,43,.12); }
+    .input-wrap.disabled { opacity: .5; pointer-events: none; }
+
+    .input-wrap input {
+      flex: 1; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 400;
+      color: var(--foreground); background: transparent;
+      border: none; outline: none; min-width: 0;
+    }
+    .input-wrap input::placeholder { color: var(--sand); }
+    .input-wrap .trailing { color: var(--sand); flex-shrink: 0; cursor: pointer; }
+    .input-wrap .trailing:hover { color: var(--foreground); }
+
+    .helper-text { font-size: 12px; font-weight: 400; color: var(--mocha); }
+    .helper-text.error-text { color: var(--destructive); }
+
+    .error-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--destructive-light); border: 1px solid rgba(192,57,43,.25);
+      border-radius: 12px; padding: 10px 12px; max-width: 360px;
+    }
+    .error-box span { font-size: 13px; color: var(--destructive); }
+
+    /* ── STATUS PILLS ── */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: var(--radius-pill);
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── TAB BAR ── */
+    .tab-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px; border-radius: var(--radius-pill);
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--mocha); cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .tab-item.active { background: var(--primary); color: #fff; }
+    .tab-item:not(.active):hover { background: var(--muted-fill); }
+
+    .btab-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+      color: var(--sand); cursor: pointer; padding: 2px 0;
+    }
+    .btab-item.active { color: var(--primary); }
+
+    svg.icon    { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    svg.icon-sm { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    svg.icon-xs { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── CHEF FLOATING GLASS TAB ── */
+    .chef-tab {
+      display: flex; flex-direction: row; align-items: center; gap: 6px;
+      padding: 9px 14px; border-radius: 100px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--mocha); cursor: pointer;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .chef-tab svg { transition: stroke .2s; flex-shrink: 0; }
+    .chef-label { display: none; }
+    .chef-tab.active .chef-label { display: inline; }
+    .chef-tab:hover:not(.active) { background: rgba(196,98,45,.07); color: var(--primary); }
+    .chef-tab:active { transform: scale(.93); }
+    .chef-tab.active {
+      background: rgba(196,98,45,.13);
+      color: var(--primary);
+    }
+    .chef-tab.active svg { stroke: var(--primary); }
+
+    /* ── CUSTOMER FLOATING GLASS TAB ── */
+    .cust-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 8px 14px; border-radius: 100px;
+      font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600;
+      color: var(--mocha); cursor: pointer;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .cust-tab svg { transition: stroke .2s; }
+    .cust-tab:hover:not(.active) { background: rgba(196,98,45,.07); color: var(--primary); }
+    .cust-tab:active { transform: scale(.93); }
+    .cust-tab.active {
+      background: rgba(196,98,45,.13);
+      color: var(--primary);
+    }
+    .cust-tab.active svg { stroke: var(--primary); }
+    .cust-label { letter-spacing: .01em; }
+  </style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<header class="page-header">
+  <div class="logo-box">
+    <svg class="icon" viewBox="0 0 24 24" style="stroke:#fff">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <h1>Nafas</h1>
+  </div>
+  <div class="badge">Design System v1</div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <div class="badge neutral">Chef App</div>
+    <div class="badge neutral">Customer App</div>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- ════════════════════════════════
+       1 — COLORS
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Colors</h2>
+      <span class="tag">Primary &amp; Neutral — Egyptian warmth</span>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-direction:column;gap:36px">
+
+      <!-- Primary palette -->
+      <div class="subgroup">
+        <div class="subgroup-title">Primary Palette</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#FDEEC8;flex:1.2">
+            <span class="swatch-name" style="color:#A8521F">Warm Tint</span>
+            <span class="swatch-hex"  style="color:#A8521F">#FDEEC8</span>
+          </div>
+          <div class="swatch" style="background:#F5ECD7">
+            <span class="swatch-name" style="color:#A8521F">Cream</span>
+            <span class="swatch-hex"  style="color:#A8521F">#F5ECD7</span>
+          </div>
+          <div class="swatch" style="background:#D4944A">
+            <span class="swatch-name" style="color:#fff">Saffron</span>
+            <span class="swatch-hex"  style="color:#fff">#D4944A</span>
+          </div>
+          <div class="swatch" style="background:#C4622D;flex:1.4;outline:3px solid rgba(255,255,255,.25);outline-offset:-3px">
+            <span class="swatch-name" style="color:#fff">Terracotta ★</span>
+            <span class="swatch-hex"  style="color:#fff">#C4622D</span>
+          </div>
+          <div class="swatch" style="background:#A8521F">
+            <span class="swatch-name" style="color:#fff">Terracotta Dark</span>
+            <span class="swatch-hex"  style="color:#fff">#A8521F</span>
+          </div>
+          <div class="swatch" style="background:#7A3A14">
+            <span class="swatch-name" style="color:#fff">Terracotta Deeper</span>
+            <span class="swatch-hex"  style="color:#fff">#7A3A14</span>
+          </div>
+        </div>
+
+        <div class="token-row">
+          <div class="token-chip">
+            <div class="token-dot" style="background:#C4622D"></div>
+            <div class="token-info">
+              <span class="token-name">primary</span>
+              <span class="token-val">#C4622D — Terracotta</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#F5ECD7"></div>
+            <div class="token-info">
+              <span class="token-name">primary-light</span>
+              <span class="token-val">#F5ECD7 — Cream</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#D4944A"></div>
+            <div class="token-info">
+              <span class="token-name">accent</span>
+              <span class="token-val">#D4944A — Saffron</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#FDEEC8"></div>
+            <div class="token-info">
+              <span class="token-name">accent-light</span>
+              <span class="token-val">#FDEEC8 — Warm Tint</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Neutral scale -->
+      <div class="subgroup">
+        <div class="subgroup-title">Neutrals — Earthy &amp; Warm</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#FAF7F2;flex:1.2">
+            <span class="swatch-name" style="color:#6B5040">Background</span>
+            <span class="swatch-hex"  style="color:#6B5040">#FAF7F2</span>
+          </div>
+          <div class="swatch" style="background:#FFFFFF">
+            <span class="swatch-name" style="color:#6B5040">Card White</span>
+            <span class="swatch-hex"  style="color:#6B5040">#FFFFFF</span>
+          </div>
+          <div class="swatch" style="background:#F2EDE4">
+            <span class="swatch-name" style="color:#6B5040">Muted Fill</span>
+            <span class="swatch-hex"  style="color:#6B5040">#F2EDE4</span>
+          </div>
+          <div class="swatch" style="background:#EDE6DA">
+            <span class="swatch-name" style="color:#6B5040">Border</span>
+            <span class="swatch-hex"  style="color:#6B5040">#EDE6DA</span>
+          </div>
+          <div class="swatch" style="background:#B8A898">
+            <span class="swatch-name" style="color:#fff">Sand</span>
+            <span class="swatch-hex"  style="color:#fff">#B8A898</span>
+          </div>
+          <div class="swatch" style="background:#6B5040">
+            <span class="swatch-name" style="color:#fff">Mocha</span>
+            <span class="swatch-hex"  style="color:#fff">#6B5040</span>
+          </div>
+          <div class="swatch" style="background:#2C1F14;flex:1.2">
+            <span class="swatch-name" style="color:#fff">Umber</span>
+            <span class="swatch-hex"  style="color:#fff">#2C1F14</span>
+          </div>
+        </div>
+
+        <div class="token-row">
+          <div class="token-chip">
+            <div class="token-dot" style="background:#FAF7F2;border:1px solid var(--border)"></div>
+            <div class="token-info">
+              <span class="token-name">background</span>
+              <span class="token-val">#FAF7F2</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#FFFFFF;border:1px solid var(--border)"></div>
+            <div class="token-info">
+              <span class="token-name">card</span>
+              <span class="token-val">#FFFFFF</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#EDE6DA"></div>
+            <div class="token-info">
+              <span class="token-name">border</span>
+              <span class="token-val">#EDE6DA</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#B8A898"></div>
+            <div class="token-info">
+              <span class="token-name">muted-fg / sand</span>
+              <span class="token-val">#B8A898</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#6B5040"></div>
+            <div class="token-info">
+              <span class="token-name">mocha</span>
+              <span class="token-val">#6B5040</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#2C1F14"></div>
+            <div class="token-info">
+              <span class="token-name">foreground / umber</span>
+              <span class="token-val">#2C1F14</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semantic -->
+      <div class="subgroup">
+        <div class="subgroup-title">Semantic</div>
+        <div class="token-row">
+          <div class="token-chip">
+            <div class="token-dot" style="background:#16A34A"></div>
+            <div class="token-info">
+              <span class="token-name">success</span>
+              <span class="token-val">#16A34A</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#C0392B"></div>
+            <div class="token-info">
+              <span class="token-name">destructive</span>
+              <span class="token-val">#C0392B</span>
+            </div>
+          </div>
+          <div class="token-chip">
+            <div class="token-dot" style="background:#D4944A"></div>
+            <div class="token-info">
+              <span class="token-name">warning / accent</span>
+              <span class="token-val">#D4944A — Saffron</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       2 — BUTTONS
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Buttons</h2>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-direction:column;gap:32px">
+
+      <div class="subgroup">
+        <div class="subgroup-title">Variants — 54px, 16px Bold, border-radius 16px</div>
+        <div class="row">
+          <div class="col">
+            <span class="label">Primary</span>
+            <button class="btn btn-primary">Place Order</button>
+          </div>
+          <div class="col">
+            <span class="label">Ghost / Outline</span>
+            <button class="btn btn-ghost">View Menu</button>
+          </div>
+          <div class="col">
+            <span class="label">Destructive</span>
+            <button class="btn btn-destructive">Cancel Order</button>
+          </div>
+          <div class="col">
+            <span class="label">Accent — Saffron</span>
+            <button class="btn btn-accent">New Dish</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">States</div>
+        <div class="row">
+          <div class="col">
+            <span class="label">Default</span>
+            <button class="btn btn-primary">Sign In</button>
+          </div>
+          <div class="col">
+            <span class="label">Loading</span>
+            <button class="btn btn-primary" style="opacity:.85">
+              <div class="spinner"></div>
+              Signing in…
+            </button>
+          </div>
+          <div class="col">
+            <span class="label">Disabled</span>
+            <button class="btn btn-primary" disabled>Place Order</button>
+          </div>
+          <div class="col">
+            <span class="label">Ghost Disabled</span>
+            <button class="btn btn-ghost" disabled>View Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Pill &amp; Small</div>
+        <div class="row">
+          <div class="col">
+            <span class="label">Primary Pill</span>
+            <button class="btn btn-primary btn-pill">Order Now</button>
+          </div>
+          <div class="col">
+            <span class="label">Ghost Pill</span>
+            <button class="btn btn-ghost btn-pill">Follow Chef</button>
+          </div>
+          <div class="col">
+            <span class="label">Small — 38px</span>
+            <button class="btn btn-primary btn-sm">Confirm</button>
+          </div>
+          <div class="col">
+            <span class="label">Small Ghost</span>
+            <button class="btn btn-ghost btn-sm">Cancel</button>
+          </div>
+          <div class="col">
+            <span class="label">Small Destructive</span>
+            <button class="btn btn-destructive btn-sm">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">With Icons</div>
+        <div class="row">
+          <div class="col">
+            <span class="label">Icon + Label</span>
+            <button class="btn btn-primary">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:#fff;width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>
+              Add Dish
+            </button>
+          </div>
+          <div class="col">
+            <span class="label">Icon only (Accent)</span>
+            <button class="btn btn-icon">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--primary)"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+          <div class="col">
+            <span class="label">Icon only (Ghost)</span>
+            <button class="btn btn-icon ghost">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       3 — CHIPS & TOGGLES
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Chips &amp; Toggles</h2>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-direction:column;gap:28px">
+
+      <div class="subgroup">
+        <div class="subgroup-title">Category Chips — Customer App</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="chip selected">All</span>
+          <span class="chip">Egyptian</span>
+          <span class="chip">Grilled</span>
+          <span class="chip">Vegetarian</span>
+          <span class="chip">Desserts</span>
+          <span class="chip">Drinks</span>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Filter Chips with Count — Chef Orders</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="chip selected">All Orders <span class="chip-badge">7</span></span>
+          <span class="chip">Pending <span class="chip-badge">2</span></span>
+          <span class="chip">Active <span class="chip-badge">3</span></span>
+          <span class="chip">Done</span>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Language Toggle</div>
+        <div style="display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap">
+          <div class="col">
+            <span class="label">English active</span>
+            <div class="lang-toggle">
+              <button class="lang-opt active">EN</button>
+              <button class="lang-opt">عربي</button>
+            </div>
+          </div>
+          <div class="col">
+            <span class="label">Arabic active</span>
+            <div class="lang-toggle">
+              <button class="lang-opt">EN</button>
+              <button class="lang-opt active">عربي</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Open / Closed Toggle — Chef App</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-pill);padding:6px 16px 6px 6px">
+            <div style="background:var(--success);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">
+              <svg style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span style="font-size:13px;font-weight:600;color:var(--success)">Open for orders</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-pill);padding:6px 16px 6px 6px">
+            <div style="background:var(--sand);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">
+              <svg style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            <span style="font-size:13px;font-weight:600;color:var(--sand)">Closed</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       4 — INPUT FIELDS
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Input Fields</h2>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-direction:column;gap:28px">
+
+      <div class="subgroup">
+        <div class="subgroup-title">States — border-radius 14px, 1.5px border, focus ring terracotta</div>
+        <div style="display:flex;flex-wrap:wrap;gap:24px">
+
+          <div class="input-group">
+            <div class="field-label">Mobile Number</div>
+            <div class="input-wrap">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--sand);width:17px;height:17px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.64 19.79 19.79 0 01.09 1 2 2 0 012.07 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.36-.36a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15z"/></svg>
+              <input type="tel" placeholder="+20 10 1234 5678" />
+            </div>
+            <div class="helper-text">Default</div>
+          </div>
+
+          <div class="input-group">
+            <div class="field-label">Password</div>
+            <div class="input-wrap" style="border-color:var(--primary);box-shadow:0 0 0 3px rgba(196,98,45,.13)">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--sand);width:17px;height:17px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input type="password" value="mysecret" />
+              <span class="trailing">
+                <svg class="icon" viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--sand)"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+            </div>
+            <div class="helper-text">Focused</div>
+          </div>
+
+          <div class="input-group">
+            <div class="field-label">Full Name</div>
+            <div class="input-wrap">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--sand);width:17px;height:17px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" value="Sara Al-Farouk" />
+            </div>
+            <div class="helper-text">Filled</div>
+          </div>
+
+          <div class="input-group">
+            <div class="field-label">Mobile Number</div>
+            <div class="input-wrap error">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--destructive);width:17px;height:17px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.64 19.79 19.79 0 01.09 1 2 2 0 012.07 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.36-.36a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15z"/></svg>
+              <input type="tel" value="0101" />
+            </div>
+            <div class="helper-text error-text">Please enter a valid mobile number</div>
+          </div>
+
+          <div class="input-group">
+            <div class="field-label">Email (optional)</div>
+            <div class="input-wrap disabled">
+              <svg class="icon" viewBox="0 0 24 24" style="stroke:var(--sand);width:17px;height:17px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" placeholder="email@example.com" disabled />
+            </div>
+            <div class="helper-text">Disabled</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Inline Error Banner</div>
+        <div class="error-box">
+          <svg class="icon-sm" viewBox="0 0 24 24" style="stroke:var(--destructive);flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Invalid mobile number or password. Please try again.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       5 — STATUS PILLS
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Status Pills</h2>
+      <span class="tag">Order Lifecycle</span>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-direction:column;gap:28px">
+
+      <div class="subgroup">
+        <div class="subgroup-title">All statuses — 11px Bold, border-radius 100px, bg = color + 20% opacity</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <span class="status-pill" style="background:#D4944A20;color:#D4944A">
+            <span class="status-dot" style="background:#D4944A"></span>Pending
+          </span>
+          <span class="status-pill" style="background:#3B82F620;color:#3B82F6">
+            <span class="status-dot" style="background:#3B82F6"></span>Confirmed
+          </span>
+          <span class="status-pill" style="background:#8B5CF620;color:#8B5CF6">
+            <span class="status-dot" style="background:#8B5CF6"></span>Preparing
+          </span>
+          <span class="status-pill" style="background:#10B98120;color:#10B981">
+            <span class="status-dot" style="background:#10B981"></span>Ready
+          </span>
+          <span class="status-pill" style="background:#C4622D20;color:#C4622D">
+            <span class="status-dot" style="background:#C4622D"></span>On the Way
+          </span>
+          <span class="status-pill" style="background:#16A34A20;color:#16A34A">
+            <span class="status-dot" style="background:#16A34A"></span>Delivered
+          </span>
+          <span class="status-pill" style="background:#C0392B20;color:#C0392B">
+            <span class="status-dot" style="background:#C0392B"></span>Cancelled
+          </span>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="subgroup">
+        <div class="subgroup-title">Order Lifecycle</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="status-pill" style="background:#D4944A20;color:#D4944A;font-size:12px;padding:6px 14px">Pending</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="status-pill" style="background:#3B82F620;color:#3B82F6;font-size:12px;padding:6px 14px">Confirmed</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="status-pill" style="background:#8B5CF620;color:#8B5CF6;font-size:12px;padding:6px 14px">Preparing</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="status-pill" style="background:#10B98120;color:#10B981;font-size:12px;padding:6px 14px">Ready</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="status-pill" style="background:#C4622D20;color:#C4622D;font-size:12px;padding:6px 14px">On the Way</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="status-pill" style="background:#16A34A20;color:#16A34A;font-size:12px;padding:6px 14px">Delivered</span>
+        </div>
+      </div>
+
+      <!-- In-context order card -->
+      <div class="subgroup">
+        <div class="subgroup-title">In context — Order card</div>
+        <div style="max-width:400px;background:var(--card);border-radius:var(--radius-card);border:1px solid var(--border);padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-card)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--foreground)">Sara Al-Farouk</div>
+              <div style="font-size:12px;color:var(--mocha);margin-top:3px;display:flex;align-items:center;gap:4px">
+                <svg class="icon-xs" viewBox="0 0 24 24" style="stroke:var(--sand)"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.64 19.79 19.79 0 01.09 1 2 2 0 012.07 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.36-.36a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15z"/></svg>
+                +20 101 234 5678
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span class="status-pill" style="background:#8B5CF620;color:#8B5CF6">
+                <span class="status-dot" style="background:#8B5CF6"></span>Preparing
+              </span>
+              <span style="font-size:11px;color:var(--sand)">12 May · 1:34 PM</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;font-weight:700;color:var(--primary);width:24px">2×</span>
+              <span style="font-size:13px;color:var(--foreground);flex:1">Koshary</span>
+              <span style="font-size:13px;color:var(--mocha);font-weight:500">EGP 80</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;font-weight:700;color:var(--primary);width:24px">1×</span>
+              <span style="font-size:13px;color:var(--foreground);flex:1">Molokheya with Rice</span>
+              <span style="font-size:13px;color:var(--mocha);font-weight:500">EGP 55</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px;font-weight:500;color:var(--foreground)">Total: <strong style="color:var(--primary)">EGP 135</strong></span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-destructive btn-sm" style="font-size:12px;height:34px;padding:0 12px">Cancel</button>
+              <button class="btn btn-sm" style="background:#8B5CF6;color:#fff;font-size:12px;height:34px;padding:0 14px;border-radius:10px">Mark Ready</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       6 — TAB BAR
+  ════════════════════════════════ -->
+  <section class="section">
+    <div class="section-heading">
+      <h2>Tab Bar</h2>
+      <span class="tag">Chef App &amp; Customer App</span>
+    </div>
+
+    <div class="ds-card" style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+      <!-- Chef: Floating Pill Tab Bar -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="subgroup-title">Chef App — Floating Glass Tab Bar (iOS)</div>
+        <div style="position:relative;width:360px;height:430px;border-radius:28px;border:1.5px solid var(--border);overflow:hidden;box-shadow:0 8px 40px rgba(44,31,20,.08)">
+          <!-- Warm gradient background -->
+          <div style="position:absolute;inset:0;background:linear-gradient(160deg,#F5ECD7 0%,#FAF7F2 40%,#F2EDE4 100%)"></div>
+          <!-- Decorative blobs -->
+          <div style="position:absolute;top:-20px;left:-20px;width:160px;height:160px;border-radius:50%;background:rgba(196,98,45,.10);filter:blur(36px)"></div>
+          <div style="position:absolute;bottom:60px;right:-20px;width:130px;height:130px;border-radius:50%;background:rgba(212,148,74,.10);filter:blur(28px)"></div>
+
+          <!-- Screen content -->
+          <div style="position:relative;padding:24px 20px 0">
+            <div style="font-size:20px;font-weight:700;color:var(--foreground);margin-bottom:16px">Orders</div>
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <span class="chip selected" style="font-size:12px;padding:6px 12px">All <span class="chip-badge">5</span></span>
+              <span class="chip" style="font-size:12px;padding:6px 12px">Pending</span>
+              <span class="chip" style="font-size:12px;padding:6px 12px">Active</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.8);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--foreground)">Ahmed Hassan</div>
+                  <div style="font-size:11px;color:var(--mocha);margin-top:2px">2× Koshary · EGP 80</div>
+                </div>
+                <span class="status-pill" style="background:#8B5CF620;color:#8B5CF6;font-size:10px">Preparing</span>
+              </div>
+              <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.8);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--foreground)">Fatma Ibrahim</div>
+                  <div style="font-size:11px;color:var(--mocha);margin-top:2px">1× Mahshi · EGP 65</div>
+                </div>
+                <span class="status-pill" style="background:#D4944A20;color:#D4944A;font-size:10px">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating glass tab bar -->
+          <div style="
+            position:absolute;
+            bottom:18px;
+            left:50%;
+            transform:translateX(-50%);
+            display:flex;
+            align-items:center;
+            gap:2px;
+            padding:6px 8px;
+            border-radius:100px;
+            background:rgba(255,255,255,0.55);
+            backdrop-filter:blur(20px) saturate(1.8);
+            -webkit-backdrop-filter:blur(20px) saturate(1.8);
+            border:1px solid rgba(255,255,255,0.75);
+            box-shadow:0 8px 32px rgba(44,31,20,.12), 0 1px 0 rgba(255,255,255,0.8) inset;
+            white-space:nowrap;
+          " id="chefTabBarShell">
+            <div class="chef-tab" data-label="Home">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span class="chef-label">Home</span>
+            </div>
+            <div class="chef-tab active" data-label="Orders">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span class="chef-label">Orders</span>
+            </div>
+            <div class="chef-tab" data-label="Menu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+              <span class="chef-label">Menu</span>
+            </div>
+            <div class="chef-tab" data-label="Analytics">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span class="chef-label">Analytics</span>
+            </div>
+            <div class="chef-tab" data-label="Profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="chef-label">Profile</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Standalone</span>
+          <div id="chefTabBar" style="
+            display:inline-flex;
+            align-items:center;
+            gap:2px;
+            padding:6px 8px;
+            border-radius:100px;
+            background:rgba(255,255,255,0.55);
+            backdrop-filter:blur(20px) saturate(1.8);
+            -webkit-backdrop-filter:blur(20px) saturate(1.8);
+            border:1px solid rgba(237,230,218,0.9);
+            box-shadow:0 6px 24px rgba(44,31,20,.10), 0 1px 0 rgba(255,255,255,0.8) inset;
+          ">
+            <div class="chef-tab active" data-label="Home">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span class="chef-label">Home</span>
+            </div>
+            <div class="chef-tab" data-label="Orders">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span class="chef-label">Orders</span>
+            </div>
+            <div class="chef-tab" data-label="Menu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+              <span class="chef-label">Menu</span>
+            </div>
+            <div class="chef-tab" data-label="Analytics">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span class="chef-label">Analytics</span>
+            </div>
+            <div class="chef-tab" data-label="Profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="chef-label">Profile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer: Bottom Tab Bar -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="subgroup-title">Customer App — Floating Glass Tab Bar (iOS)</div>
+
+        <!-- Phone shell with floating glass tab bar -->
+        <div style="position:relative;width:360px;height:500px;border-radius:28px;border:1.5px solid var(--border);overflow:hidden;box-shadow:0 8px 40px rgba(44,31,20,.08)">
+          <!-- Warm gradient background to make glass pop -->
+          <div style="position:absolute;inset:0;background:linear-gradient(160deg,#F5ECD7 0%,#FAF7F2 40%,#F2EDE4 100%)"></div>
+          <!-- Decorative blobs for glass effect context -->
+          <div style="position:absolute;top:-30px;right:-20px;width:180px;height:180px;border-radius:50%;background:rgba(196,98,45,.12);filter:blur(40px)"></div>
+          <div style="position:absolute;bottom:60px;left:-30px;width:140px;height:140px;border-radius:50%;background:rgba(212,148,74,.10);filter:blur(32px)"></div>
+
+          <!-- Screen content -->
+          <div style="position:relative;padding:24px 20px 0">
+            <div style="font-size:20px;font-weight:700;color:var(--foreground);margin-bottom:4px">Good morning 👋</div>
+            <div style="font-size:14px;color:var(--mocha);margin-bottom:16px">What are you craving today?</div>
+            <div style="background:rgba(255,255,255,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.7);border-radius:var(--radius-input);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span style="font-size:14px;color:var(--sand)">Search dishes or chefs…</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="chip selected" style="font-size:12px;padding:6px 12px">All</span>
+              <span class="chip" style="font-size:12px;padding:6px 12px">Egyptian</span>
+              <span class="chip" style="font-size:12px;padding:6px 12px">Grilled</span>
+              <span class="chip" style="font-size:12px;padding:6px 12px">Desserts</span>
+            </div>
+          </div>
+
+          <!-- Floating glass tab bar -->
+          <div id="customerTabBar" style="
+            position:absolute;
+            bottom:18px;
+            left:50%;
+            transform:translateX(-50%);
+            display:flex;
+            align-items:center;
+            gap:2px;
+            padding:8px 10px;
+            border-radius:100px;
+            background:rgba(255,255,255,0.55);
+            backdrop-filter:blur(20px) saturate(1.8);
+            -webkit-backdrop-filter:blur(20px) saturate(1.8);
+            border:1px solid rgba(255,255,255,0.75);
+            box-shadow:
+              0 8px 32px rgba(44,31,20,.12),
+              0 1px 0 rgba(255,255,255,0.8) inset;
+            white-space:nowrap;
+          ">
+            <div class="cust-tab active" data-label="Home">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span class="cust-label">Home</span>
+            </div>
+            <div class="cust-tab" data-label="Explore">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span class="cust-label">Explore</span>
+            </div>
+            <div class="cust-tab" data-label="Favorites">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              <span class="cust-label">Favorites</span>
+            </div>
+            <div class="cust-tab" data-label="Orders">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              <span class="cust-label">Orders</span>
+            </div>
+            <div class="cust-tab" data-label="Profile">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="cust-label">Profile</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Standalone glass pill -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Standalone</span>
+          <div id="customerTabBar2" style="
+            display:inline-flex;
+            align-items:center;
+            gap:2px;
+            padding:8px 10px;
+            border-radius:100px;
+            background:rgba(255,255,255,0.55);
+            backdrop-filter:blur(20px) saturate(1.8);
+            -webkit-backdrop-filter:blur(20px) saturate(1.8);
+            border:1px solid rgba(237,230,218,0.9);
+            box-shadow:0 6px 24px rgba(44,31,20,.10), 0 1px 0 rgba(255,255,255,0.8) inset;
+          ">
+            <div class="cust-tab active" data-label="Home">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span class="cust-label">Home</span>
+            </div>
+            <div class="cust-tab" data-label="Explore">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span class="cust-label">Explore</span>
+            </div>
+            <div class="cust-tab" data-label="Favorites">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              <span class="cust-label">Favorites</span>
+            </div>
+            <div class="cust-tab" data-label="Orders">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              <span class="cust-label">Orders</span>
+            </div>
+            <div class="cust-tab" data-label="Profile">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="cust-label">Profile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Chips interactive
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const group = chip.closest('[style*="flex-wrap"]') || chip.parentElement;
+      if (group) {
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      }
+      chip.classList.add('selected');
+    });
+  });
+
+  // Language toggle
+  document.querySelectorAll('.lang-toggle').forEach(toggle => {
+    toggle.querySelectorAll('.lang-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        toggle.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+      });
+    });
+  });
+
+  // Chef floating glass tab bars
+  ['chefTabBar', 'chefTabBarShell'].forEach(id => {
+    const bar = document.getElementById(id);
+    if (!bar) return;
+    bar.querySelectorAll('.chef-tab').forEach(item => {
+      item.addEventListener('click', () => {
+        bar.querySelectorAll('.chef-tab').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+  });
+
+  // Customer floating glass tab bars
+  ['customerTabBar', 'customerTabBar2'].forEach(id => {
+    const bar = document.getElementById(id);
+    if (!bar) return;
+    bar.querySelectorAll('.cust-tab').forEach(item => {
+      item.addEventListener('click', () => {
+        bar.querySelectorAll('.cust-tab').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

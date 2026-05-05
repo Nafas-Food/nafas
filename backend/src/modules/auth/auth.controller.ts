@@ -93,5 +93,32 @@ export class AuthController {
     return this.auth.getMe(payload.sub);
   }
 
-  // Phase 7 (T101): @Post('sign-out')
+  @Public()
+  @UseGuards(JwtRefreshGuard)
+  @Post('sign-out')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: "Revoke the customer's current refresh credential.",
+  })
+  @ApiResponse({
+    status: 204,
+    description:
+      'Refresh credential revoked (or already revoked — sign-out is idempotent).',
+  })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Refresh credential is missing, malformed, expired, or failed verification (`AUTH_REFRESH_INVALID`).',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Rate limited (`AUTH_RATE_LIMITED`).',
+  })
+  async signOut(@CurrentUser() payload: CurrentUserPayload) {
+    await this.auth.signOut({
+      sub: payload.sub,
+      jti: payload.jti!,
+      exp: payload.exp!,
+    });
+  }
 }
