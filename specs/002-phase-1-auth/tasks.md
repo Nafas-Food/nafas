@@ -2387,7 +2387,7 @@ yet.
   # Find any user-visible string literal that should be t(...)
   Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx","app\(chef)\*.tsx" -Pattern '<Text[^>]*>[^{<][^<]*<' -CaseSensitive
   # Find any flexDirection: "row" hardcode that should derive from isRTL
-  Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx" -Pattern "flexDirection: ['\""]row" -CaseSensitive
+  Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx" -Pattern 'flexDirection:\s*["'']row' -CaseSensitive
   ```
   Expected: zero matches in either grep. Any match is a bug — replace the literal with `t(...)` from the `LanguageContext` and the `flexDirection` with a `useLanguage().isRTL ? 'row-reverse' : 'row'` (or rely on a design-system layout primitive that does this).
 
