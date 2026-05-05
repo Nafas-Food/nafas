@@ -41,7 +41,7 @@ function startTimer(
 }
 
 export default function VerifyOtpScreen() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { phone: routePhone } = useLocalSearchParams<{ phone?: string }>();
@@ -124,15 +124,15 @@ export default function VerifyOtpScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={styles.title}>{t('verifyOtp.title')}</Text>
-          <Text style={styles.subtitle}>{t('verifyOtp.subtitle', { phone })}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.title')}</Text>
+          <Text style={[styles.subtitle, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.subtitle', { phone })}</Text>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('verifyOtp.codeLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.codeLabel')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { textAlign: isRTL ? 'right' : 'center' }]}
               value={code}
               onChangeText={setCode}
               keyboardType="number-pad"

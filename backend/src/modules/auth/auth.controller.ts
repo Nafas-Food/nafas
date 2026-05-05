@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -88,6 +88,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Return the currently authenticated customer.' })
   async getMe(@CurrentUser() payload: CurrentUserPayload) {
     return this.auth.getMe(payload.sub);

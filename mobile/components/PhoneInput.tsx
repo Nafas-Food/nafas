@@ -14,6 +14,7 @@ interface PhoneInputProps extends Omit<TextInputProps, 'value' | 'onChangeText'>
   value: string;
   onChangeText: (fullNumber: string) => void;
   locale: 'en' | 'ar';
+  isRTL?: boolean;
 }
 
 const DEFAULT_COUNTRY = MIDDLE_EAST_COUNTRIES[0]; // Egypt +20
@@ -26,6 +27,7 @@ export function PhoneInput({
   value,
   onChangeText,
   locale,
+  isRTL,
   placeholder,
   ...textInputProps
 }: PhoneInputProps) {
@@ -76,7 +78,7 @@ export function PhoneInput({
         <Pressable
           style={styles.countrySection}
           onPress={() => setShowPicker(true)}
-          hitSlop={6}
+          hitSlop={{ top: 12, bottom: 12, left: 8, right: 4 }}
         >
           <TextInput
             style={styles.flag}
@@ -101,7 +103,11 @@ export function PhoneInput({
         <TextInput
           {...textInputProps}
           ref={inputRef}
-          style={styles.input}
+          style={[
+            styles.input,
+            isRTL ? styles.inputRTL : undefined,
+            textInputProps.style,
+          ]}
           value={localNumber}
           onChangeText={handleLocalChange}
           placeholder={placeholder ?? country.placeholder}
@@ -184,5 +190,8 @@ const styles = StyleSheet.create({
     fontFamily: Font.regular,
     color: Colors.foreground,
     paddingVertical: 0,
+  },
+  inputRTL: {
+    textAlign: 'right',
   },
 });

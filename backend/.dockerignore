@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.git/
+.env*
+!.env.example
+coverage/
+*.log
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

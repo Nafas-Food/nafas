@@ -38,7 +38,7 @@ async function bootstrap(): Promise<void> {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Nafas API')
-    .setDescription('Phase 0 Foundation')
+    .setDescription('Nafas API — Phase 1 Authentication + Users')
     .setVersion(process.env.npm_package_version ?? '0.1.0')
     .addBearerAuth()
     .build();

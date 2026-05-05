@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s5,
   },
   sheet: {
-    maxHeight: 380,
+    maxHeight: 280,
     backgroundColor: Colors.card,
     borderRadius: Radius.card,
     borderWidth: 1,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.s4,
-    paddingVertical: Spacing.s3,
+    paddingVertical: Spacing.s2,
     gap: Spacing.s3,
   },
   itemSelected: {
@@ -140,12 +140,12 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: FontSize.body,
+    fontSize: FontSize.bodySm,
     fontFamily: Font.medium,
     color: Colors.foreground,
   },
   code: {
-    fontSize: FontSize.bodySm,
+    fontSize: FontSize.caption,
     fontFamily: Font.semibold,
     color: Colors.mutedForeground,
   },

@@ -23,7 +23,7 @@ import { PhoneInput } from '../../components/PhoneInput';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export default function SignInScreen() {
-  const { t, locale } = useLanguage();
+  const { t, locale, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const auth = useAuth();
@@ -69,21 +69,22 @@ export default function SignInScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={styles.title}>{t('signIn.title')}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.title')}</Text>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('signIn.phoneLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.phoneLabel')}</Text>
             <PhoneInput
               value={phone}
               onChangeText={setPhone}
               locale={locale}
+              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('signIn.passwordLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.passwordLabel')}</Text>
             <Input
               leftIcon="lock"
               showToggle
@@ -92,6 +93,7 @@ export default function SignInScreen() {
               secureTextEntry
               textContentType="password"
               autoComplete="password"
+              isRTL={isRTL}
             />
           </View>
 

@@ -89,4 +89,20 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
   `Number(amount)`.
 - Each contributor uses their own free-tier Supabase project. There is
   no shared dev secret store.
+
+## Phase 1 conventions (do not regress)
+
+- The global `@nestjs/throttler` configuration registers **a single
+  default tier** of `10 requests / 15 min / IP`.
+  SMS-dispatching endpoints (`/auth/send-otp`,
+  `/users/me/change-phone/start`) override it per-route with
+  `@Throttle({ default: { limit: 3, ttl: 60_000 } })`. Never add a
+  second named tier globally — multi-tier configs compound and
+  over-throttle (research R7).
+- The global `HttpExceptionNormalizerFilter`
+  (`backend/src/common/errors/http-exception.filter.ts`) is the
+  canonical place to emit `auth.password_validation` and
+  `auth.rate_limit` structured-log events, because the underlying
+  triggers (`ValidationPipe` rejection and `ThrottlerException`) happen
+  before any controller code runs.
 <!-- MANUAL ADDITIONS END -->
