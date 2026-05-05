@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Patch, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePhoneStartDto } from './dto/change-phone-start.dto';
@@ -10,6 +10,10 @@ import type { CurrentUserPayload } from '../../common/decorators/current-user.de
 import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Users')
+// Class-level: every route on /users currently requires a bearer token.
+// If a future route is marked @Public(), move @ApiBearerAuth per-method
+// instead so Swagger doesn't draw a misleading lock icon on it.
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly users: UsersService) {}
