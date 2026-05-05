@@ -106,6 +106,7 @@ export function PhoneInput({
           style={[
             styles.input,
             isRTL ? styles.inputRTL : undefined,
+            textInputProps.style,
           ]}
           value={localNumber}
           onChangeText={handleLocalChange}
