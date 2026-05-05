@@ -18,7 +18,7 @@ export default function WelcomeScreen() {
   const { t, locale, setLocale, isRTL } = useLanguage();
   const router = useRouter();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -31,7 +31,7 @@ export default function WelcomeScreen() {
       } catch {
         // offline — fallback will be used
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setSettingsLoading(false);
       }
     })();
     return () => { mounted = false; };
@@ -54,9 +54,9 @@ export default function WelcomeScreen() {
           <View style={styles.wordmarkDivider} />
           <Text style={styles.wordmarkEn}>{t('welcome.wordmarkEn')}</Text>
         </View>
-        <Text style={styles.tagline}>{t('welcome.tagline')}</Text>
+        <Text style={[styles.tagline, { textAlign: isRTL ? 'right' : 'center' }]}>{t('welcome.tagline')}</Text>
 
-        {loading && (
+        {settingsLoading && (
           <ActivityIndicator
             color={Colors.primaryForeground}
             style={styles.loader}

@@ -2408,7 +2408,7 @@ yet.
 
 **Purpose**: Swagger surface, end-to-end quickstart pass, FR-019 sample, soft-deleted account check, observability spot-check.
 
-- [X] T081 [P] Verify Swagger documents every Phase 1 endpoint. Boot the backend (`npm run start:dev` from `<repo>\backend`) and open http://localhost:3000/api/v1/docs. Confirm the **Auth** tag lists `send-otp`, `register`, `sign-in`, `refresh`, `sign-out`, `me` and the **Users** tag lists `me`, `me/change-phone/start`, `me/change-phone/verify`, `me/fcm-token`. Each endpoint shows the request body schema with the validation hints from its DTO. The bearer-auth lock icon appears on every authenticated endpoint.
+- [X] T081 [P] Verify Swagger documents every Phase 1 endpoint. Boot the backend (`npm run start:dev` from `<repo>\backend`) and open http://localhost:3000/api/v1/docs. Confirm the **Auth** tag lists `send-otp`, `register`, `sign-in`, `refresh`, `sign-out`, `me` and the **Users** tag lists `me`, `me/change-phone/start`, `me/change-phone/verify`, `me/fcm-token`. Each endpoint shows the request body schema with the validation hints from its DTO. The bearer-auth lock icon appears on every bearer-authenticated endpoint (note: `/auth/refresh` and `/auth/sign-out` are `@Public()` with `JwtRefreshGuard` and use a body token, so they do not carry the Swagger lock icon).
 
 - [X] T082 Run quickstart.md Step 7 (rate-limit verification) to verify FR-016 and FR-016a end-to-end. Confirm the fourth `/auth/send-otp` returns 429 and the eleventh `/auth/sign-in` returns 429.
 

@@ -65,11 +65,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setLocaleState(next);
         const wantRTL = next === 'ar';
         if (I18nManager.isRTL !== wantRTL) {
+          // Apply the RTL flag silently. We do NOT reload here: on iOS / Expo
+          // dev clients, forceRTL is session-scoped and may not survive a JS
+          // reload, which would put us in an infinite reload loop on cold
+          // launch (T-T see prior incident — the app appeared to crash on
+          // open). The next user-initiated setLocale() will reload cleanly
+          // because by then forceRTL is already in effect for the session.
           I18nManager.allowRTL(wantRTL);
           I18nManager.forceRTL(wantRTL);
-          // Direction was out of sync at boot — reload so native layout matches.
-          await reloadApp();
-          return;
         }
       } catch {
         setLocaleState('en');

@@ -12,11 +12,13 @@ import { Colors, Font, FontSize, Spacing, Radius } from '../constants/theme';
 interface InputProps extends TextInputProps {
   leftIcon?: keyof typeof Feather.glyphMap;
   showToggle?: boolean;
+  isRTL?: boolean;
 }
 
 export function Input({
   leftIcon,
   showToggle,
+  isRTL,
   secureTextEntry,
   ...textInputProps
 }: InputProps) {
@@ -47,6 +49,7 @@ export function Input({
           styles.input,
           leftIcon ? styles.inputWithLeftIcon : undefined,
           showToggle ? styles.inputWithRightIcon : undefined,
+          isRTL ? styles.inputRTL : undefined,
           textInputProps.style,
         ]}
         secureTextEntry={showToggle ? !visible : secureTextEntry}
@@ -111,6 +114,9 @@ const styles = StyleSheet.create({
   },
   inputWithRightIcon: {
     paddingRight: Spacing.s1,
+  },
+  inputRTL: {
+    textAlign: 'right',
   },
   rightIcon: {
     marginLeft: Spacing.s2,

@@ -32,12 +32,13 @@ function formatIsoDate(d: Date): string {
 export const pendingRegistration = { fullName: '', phone: '', password: '', birthdate: '' };
 
 export default function RegisterScreen() {
-  const { t, locale } = useLanguage();
+  const { t, locale, isRTL } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [birthdate, setBirthdate] = useState<Date | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -79,7 +80,7 @@ export default function RegisterScreen() {
   maxDate.setFullYear(maxDate.getFullYear() - 13);
 
   const isValid =
-    fullName.trim().length >= 2 && phone.trim().length > 0 && password.length >= 8 && birthdate !== null;
+    fullName.trim().length >= 2 && phone.trim().length > 0 && password.length >= 8 && birthdate !== null && password === confirmPassword && confirmPassword.length > 0;
 
   return (
     <KeyboardAvoidingView
@@ -101,44 +102,69 @@ export default function RegisterScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={styles.title}>{t('register.title')}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.title')}</Text>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('register.fullNameLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.fullNameLabel')}</Text>
             <Input
               leftIcon="user"
               value={fullName}
               onChangeText={setFullName}
               autoCapitalize="words"
+              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('register.phoneLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.phoneLabel')}</Text>
             <PhoneInput
               value={phone}
               onChangeText={setPhone}
               locale={locale}
+              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('register.passwordLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.passwordLabel')}</Text>
             <Input
               leftIcon="lock"
               showToggle
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              isRTL={isRTL}
             />
+            {password.length > 0 && password.length < 8 && (
+              <Text style={[styles.hintText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>
+                {t('register.passwordTooShort')}
+              </Text>
+            )}
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('register.birthdateLabel')}</Text>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.confirmPasswordLabel')}</Text>
+            <Input
+              leftIcon="lock"
+              showToggle
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              isRTL={isRTL}
+            />
+            {confirmPassword.length > 0 && password !== confirmPassword && (
+              <Text style={[styles.hintText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>
+                {t('register.passwordMismatch')}
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.birthdateLabel')}</Text>
             <Pressable style={styles.dateInput} onPress={() => setPickerOpen(true)}>
-              <Text style={birthdate ? styles.dateValue : styles.datePlaceholder}>
+              <Text style={[birthdate ? styles.dateValue : styles.datePlaceholder, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {birthdate ? formatIsoDate(birthdate) : t('register.datePlaceholder')}
               </Text>
             </Pressable>
@@ -237,5 +263,11 @@ const styles = StyleSheet.create({
     fontSize: FontSize.bodySm,
     fontFamily: Font.regular,
     marginBottom: Spacing.s3,
+  },
+  hintText: {
+    color: Colors.destructive,
+    fontSize: FontSize.micro,
+    fontFamily: Font.regular,
+    marginTop: Spacing.s1,
   },
 });
