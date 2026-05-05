@@ -3,7 +3,12 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const supabaseUrl = process.env.SUPABASE_URL ?? '';
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error(
+      'SUPABASE_URL is required to seed settings. Refusing to write a relative URL for WELCOME_BACKGROUND_IMAGE.',
+    );
+  }
 
   const defaults = [
     {

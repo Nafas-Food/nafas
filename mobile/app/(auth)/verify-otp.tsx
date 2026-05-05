@@ -56,6 +56,7 @@ export default function VerifyOtpScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(60);
+  const [isResending, setIsResending] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -68,11 +69,15 @@ export default function VerifyOtpScreen() {
   }, []);
 
   const handleResend = async () => {
+    if (isResending) return;
+    setIsResending(true);
     try {
       await sendOtp(phone);
       startTimer(timerRef, setResendTimer);
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -149,8 +154,10 @@ export default function VerifyOtpScreen() {
           {resendTimer > 0 ? (
             <Text style={styles.timerText}>{t('verifyOtp.resendIn', { seconds: resendTimer })}</Text>
           ) : (
-            <Pressable onPress={handleResend}>
-              <Text style={styles.resendLink}>{t('verifyOtp.resend')}</Text>
+            <Pressable onPress={handleResend} disabled={isResending}>
+              <Text style={[styles.resendLink, isResending && styles.buttonDisabled]}>
+                {t('verifyOtp.resend')}
+              </Text>
             </Pressable>
           )}
         </View>

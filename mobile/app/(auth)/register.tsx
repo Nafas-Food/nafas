@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -42,9 +42,13 @@ export default function RegisterScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async () => {
     if (!birthdate) return;
+    // Synchronous guard against double-tap before React re-renders disabled.
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setError(null);
     setLoading(true);
     const name = fullName.trim();
@@ -60,6 +64,7 @@ export default function RegisterScreen() {
       setError(t(`errors.${errorCodeOf(err)}`));
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

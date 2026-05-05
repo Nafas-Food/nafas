@@ -24,16 +24,16 @@ export class SettingsController {
   @ApiOperation({ summary: 'Get all public settings as key-value map.' })
   @ApiResponse({ status: 200, description: 'Settings map returned.' })
   async getAll() {
-    return this.settings.getAll();
+    return this.settings.getPublicAll();
   }
 
   @Public()
   @Get(':key')
-  @ApiOperation({ summary: 'Get a single setting by key.' })
+  @ApiOperation({ summary: 'Get a single public setting by key.' })
   @ApiResponse({ status: 200, description: 'Setting value returned.' })
-  @ApiResponse({ status: 404, description: 'Setting not found.' })
+  @ApiResponse({ status: 404, description: 'Setting not found or not public.' })
   async getByKey(@Param('key') key: string) {
-    const value = await this.settings.getByKey(key);
+    const value = await this.settings.getPublicByKey(key);
     if (value === null) throw new NotFoundException();
     return { key, value };
   }

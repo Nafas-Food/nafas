@@ -44,6 +44,7 @@ export default function WelcomeScreen() {
       source={imageSource}
       style={styles.container}
       resizeMode="cover"
+      onError={() => setBgUrl(null)}
     >
       <View style={styles.overlay} />
 

@@ -53,12 +53,15 @@ export function PhoneInput({
   const handleLocalChange = (text: string) => {
     const digitsOnly = stripLeadingZero(text.replace(/\D/g, ''));
     setLocalNumber(digitsOnly);
-    onChangeText(country.code + digitsOnly);
+    // Don't emit a prefix-only value (e.g. "+20") when the user has cleared
+    // the field — surface an empty string so parent validation treats it as
+    // missing rather than a 3-char "valid" phone.
+    onChangeText(digitsOnly === '' ? '' : country.code + digitsOnly);
   };
 
   const handleCountryChange = (newCountry: Country) => {
     setCountry(newCountry);
-    onChangeText(newCountry.code + localNumber);
+    onChangeText(localNumber === '' ? '' : newCountry.code + localNumber);
   };
 
   return (

@@ -57,14 +57,16 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 function ProvidersInner({ children }: { children: React.ReactNode }) {
   const { ready } = useLanguage();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontsError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
   });
 
-  if (!ready || !fontsLoaded) {
+  // If font loading errors out (e.g., offline first launch), don't block the
+  // app — fall back to system fonts so the user can still sign in.
+  if (!ready || (!fontsLoaded && !fontsError)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />

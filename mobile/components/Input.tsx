@@ -47,6 +47,7 @@ export function Input({
           styles.input,
           leftIcon ? styles.inputWithLeftIcon : undefined,
           showToggle ? styles.inputWithRightIcon : undefined,
+          textInputProps.style,
         ]}
         secureTextEntry={showToggle ? !visible : secureTextEntry}
         onFocus={(e) => {
