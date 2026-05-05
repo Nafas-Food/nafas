@@ -9,11 +9,14 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "axios": "^1.16.0",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
+    "expo-font": "^55.0.6",
     "expo-localization": "~17.0.8",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.23",

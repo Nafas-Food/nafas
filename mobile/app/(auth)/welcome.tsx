@@ -1,15 +1,52 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ImageBackground,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
-import { Colors, FontSize, Spacing, Radius } from '../../constants/theme';
+import { Colors, Font, FontSize, Spacing, Radius } from '../../constants/theme';
+import { fetchSettings } from '../../services/settings';
+
+const FALLBACK_IMAGE = require('../../assets/hero_vertical.png');
 
 export default function WelcomeScreen() {
   const { t, locale, setLocale } = useLanguage();
   const router = useRouter();
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const settings = await fetchSettings();
+        if (mounted && settings.WELCOME_BACKGROUND_IMAGE) {
+          setBgUrl(settings.WELCOME_BACKGROUND_IMAGE);
+        }
+      } catch {
+        // offline — fallback will be used
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const imageSource = bgUrl ? { uri: bgUrl } : FALLBACK_IMAGE;
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={imageSource}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
+
       <View style={styles.content}>
         <View style={styles.wordmark}>
           <Text style={styles.wordmarkAr}>نفَس</Text>
@@ -18,19 +55,36 @@ export default function WelcomeScreen() {
         </View>
         <Text style={styles.tagline}>{t('welcome.tagline')}</Text>
 
+        {loading && (
+          <ActivityIndicator
+            color={Colors.primaryForeground}
+            style={styles.loader}
+          />
+        )}
+
         <View style={styles.buttonGroup}>
           <Pressable
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.buttonPressed,
+            ]}
             onPress={() => router.push('/(auth)/register')}
           >
-            <Text style={styles.primaryButtonText}>{t('welcome.createAccount')}</Text>
+            <Text style={styles.primaryButtonText}>
+              {t('welcome.createAccount')}
+            </Text>
           </Pressable>
 
           <Pressable
-            style={({ pressed }) => [styles.ghostButton, pressed && styles.buttonPressed]}
+            style={({ pressed }) => [
+              styles.ghostButton,
+              pressed && styles.buttonPressed,
+            ]}
             onPress={() => router.push('/(auth)/sign-in')}
           >
-            <Text style={styles.ghostButtonText}>{t('welcome.signIn')}</Text>
+            <Text style={styles.ghostButtonText}>
+              {t('welcome.signIn')}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -39,21 +93,29 @@ export default function WelcomeScreen() {
         style={styles.langToggle}
         onPress={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
       >
-        <Text style={styles.langToggleText}>{t('welcome.languageToggle')}</Text>
+        <Text style={styles.langToggleText}>
+          {t('welcome.languageToggle')}
+        </Text>
       </Pressable>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.s5,
     justifyContent: 'center',
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(20, 10, 0, 0.45)',
+  },
   content: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: Spacing.s5,
+    zIndex: 1,
   },
   wordmark: {
     flexDirection: 'row',
@@ -62,27 +124,31 @@ const styles = StyleSheet.create({
   },
   wordmarkAr: {
     fontSize: FontSize.h1,
-    fontWeight: '700',
-    color: Colors.foreground,
+    fontFamily: Font.bold,
+    color: Colors.primaryForeground,
     letterSpacing: -0.5,
   },
   wordmarkEn: {
     fontSize: FontSize.h1,
-    fontWeight: '700',
-    color: Colors.foreground,
+    fontFamily: Font.bold,
+    color: Colors.primaryForeground,
     letterSpacing: 0.5,
   },
   wordmarkDivider: {
     width: 1.5,
     height: 22,
-    backgroundColor: Colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   tagline: {
     fontSize: FontSize.body,
-    color: Colors.mutedForeground,
+    fontFamily: Font.regular,
+    color: 'rgba(255, 255, 255, 0.85)',
     textAlign: 'center',
     marginTop: Spacing.s2,
     lineHeight: FontSize.body * 1.5,
+  },
+  loader: {
+    marginTop: Spacing.s4,
   },
   buttonGroup: {
     width: '100%',
@@ -99,7 +165,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: Colors.primaryForeground,
     fontSize: FontSize.bodyLg,
-    fontWeight: '700',
+    fontFamily: Font.bold,
   },
   ghostButton: {
     backgroundColor: 'transparent',
@@ -108,12 +174,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: Colors.primaryForeground,
   },
   ghostButtonText: {
-    color: Colors.primary,
+    color: Colors.primaryForeground,
     fontSize: FontSize.bodyLg,
-    fontWeight: '600',
+    fontFamily: Font.semibold,
   },
   buttonPressed: {
     opacity: 0.85,
@@ -124,12 +190,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Spacing.s4,
     paddingVertical: Spacing.s2,
-    backgroundColor: Colors.muted,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: Radius.pill,
+    zIndex: 1,
   },
   langToggleText: {
-    color: Colors.primary,
+    color: Colors.primaryForeground,
     fontSize: FontSize.bodySm,
-    fontWeight: '600',
+    fontFamily: Font.semibold,
   },
 });

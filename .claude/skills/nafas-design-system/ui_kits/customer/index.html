@@ -10,13 +10,13 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; background:#1a1a2e; font-family:'Inter',sans-serif; }
+html, body { height:100%; background:#1A120B; font-family:'Inter',sans-serif; }
 body { display:flex; align-items:center; justify-content:center; }
 .stage { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
 .phone-wrap { position:relative; }
 .phone-frame {
   width:390px; height:844px;
-  background:#FAFAFE;
+  background:#FAF7F2;
   border-radius:44px;
   overflow:hidden;
   box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
@@ -33,15 +33,29 @@ body { display:flex; align-items:center; justify-content:center; }
 .status-bar .icons { display:flex; align-items:center; gap:6px; }
 .screen-content { flex:1; overflow-y:auto; overflow-x:hidden; position:relative; }
 .screen-content::-webkit-scrollbar { display:none; }
-/* Bottom tab bar */
+/* Floating glass tab bar */
 .tab-bar {
-  height:83px; flex-shrink:0;
-  background:#fff; border-top:1px solid #E4E2F8;
-  display:flex; align-items:flex-start; padding-top:8px;
+  flex-shrink:0;
+  display:flex; justify-content:center;
+  padding: 12px 16px 20px;
+  background: transparent;
+  position: relative;
 }
-.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding-top:4px; }
-.tab-label { font-size:10px; font-weight:500; color:#7C7A9E; }
-.tab-label.active { color:#4F46E5; font-weight:600; }
+.glass-pill {
+  display:flex; align-items:center; gap:2px;
+  padding:8px 10px;
+  border-radius:100px;
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(20px) saturate(1.8);
+  -webkit-backdrop-filter:blur(20px) saturate(1.8);
+  border:1px solid rgba(255,255,255,0.75);
+  box-shadow:0 8px 32px rgba(196,98,45,.12), 0 1px 0 rgba(255,255,255,0.8) inset;
+  width: 100%;
+}
+.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:6px 4px; border-radius:100px; transition:background .15s, color .15s; }
+.tab-item.active { background:rgba(196,98,45,.13); }
+.tab-label { font-size:10px; font-weight:600; color:#6B5040; }
+.tab-label.active { color:#C4622D; }
 /* Nav outside phone */
 .nav-bar {
   position:absolute; bottom:-56px; left:0; right:0;
@@ -60,18 +74,18 @@ body { display:flex; align-items:center; justify-content:center; }
 </div>
 <script type="text/babel">
 const C = {
-  bg: '#FAFAFE', fg: '#0D0B1E', card: '#FFFFFF',
-  primary: '#4F46E5', primaryFg: '#FFFFFF',
-  secondary: '#EEF2FF', secondaryFg: '#4338CA',
-  muted: '#F0F0FF', mutedFg: '#7C7A9E',
-  accent: '#F59E0B', border: '#E4E2F8',
-  success: '#16A34A', destructive: '#DC2626',
-  input: '#ECEAFA',
+  bg: '#FAF7F2', fg: '#2C1F14', card: '#FFFFFF',
+  primary: '#C4622D', primaryFg: '#FFFFFF',
+  secondary: '#F5ECD7', secondaryFg: '#A8521F',
+  muted: '#F2EDE4', mutedFg: '#6B5040',
+  accent: '#D4944A', border: '#EDE6DA',
+  success: '#16A34A', destructive: '#C0392B',
+  input: '#F2EDE4', sand: '#B8A898', cream: '#F5ECD7',
 };
 
 const STATUS_COLORS = {
-  pending:'#F59E0B', confirmed:'#3B82F6', preparing:'#8B5CF6',
-  ready:'#10B981', on_the_way:'#6366F1', delivered:'#16A34A', cancelled:'#EF4444'
+  pending:'#D4944A', confirmed:'#3B82F6', preparing:'#8B5CF6',
+  ready:'#10B981', on_the_way:'#C4622D', delivered:'#16A34A', cancelled:'#C0392B'
 };
 
 // ─── Icons (Feather-style inline SVGs) ────────────────────
@@ -135,18 +149,20 @@ const BottomTabs = ({ active, onTab }) => {
   ];
   return (
     <div className="tab-bar">
-      {tabs.map(t => (
-        <div key={t.id} className="tab-item" onClick={() => onTab(t.id)}>
-          <Icon name={t.icon} size={22} color={active===t.id ? C.primary : C.mutedFg} />
-          <span className={`tab-label ${active===t.id?'active':''}`}>{t.label}</span>
-        </div>
-      ))}
+      <div className="glass-pill">
+        {tabs.map(t => (
+          <div key={t.id} className={`tab-item ${active===t.id?'active':''}`} onClick={() => onTab(t.id)}>
+            <Icon name={t.icon} size={22} color={active===t.id ? C.primary : C.mutedFg} />
+            <span className={`tab-label ${active===t.id?'active':''}`}>{t.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
 // ─── Chef Avatar Placeholder ──────────────────────────────
-const AvatarPlaceholder = ({ name, size=52, colors=['#c7d2fe','#818cf8'] }) => {
+const AvatarPlaceholder = ({ name, size=52, colors=['#F5ECD7','#D4944A'] }) => {
   const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   return (
     <div style={{
@@ -271,9 +287,9 @@ const HomeScreen = ({ onNavigate }) => {
   const [cartCount, setCartCount] = React.useState(0);
   const cats = ['All','Koshary','Mahshi','Molokheya','Hawawshi','Sweets','Feteer'];
   const chefs = [
-    { id:'hm1', name:'Umm Ahmed', spec:'Koshary · Molokheya', rating:4.9, time:'45–60 min', open:true, colors:['#c7d2fe','#818cf8'] },
-    { id:'hm2', name:'Zeinab Hassan', spec:'Mahshi · Feteer', rating:4.8, time:'50–70 min', open:true, colors:['#fde68a','#fb923c'] },
-    { id:'hm3', name:'Fatma El-Sayed', spec:'Sweets · Hawawshi', rating:4.7, time:'40–55 min', open:true, colors:['#bbf7d0','#22c55e'] },
+    { id:'hm1', name:'Umm Ahmed', spec:'Koshary · Molokheya', rating:4.9, time:'45–60 min', open:true, colors:['#F5ECD7','#C4622D'] },
+    { id:'hm2', name:'Zeinab Hassan', spec:'Mahshi · Feteer', rating:4.8, time:'50–70 min', open:true, colors:['#FDEEC8','#D4944A'] },
+    { id:'hm3', name:'Fatma El-Sayed', spec:'Sweets · Hawawshi', rating:4.7, time:'40–55 min', open:true, colors:['#F5ECD7','#B8A898'] },
   ];
   const dishes = [
     { id:'d1', name:'Koshary Family Pot', desc:'Rice, lentils, macaroni, crispy onions, two sauces.', price:65, chef:'Umm Ahmed', prepTime:20, img:'../../assets/images/koshary.png' },
@@ -306,7 +322,7 @@ const HomeScreen = ({ onNavigate }) => {
           </div>
           <button onClick={() => onNavigate('cart')} style={{ position:'relative', background:C.secondary, border:'none', borderRadius:12, width:42, height:42, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
             <Icon name="shopping-cart" size={20} color={C.primary} />
-            {cartCount > 0 && <div style={{ position:'absolute', top:-4, right:-4, width:18, height:18, background:C.primary, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff' }}><span style={{ fontSize:10, fontWeight:700, color:'#fff' }}>{cartCount}</span></div>}
+            {cartCount > 0 && <div style={{ position:'absolute', top:-4, right:-4, width:18, height:18, background:C.primary, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', border:`2px solid ${C.bg}` }}><span style={{ fontSize:10, fontWeight:700, color:'#fff' }}>{cartCount}</span></div>}
           </button>
         </div>
         {/* Greeting */}
@@ -434,11 +450,12 @@ const ChefScreen = ({ onNavigate }) => {
             <button onClick={() => onNavigate('cart')} style={{ position:'relative', width:38, height:38, borderRadius:19, background:'rgba(255,255,255,0.85)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <Icon name="shopping-cart" size={18} color={C.fg} />
               {totalInCart > 0 && <div style={{ position:'absolute', top:-3, right:-3, width:16, height:16, background:C.primary, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ fontSize:9, fontWeight:700, color:'#fff' }}>{totalInCart}</span></div>}
+
             </button>
           </div>
         </div>
         <div style={{ width:90, height:90, borderRadius:45, border:'3px solid #fff', overflow:'hidden', margin:'0 auto 12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)' }}>
-          <AvatarPlaceholder name="Umm Ahmed" size={84} colors={['#c7d2fe','#818cf8']} />
+          <AvatarPlaceholder name="Umm Ahmed" size={84} colors={['#F5ECD7','#C4622D']} />
         </div>
         <div style={{ fontSize:22, fontWeight:700, color:C.fg }}>Umm Ahmed</div>
         <div style={{ fontSize:15, color:C.mutedFg, marginTop:2, marginBottom:12 }}>أم أحمد</div>
@@ -449,6 +466,7 @@ const ChefScreen = ({ onNavigate }) => {
           <Icon name="heart" size={11} color="#fff" />
           <span style={{ fontSize:12, fontWeight:600, color:'#fff' }}>Saved to Favorites</span>
         </div>}
+
       </div>
       {/* Stats */}
       <div style={{ margin:'14px 20px 0', background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:14, display:'flex', alignItems:'center', gap:8 }}>
@@ -614,9 +632,9 @@ const CartScreen = ({ onNavigate }) => {
 // ─── Screen 6: Orders ────────────────────────────────────
 const OrdersScreen = ({ onNavigate }) => {
   const orders = [
-    { id:'o1', chef:'Umm Ahmed', date:'Today, 2:30 PM', status:'preparing', items:'2× Koshary, 1× Molokheya', total:225, eta:'3:15 PM', colors:['#c7d2fe','#818cf8'] },
-    { id:'o2', chef:'Zeinab Hassan', date:'Yesterday, 7:00 PM', status:'delivered', items:'1× Mahshi Platter', total:120, eta:null, colors:['#fde68a','#fb923c'] },
-    { id:'o3', chef:'Fatma El-Sayed', date:'3 May, 1:00 PM', status:'delivered', items:'2× Om Ali', total:110, eta:null, colors:['#bbf7d0','#22c55e'] },
+    { id:'o1', chef:'Umm Ahmed', date:'Today, 2:30 PM', status:'preparing', items:'2× Koshary, 1× Molokheya', total:225, eta:'3:15 PM', colors:['#F5ECD7','#C4622D'] },
+    { id:'o2', chef:'Zeinab Hassan', date:'Yesterday, 7:00 PM', status:'delivered', items:'1× Mahshi Platter', total:120, eta:null, colors:['#FDEEC8','#D4944A'] },
+    { id:'o3', chef:'Fatma El-Sayed', date:'3 May, 1:00 PM', status:'delivered', items:'2× Om Ali', total:110, eta:null, colors:['#F5ECD7','#B8A898'] },
   ];
   const statusLabel = { pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', on_the_way:'On the Way', delivered:'Delivered', cancelled:'Cancelled' };
   const statusIcon = { preparing:'clock', on_the_way:'navigation', delivered:'check-circle' };

@@ -5,47 +5,91 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #FAFAFE; padding: 20px; }
-  .section-label { font-size: 10px; font-weight: 600; color: #7C7A9E; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-  .section { margin-bottom: 16px; }
+  body { font-family: 'Inter', sans-serif; background: #FAF7F2; padding: 20px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #B8A898; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .section { margin-bottom: 18px; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 500; cursor: pointer; }
-  .chip-default { background: #F0F0FF; color: #7C7A9E; }
-  .chip-active { background: #4F46E5; color: #fff; }
-  .chip-secondary { background: #EEF2FF; color: #4F46E5; font-size: 12px; font-weight: 500; padding: 5px 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 100px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #EDE6DA; background: #fff; color: #2C1F14; transition: border-color .12s; }
+  .chip:hover { border-color: #C4622D; }
+  .chip-active { background: #C4622D; border-color: #C4622D; color: #fff; font-weight: 600; }
+  .chip-badge { width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .chip-active .chip-badge { background: rgba(255,255,255,.28); color: #fff; }
+  .chip:not(.chip-active) .chip-badge { background: #F5ECD7; color: #C4622D; }
+  .chip-secondary { background: #F5ECD7; color: #C4622D; border-color: transparent; font-size: 12px; padding: 5px 12px; }
   /* Language toggle */
-  .lang-toggle { display: flex; align-items: center; background: rgba(255,255,255,0.85); border: 1px solid #E4E2F8; border-radius: 100px; padding: 4px; backdrop-filter: blur(8px); gap: 0; width: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .lang-seg { padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .lang-active { background: #fff; color: #0D0B1E; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-  .lang-inactive { color: #7C7A9E; }
+  .lang-toggle { display: flex; align-items: center; background: #fff; border: 1px solid #EDE6DA; border-radius: 100px; padding: 3px; gap: 2px; width: fit-content; }
+  .lang-seg { padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #6B5040; }
+  .lang-active { background: #C4622D; color: #fff; }
+  /* Open/Closed toggle */
+  .status-toggle { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #EDE6DA; border-radius: 100px; padding: 6px 16px 6px 6px; width: fit-content; }
+  .status-dot-wrap { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
+
 <div class="section">
-  <div class="section-label">Category Chips</div>
+  <div class="section-label">Category Chips — Customer App</div>
   <div class="row">
     <div class="chip chip-active">All</div>
-    <div class="chip chip-default">Koshary</div>
-    <div class="chip chip-default">Mahshi</div>
-    <div class="chip chip-default">Molokheya</div>
-    <div class="chip chip-default">Sweets</div>
-    <div class="chip chip-default">Hawawshi</div>
+    <div class="chip">Egyptian</div>
+    <div class="chip">Grilled</div>
+    <div class="chip">Vegetarian</div>
+    <div class="chip">Desserts</div>
+    <div class="chip">Drinks</div>
   </div>
 </div>
+
 <div class="section">
-  <div class="section-label">Specialty Tags (Chef Profile)</div>
+  <div class="section-label">Filter Chips with Count — Chef Orders</div>
+  <div class="row">
+    <div class="chip chip-active">All Orders <span class="chip-badge">7</span></div>
+    <div class="chip">Pending <span class="chip-badge">2</span></div>
+    <div class="chip">Active <span class="chip-badge">3</span></div>
+    <div class="chip">Done</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Specialty Tags</div>
   <div class="row">
     <div class="chip chip-secondary">Koshary</div>
     <div class="chip chip-secondary">Molokheya</div>
     <div class="chip chip-secondary">Fattah</div>
+    <div class="chip chip-secondary">Om Ali</div>
   </div>
 </div>
+
 <div class="section">
   <div class="section-label">Language Toggle</div>
-  <div class="lang-toggle">
-    <div class="lang-seg lang-active">EN</div>
-    <div class="lang-seg lang-inactive">عربي</div>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <div class="lang-toggle">
+      <button class="lang-seg lang-active">EN</button>
+      <button class="lang-seg">عربي</button>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-seg">EN</button>
+      <button class="lang-seg lang-active">عربي</button>
+    </div>
   </div>
 </div>
+
+<div class="section">
+  <div class="section-label">Open / Closed — Chef App</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="status-toggle">
+      <div class="status-dot-wrap" style="background:#16A34A">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:#16A34A">Open for orders</span>
+    </div>
+    <div class="status-toggle">
+      <div class="status-dot-wrap" style="background:#B8A898">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:#B8A898">Closed</span>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

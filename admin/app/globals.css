@@ -2,22 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #FAF7F2;
+  --foreground: #2C1F14;
+  --card: #FFFFFF;
+  --card-foreground: #2C1F14;
+  --primary: #C4622D;
+  --primary-hover: #A8521F;
+  --primary-foreground: #FFFFFF;
+  --primary-light: #F5ECD7;
+  --accent: #D4944A;
+  --accent-light: #FDEEC8;
+  --accent-foreground: #FFFFFF;
+  --muted: #F2EDE4;
+  --muted-foreground: #6B5040;
+  --border: #EDE6DA;
+  --input: #F2EDE4;
+  --ring: #C4622D;
+  --success: #16A34A;
+  --destructive: #C0392B;
+  --warning: #D4944A;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer utilities {

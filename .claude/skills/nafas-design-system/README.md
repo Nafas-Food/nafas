@@ -26,7 +26,7 @@ The platform is mobile-first (React Native / Expo), fully bilingual (English + A
 - **Codebase**: Mounted at `nafas_food/` via File System Access API
   - Mobile app: `nafas_food/artifacts/mobile/`
   - Docs: `nafas_food/docs/`
-- **No Figma file was provided** — design system derived from codebase only
+- **No Figma file was provided** — design system derived from codebase + brand palette brief
 
 ---
 
@@ -56,21 +56,29 @@ The platform is mobile-first (React Native / Expo), fully bilingual (English + A
 ## VISUAL FOUNDATIONS
 
 ### Color System
-The palette is **indigo-forward** — a warm off-white background with indigo-600 as primary and amber-500 as accent. Feels premium and trustworthy while remaining warm.
+The palette is **terracotta-forward** — a warm off-white background with terracotta as primary and saffron as accent. Inspired by Egyptian earthenware and spice markets. Distinct from Talabat (orange), Careem (green), and food-tech blue palettes.
 
-- **Primary**: Indigo `#4F46E5` (indigo-600) — CTAs, active states, interactive elements
-- **Secondary**: Light indigo `#EEF2FF` (indigo-50) — chips, badges, subtle fills
-- **Accent**: Amber `#F59E0B` — star ratings, hero eyebrow labels, warmth moments
-- **Background**: Warm off-white `#FAFAFE` — just a hint of lavender warmth
+**Primary Palette**
+- **Primary**: Terracotta `#C4622D` — CTAs, active states, interactive elements, focus rings
+- **Primary Light**: Cream `#F5ECD7` — button hover fills, chip backgrounds, secondary fills
+- **Accent**: Saffron `#D4944A` — accent buttons, star ratings, eyebrow labels, warmth moments
+- **Accent Light**: Warm Tint `#FDEEC8` — lightest accent fill
+
+**Neutrals — Earthy & Warm**
+- **Foreground**: Umber `#2C1F14` — primary text, near-black with warmth
+- **Mocha**: `#6B5040` — secondary text, labels, muted foreground
+- **Sand**: `#B8A898` — placeholders, icons, metadata, inactive tabs
+- **Background**: `#FAF7F2` — warm off-white page surface
 - **Card**: Pure white `#FFFFFF`
-- **Border**: Soft indigo-tinted `#E4E2F8`
-- **Muted**: `#F0F0FF` — lightest fill for inactive/secondary zones
-- **Muted foreground**: `#7C7A9E` — secondary text, placeholders, metadata
-- **Foreground**: Near-black `#0D0B1E` — slightly purple-tinted, not pure black
-- **Destructive**: Red `#DC2626`
-- **Success**: Green `#16A34A`
+- **Border**: `#EDE6DA` — warm beige dividers
+- **Muted Fill**: `#F2EDE4` — inactive zones, input background
 
-Status lifecycle colors: Pending=Amber, Confirmed=Blue, Preparing=Purple, Ready=Emerald, On the Way=Indigo, Delivered=Green, Cancelled=Red.
+**Semantic**
+- **Success**: Green `#16A34A`
+- **Destructive**: Red `#C0392B`
+- **Warning**: Saffron `#D4944A`
+
+Status lifecycle colors: Pending=Saffron `#D4944A`, Confirmed=Blue `#3B82F6`, Preparing=Purple `#8B5CF6`, Ready=Emerald `#10B981`, On the Way=Terracotta `#C4622D`, Delivered=Green `#16A34A`, Cancelled=Red `#C0392B`.
 
 ### Typography
 **Font**: Inter (Google Fonts) — 400, 500, 600, 700 weights only.
@@ -101,10 +109,10 @@ Token scale: 4, 8, 12, 14, 16, 20, 24, 28, 32px. Container padding: 20px horizon
 Cards use `backgroundColor: white`, `borderWidth: 1px`, `borderColor: #E4E2F8`, `borderRadius: 16px`, subtle shadow (iOS: `shadowOpacity 0.06 / shadowRadius 8`). No colored left-border accents. No heavy drop shadows.
 
 ### Backgrounds
-- Default: warm off-white `#FAFAFE`
+- Default: warm off-white `#FAF7F2`
 - No full-bleed gradient backgrounds
 - Hero banners use full-bleed photography with a dark overlay (`rgba(20,10,0,0.45)`)
-- Indigo secondary fills (`#EEF2FF`) used for chef hero sections
+- Cream secondary fills (`#F5ECD7`) used for chef hero sections and secondary surfaces
 
 ### Animations & Interactions
 - **Press states**: `opacity: 0.85–0.92` + very subtle `scale: 0.98–0.99` on cards and CTAs. No color changes on press.
@@ -134,7 +142,7 @@ No custom SVG icons, no icon font, no PNG icon sprites. No emoji as icons.
 Key icon mappings documented in `docs/05_DESIGN_SYSTEM.md` and `colors_and_type.css`.
 
 Logos and brand assets:
-- `assets/images/icon.png` — app icon / logo mark (used in 40×40 indigo rounded square)
+- `assets/images/icon.png` — app icon / logo mark (used in 40×40 terracotta rounded square)
 - `assets/images/hero_banner.png` — hero food photography
 - `assets/images/koshary.png`, `mahshi.png`, `molokheya.png` — dish photography
 

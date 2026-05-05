@@ -10,13 +10,13 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; background:#0f0e1a; font-family:'Inter',sans-serif; }
+html, body { height:100%; background:#1A120B; font-family:'Inter',sans-serif; }
 body { display:flex; align-items:center; justify-content:center; }
 .stage { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
 .phone-wrap { position:relative; }
 .phone-frame {
   width:390px; height:844px;
-  background:#FAFAFE;
+  background:#FAF7F2;
   border-radius:44px;
   overflow:hidden;
   box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
@@ -26,17 +26,20 @@ body { display:flex; align-items:center; justify-content:center; }
 .screen-content { flex:1; overflow-y:auto; overflow-x:hidden; position:relative; padding-bottom:100px; }
 .screen-content::-webkit-scrollbar { display:none; }
 .status-bar { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; flex-shrink:0; }
-/* Floating pill tab bar */
+/* Floating glass tab bar */
 .float-tab-bar {
   position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
-  background:#fff; border:1px solid #E4E2F8;
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(20px) saturate(1.8);
+  -webkit-backdrop-filter:blur(20px) saturate(1.8);
+  border:1px solid rgba(255,255,255,0.75);
   border-radius:100px; padding:6px;
   display:flex; align-items:center; gap:2px;
-  box-shadow: 0 8px 32px rgba(79,70,229,0.14);
+  box-shadow: 0 8px 32px rgba(196,98,45,0.13), 0 1px 0 rgba(255,255,255,0.8) inset;
   z-index:100;
 }
-.f-tab { display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:100px; cursor:pointer; transition:all 0.2s; }
-.f-tab-active { background:#4F46E5; padding:8px 16px; }
+.f-tab { display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:100px; cursor:pointer; transition:all 0.2s; color:#6B5040; }
+.f-tab-active { background:rgba(196,98,45,0.13); color:#C4622D; }
 .nav-bar { position:absolute; bottom:-52px; left:0; right:0; display:flex; justify-content:center; gap:8px; }
 .nav-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; }
 .nav-dot.active { background:#fff; transform:scale(1.3); }
@@ -54,16 +57,17 @@ body { display:flex; align-items:center; justify-content:center; }
 </div>
 <script type="text/babel">
 const C = {
-  bg:'#FAFAFE', fg:'#0D0B1E', card:'#FFFFFF',
-  primary:'#4F46E5', primaryFg:'#FFFFFF',
-  secondary:'#EEF2FF', secondaryFg:'#4338CA',
-  muted:'#F0F0FF', mutedFg:'#7C7A9E',
-  accent:'#F59E0B', border:'#E4E2F8',
-  success:'#16A34A', destructive:'#DC2626',
+  bg:'#FAF7F2', fg:'#2C1F14', card:'#FFFFFF',
+  primary:'#C4622D', primaryFg:'#FFFFFF',
+  secondary:'#F5ECD7', secondaryFg:'#A8521F',
+  muted:'#F2EDE4', mutedFg:'#6B5040',
+  accent:'#D4944A', border:'#EDE6DA',
+  success:'#16A34A', destructive:'#C0392B',
+  sand:'#B8A898', cream:'#F5ECD7', warmTint:'#FDEEC8',
 };
 const STATUS_COLORS = {
-  pending:'#F59E0B', confirmed:'#3B82F6', preparing:'#8B5CF6',
-  ready:'#10B981', on_the_way:'#6366F1', delivered:'#16A34A', cancelled:'#EF4444',
+  pending:'#D4944A', confirmed:'#3B82F6', preparing:'#8B5CF6',
+  ready:'#10B981', on_the_way:'#C4622D', delivered:'#16A34A', cancelled:'#C0392B',
 };
 const STATUS_NEXT = {
   pending:'confirmed', confirmed:'preparing', preparing:'ready',
@@ -143,8 +147,8 @@ const FloatTabs = ({ active, onTab }) => {
     <div className="float-tab-bar">
       {tabs.map(t => (
         <div key={t.id} className={`f-tab ${active===t.id?'f-tab-active':''}`} onClick={() => onTab(t.id)}>
-          <Icon name={t.icon} size={17} color={active===t.id ? '#fff' : C.mutedFg} />
-          {active===t.id && <span style={{ fontSize:12, fontWeight:600, color:'#fff' }}>{t.label}</span>}
+          <Icon name={t.icon} size={17} color={active===t.id ? C.primary : C.mutedFg} />
+          {active===t.id && <span style={{ fontSize:12, fontWeight:600, color:C.primary }}>{t.label}</span>}
         </div>
       ))}
     </div>

@@ -14,6 +14,7 @@ import { HttpExceptionNormalizerFilter } from './common/errors/http-exception.fi
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TwilioModule } from './modules/twilio/twilio.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -32,6 +33,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     TwilioModule,
     AuthModule,
     UsersModule,
+    SettingsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
