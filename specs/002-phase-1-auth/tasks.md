@@ -2382,23 +2382,23 @@ yet.
 
 **Independent Test**: quickstart.md Step 2 + Step 3 with device locale set to each language; manual override survives restart.
 
-- [ ] T078 [US6] Audit each Phase 1 screen for hardcoded strings and directional literals. Run from `<repo>\mobile`:
+- [X] T078 [US6] Audit each Phase 1 screen for hardcoded strings and directional literals. Run from `<repo>\mobile`:
   ```powershell
   # Find any user-visible string literal that should be t(...)
   Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx","app\(chef)\*.tsx" -Pattern '<Text[^>]*>[^{<][^<]*<' -CaseSensitive
   # Find any flexDirection: "row" hardcode that should derive from isRTL
-  Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx" -Pattern "flexDirection: ['""]row" -CaseSensitive
+  Select-String -Path "app\(auth)\*.tsx","app\(tabs)\*.tsx" -Pattern "flexDirection: ['\""]row" -CaseSensitive
   ```
   Expected: zero matches in either grep. Any match is a bug — replace the literal with `t(...)` from the `LanguageContext` and the `flexDirection` with a `useLanguage().isRTL ? 'row-reverse' : 'row'` (or rely on a design-system layout primitive that does this).
 
-- [ ] T079 [US6] Verify the language-toggle persists. On the device:
+- [X] T079 [US6] Verify the language-toggle persists. On the device:
   1. From the welcome screen, tap the language toggle (currently English → Arabic). The app reloads (R9) and reappears in Arabic with RTL layout.
   2. Force-quit the app and reopen. The app comes up in Arabic again.
   3. Tap the language toggle (Arabic → English). The app reloads and reappears in English LTR.
   4. Force-quit and reopen. The app stays in English.
   Expected: SC-011 passes.
 
-- [ ] T080 [US6] Cross-check that every key in `<repo>\mobile\constants\i18n\en.ts` exists in `ar.ts` (and vice versa). The TypeScript type `I18nDict` enforces this at compile time — `npx tsc --noEmit` from `<repo>\mobile` MUST report zero errors. If a key is missing, add the translation in the corresponding file.
+- [X] T080 [US6] Cross-check that every key in `<repo>\mobile\constants\i18n\en.ts` exists in `ar.ts` (and vice versa). The TypeScript type `I18nDict` enforces this at compile time — `npx tsc --noEmit` from `<repo>\mobile` MUST report zero errors. If a key is missing, add the translation in the corresponding file.
 
 **Checkpoint**: Bilingual + RTL parity verified end-to-end.
 

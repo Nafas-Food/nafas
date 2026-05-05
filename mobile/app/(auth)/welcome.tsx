@@ -15,7 +15,7 @@ import { fetchSettings } from '../../services/settings';
 const FALLBACK_IMAGE = require('../../assets/hero_vertical.png');
 
 export default function WelcomeScreen() {
-  const { t, locale, setLocale } = useLanguage();
+  const { t, locale, setLocale, isRTL } = useLanguage();
   const router = useRouter();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,10 +49,10 @@ export default function WelcomeScreen() {
       <View style={styles.overlay} />
 
       <View style={styles.content}>
-        <View style={styles.wordmark}>
-          <Text style={styles.wordmarkAr}>نفَس</Text>
+        <View style={[styles.wordmark, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <Text style={styles.wordmarkAr}>{t('welcome.wordmarkAr')}</Text>
           <View style={styles.wordmarkDivider} />
-          <Text style={styles.wordmarkEn}>Nafas</Text>
+          <Text style={styles.wordmarkEn}>{t('welcome.wordmarkEn')}</Text>
         </View>
         <Text style={styles.tagline}>{t('welcome.tagline')}</Text>
 
@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   wordmark: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.s2,
   },
