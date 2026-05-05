@@ -13,11 +13,12 @@ export const ar: I18nDict = {
     signIn: 'تسجيل الدخول',
     createAccount: 'إنشاء حساب',
     languageToggle: 'English',
+    wordmarkAr: 'نفَس',
+    wordmarkEn: 'Nafas',
   },
   signIn: {
     title: 'تسجيل الدخول',
     phoneLabel: 'رقم الهاتف',
-    phonePlaceholder: '+20...',
     passwordLabel: 'كلمة المرور',
     submit: 'دخول',
     createAccountLink: 'لسه ما عندكش حساب؟ سجّل دلوقتي',
@@ -29,6 +30,7 @@ export const ar: I18nDict = {
     passwordLabel: 'كلمة المرور (8 أحرف على الأقل)',
     birthdateLabel: 'تاريخ الميلاد',
     sendCode: 'إرسال رمز التحقق',
+    datePlaceholder: 'YYYY-MM-DD',
   },
   verifyOtp: {
     title: 'تحقق من رقمك',
@@ -43,6 +45,7 @@ export const ar: I18nDict = {
   },
   home: {
     greeting: 'أهلاً، {name}',
+    chefPlaceholder: 'الصفحة الرئيسية للشيف (مؤقتة)',
   },
   errors: {
     AUTH_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',

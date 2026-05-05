@@ -139,7 +139,7 @@ export default function RegisterScreen() {
             <Text style={styles.label}>{t('register.birthdateLabel')}</Text>
             <Pressable style={styles.dateInput} onPress={() => setPickerOpen(true)}>
               <Text style={birthdate ? styles.dateValue : styles.datePlaceholder}>
-                {birthdate ? formatIsoDate(birthdate) : 'YYYY-MM-DD'}
+                {birthdate ? formatIsoDate(birthdate) : t('register.datePlaceholder')}
               </Text>
             </Pressable>
             {pickerOpen && (

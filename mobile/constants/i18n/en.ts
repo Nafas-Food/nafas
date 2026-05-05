@@ -16,11 +16,12 @@ export const en = {
     signIn: 'Sign in',
     createAccount: 'Create an account',
     languageToggle: 'العربية',
+    wordmarkAr: 'نفَس',
+    wordmarkEn: 'Nafas',
   },
   signIn: {
     title: 'Sign in',
     phoneLabel: 'Phone number',
-    phonePlaceholder: '+20...',
     passwordLabel: 'Password',
     submit: 'Sign in',
     createAccountLink: 'New here? Create an account',
@@ -32,6 +33,7 @@ export const en = {
     passwordLabel: 'Password (8 characters or more)',
     birthdateLabel: 'Date of birth',
     sendCode: 'Send verification code',
+    datePlaceholder: 'YYYY-MM-DD',
   },
   verifyOtp: {
     title: 'Verify your phone',
@@ -46,6 +48,7 @@ export const en = {
   },
   home: {
     greeting: 'Hello, {name}',
+    chefPlaceholder: 'Chef home (placeholder)',
   },
   errors: {
     AUTH_OTP_INVALID: 'The code is incorrect or has expired. Try again.',
