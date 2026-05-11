@@ -15,11 +15,10 @@ export class CreateAddressDto {
   @Length(1, 80)
   label!: string;
 
-  @ApiProperty({ minLength: 0, maxLength: 200, required: false })
-  @IsOptional()
+  @ApiProperty({ minLength: 0, maxLength: 200 })
   @IsString()
   @Length(0, 200)
-  streetName?: string;
+  streetName!: string;
 
   @ApiPropertyOptional({ maxLength: 80 })
   @IsOptional()

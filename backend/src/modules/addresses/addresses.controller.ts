@@ -26,7 +26,7 @@ interface JwtRequest extends Request {
 @ApiTags('Addresses')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/addresses')
+@Controller('addresses')
 export class AddressesController {
   constructor(private readonly svc: AddressesService) {}
 

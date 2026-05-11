@@ -34,7 +34,7 @@ export class AddressesService {
       data: {
         userId,
         label: dto.label,
-        streetName: dto.streetName ?? '',
+        streetName: dto.streetName,
         building: dto.building ?? null,
         floor: dto.floor ?? null,
         apartment: dto.apartment ?? null,
