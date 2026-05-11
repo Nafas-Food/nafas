@@ -184,6 +184,7 @@ describe('Addresses (e2e) — US1', () => {
         .expect(401);
 
       expect(cap.addressEvents()).toHaveLength(0);
+      assertNoCoordsInLogs(cap.lines);
     });
   });
 
