@@ -1,0 +1,400 @@
+openapi: 3.1.0
+info:
+  title: Nafas Addresses API
+  version: 0.3.0
+  description: |
+    Phase 2 ships the platform's delivery-target substrate: saved
+    addresses on the customer account, ownership-isolated reads, the
+    FR-013 in-flight-order safety rail on delete, and the FR-021
+    coordinate-redaction contract on every error response.
+
+    The contract intentionally returns server-side error *codes*
+    (stable string identifiers like `ADDRESS_NOT_FOUND`) rather than
+    user-facing messages. The mobile client maps codes to bilingual
+    messages on the device per Constitution Principle I — no
+    language leaks from the server.
+
+    Per FR-015 and research R4, an authenticated request whose
+    target address is owned by a different customer returns the
+    same `404 ADDRESS_NOT_FOUND` response as a request for an
+    address that genuinely does not exist. Identifier enumeration
+    across accounts is therefore not possible through any of the
+    endpoints below.
+
+    Per FR-021 and research R6, no error response body returned by
+    any endpoint below MAY include `latitude`, `longitude`, or any
+    nested `coordinates` property. The global
+    `HttpExceptionNormalizerFilter` strips these fields before
+    serialisation; the schema definitions for error responses
+    therefore do not declare them.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: Addresses
+    description: Authenticated saved-address CRUD scoped to the requesting customer.
+
+paths:
+  /api/v1/addresses:
+    get:
+      operationId: listAddresses
+      summary: List the authenticated customer's saved addresses.
+      description: |
+        Returns every non-soft-deleted `UserAddress` whose `userId`
+        matches the authenticated customer's `sub` claim, ordered by
+        `createdAt` ascending (oldest first — stable ordering for
+        the saved-list UX).
+
+        Soft-deleted addresses are filtered out by the Phase 0
+        Prisma extension (FR-016, SC-009).
+      tags: [Addresses]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Saved addresses, possibly empty.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Address" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      operationId: createAddress
+      summary: Save a new delivery address for the authenticated customer.
+      description: |
+        Creates a `UserAddress` whose `userId` is the authenticated
+        customer's `sub` claim. The request body MUST NOT include
+        `userId` or any other server-owned field; the global
+        validation pipe refuses unknown fields with `400
+        VALIDATION_ERROR` (FR-018, SC-008).
+
+        The street-name field MAY be empty — the coordinates are
+        the authoritative delivery target (FR-002). The mobile
+        client SHOULD pre-fill the field via reverse-geocoding
+        (FR-006, R1) but MUST NOT block save on a missing or failed
+        lookup.
+
+        On success, emits one structured log line of shape
+        `address.create / success` (FR-019). Validation rejection
+        emits `address.create / validation_rejected`. Neither line
+        carries `latitude`, `longitude`, or `coordinates` (FR-021,
+        SC-011).
+      tags: [Addresses]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAddressRequest" }
+      responses:
+        "201":
+          description: Address created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+        "400":
+          description: Validation error (`VALIDATION_ERROR`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/addresses/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The target address ID.
+
+    patch:
+      operationId: updateAddress
+      summary: Update one of the authenticated customer's saved addresses.
+      description: |
+        Updates any subset of `{label, streetName, building, floor,
+        apartment, latitude, longitude, notes}` on the named
+        address (FR-010). Per FR-011, edits are permitted at any
+        time, including while an order in non-terminal status
+        references the address — Phase 2 protects deletion only.
+
+        Per R4, when the target row's `userId` does not match the
+        authenticated customer, the platform returns the same
+        `404 ADDRESS_NOT_FOUND` response as a request for an address
+        that does not exist (FR-015, SC-006).
+
+        Emits one structured log line of shape
+        `address.update / {success | validation_rejected | not_found}`.
+      tags: [Addresses]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAddressRequest" }
+      responses:
+        "200":
+          description: Updated address.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+        "400":
+          description: Validation error (`VALIDATION_ERROR`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Address not found (or owned by a different customer — same response per FR-015).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+    delete:
+      operationId: deleteAddress
+      summary: Delete one of the authenticated customer's saved addresses.
+      description: |
+        Soft-deletes the named address per Constitution
+        Principle IV. The row remains in the database with
+        `deletedAt = now()`; subsequent reads filter it out.
+
+        Per FR-013, the platform refuses with
+        `409 ADDRESS_IN_USE` when `OrdersService.hasActiveOrderForAddress`
+        finds at least one of the customer's orders whose status is
+        not `DELIVERED` and not `CANCELLED`. The address remains
+        saved on a refusal.
+
+        Per R4, when the target row's `userId` does not match the
+        authenticated customer, the platform returns the same
+        `404 ADDRESS_NOT_FOUND` response as a request for an
+        address that does not exist (FR-015).
+
+        Emits one structured log line of shape
+        `address.delete / {success | in_use | not_found}`.
+      tags: [Addresses]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Address soft-deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Address not found (or owned by a different customer — same response per FR-015).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Address is in use by an order in non-terminal status (`ADDRESS_IN_USE`). The response includes a machine-readable next-step hint (`activeOrderId`) the client uses to deep-link the customer to that order.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AddressInUseError" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid access credential.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Address:
+      type: object
+      required: [id, label, streetName, latitude, longitude, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Customer-chosen short identifier for the address (e.g., "home").
+        streetName:
+          type: string
+          minLength: 0
+          maxLength: 200
+          description: Customer-readable street text. May be empty (the coordinates are authoritative per FR-002).
+        building:
+          type: string
+          nullable: true
+          maxLength: 80
+        floor:
+          type: string
+          nullable: true
+          maxLength: 20
+        apartment:
+          type: string
+          nullable: true
+          maxLength: 20
+        latitude:
+          type: string
+          description: |
+            Decimal latitude as a string (Phase 0 convention — `Decimal(10, 7)` columns are delivered as JS strings to avoid float-precision drift). The mobile client parses to a number for the map view.
+          example: "30.0444000"
+        longitude:
+          type: string
+          description: |
+            Decimal longitude as a string. See `latitude` for the format rationale.
+          example: "31.2357000"
+        notes:
+          type: string
+          nullable: true
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAddressRequest:
+      type: object
+      required: [label, streetName, latitude, longitude]
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        streetName:
+          type: string
+          minLength: 0
+          maxLength: 200
+        building:
+          type: string
+          maxLength: 80
+        floor:
+          type: string
+          maxLength: 20
+        apartment:
+          type: string
+          maxLength: 20
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateAddressRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        Every field is optional; the server merges the supplied
+        subset onto the existing row. Sending an empty body is
+        accepted (no-op update). Sending `userId`, `id`,
+        `createdAt`, `updatedAt`, or `deletedAt` is refused with
+        `400 VALIDATION_ERROR` per the global pipe contract
+        (FR-018).
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        streetName:
+          type: string
+          minLength: 0
+          maxLength: 200
+        building:
+          type: string
+          maxLength: 80
+        floor:
+          type: string
+          maxLength: 20
+        apartment:
+          type: string
+          maxLength: 20
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        notes:
+          type: string
+          maxLength: 500
+
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: true
+      description: |
+        Standard error envelope. Per FR-021 / R6, the
+        `HttpExceptionNormalizerFilter` strips any `latitude`,
+        `longitude`, or `coordinates` properties from this object
+        and from any `details` payload before serialisation.
+
+        `additionalProperties` is `true` so that `allOf` extensions
+        (e.g., `AddressInUseError`) can add their own properties
+        without being rejected by a strict base schema. Each
+        specialised error schema enforces `additionalProperties:
+        false` on its own composed object.
+      properties:
+        code:
+          type: string
+          description: |
+            Stable string identifier the client maps to a localised
+            message. Examples: `VALIDATION_ERROR`,
+            `ADDRESS_NOT_FOUND`, `ADDRESS_IN_USE`,
+            `AUTH_UNAUTHORIZED`.
+        message:
+          type: string
+          description: |
+            Human-readable English fallback. The mobile client
+            ignores this and renders its own bilingual message
+            keyed by `code` per Constitution Principle I.
+        details:
+          type: object
+          description: |
+            Optional machine-readable hint (e.g., field-name → reason
+            pairs from a validation rejection). Coordinates redacted
+            per FR-021.
+          additionalProperties: true
+
+    AddressInUseError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          additionalProperties: false
+          required: [activeOrderId]
+          properties:
+            activeOrderId:
+              type: string
+              format: uuid
+              description: |
+                The ID of one order in non-terminal status that
+                references this address. The mobile client uses
+                this to deep-link the customer to the order detail
+                screen. If multiple active orders reference the
+                address, the most recently created is returned.
