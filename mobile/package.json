@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check:i18n": "npx --yes tsx scripts/check-i18n-symmetry.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

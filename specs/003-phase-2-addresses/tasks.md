@@ -1788,9 +1788,9 @@ and re-entering the surfaces flips both without a restart.
 
 **Maps to**: spec.md User Story 4, FR-017. SC delivered: SC-007.
 
-- [ ] T032 [US4] Audit i18n key parity. Create `<repo>\mobile\scripts\check-i18n-symmetry.ts` (the `mobile/scripts/` folder is created by this task — `mkdir -p mobile/scripts` if absent). The script imports both `constants/i18n/en.ts` and `constants/i18n/ar.ts`, walks the recursive key set depth-first, and prints any key present in one file and not the other. Run it via `npx tsx scripts/check-i18n-symmetry.ts` from `<repo>\mobile`. Expected outcome: zero asymmetric keys printed; exit code 0. If asymmetric keys exist, fix the laggard locale file before continuing. The script is reusable across all later phases — keep it under `mobile/scripts/` so future `/speckit-tasks` runs can invoke it.
+- [X] T032 [US4] Audit i18n key parity. Create `<repo>\mobile\scripts\check-i18n-symmetry.ts` (the `mobile/scripts/` folder is created by this task — `mkdir -p mobile/scripts` if absent). The script imports both `constants/i18n/en.ts` and `constants/i18n/ar.ts`, walks the recursive key set depth-first, and prints any key present in one file and not the other. Run it via `npx tsx scripts/check-i18n-symmetry.ts` from `<repo>\mobile`. Expected outcome: zero asymmetric keys printed; exit code 0. If asymmetric keys exist, fix the laggard locale file before continuing. The script is reusable across all later phases — keep it under `mobile/scripts/` so future `/speckit-tasks` runs can invoke it.
 
-- [ ] T033 [US4] On-device RTL pass. Boot the dev client (`npx expo start --dev-client`), set the in-app language to Arabic via the Phase 1 settings surface, then walk through:
+- [X] T033 [US4] On-device RTL pass. Boot the dev client (`npx expo start --dev-client`), set the in-app language to Arabic via the Phase 1 settings surface, then walk through:
   - addresses list (empty + populated states)
   - add-address screen (every form field, validation error, picker hint)
   - edit-address screen (every form field, delete CTA, delete confirm)
@@ -1798,7 +1798,7 @@ and re-entering the surfaces flips both without a restart.
 
   For each surface, verify visually: (a) every label/placeholder/error/CTA reads in Arabic; (b) `flexDirection: 'row'` UI elements render right-to-left (use the address-list row's `rowRtl` style as the canonical example); (c) icons that have an obvious horizontal asymmetry (chevrons, back arrows) mirror correctly. If any string fails, add the missing key to BOTH locale files and re-test. Expected outcome: a screenshot or note for each surface confirming Arabic + RTL parity. Switch the language back to English and confirm every surface flips on the next render (no restart required).
 
-- [ ] T034 [US4] If the validation copy (`addresses.validation.*`) is rendered via `Alert.alert` (per T020 / T027), confirm both `Alert.alert` titles render in the active language. iOS and Android `Alert` accept localised strings as input; nothing OS-level needs changing. Expected outcome: validation alerts in the active language on both platforms.
+- [X] T034 [US4] If the validation copy (`addresses.validation.*`) is rendered via `Alert.alert` (per T020 / T027), confirm both `Alert.alert` titles render in the active language. iOS and Android `Alert` accept localised strings as input; nothing OS-level needs changing. Expected outcome: validation alerts in the active language on both platforms.
 
 **Checkpoint**: User Story 4 is verified. Phase 2 contributes zero
 hardcoded strings or directional literals to the mobile bundle.
