@@ -11,6 +11,7 @@ import {
   seedAddress,
   seedChef,
   seedActiveOrder,
+  seedTerminalOrder,
 } from './helpers/address.fixtures';
 
 describe('Addresses (e2e) — US1 & US2', () => {
@@ -458,6 +459,102 @@ describe('Addresses (e2e) — US1 & US2', () => {
       expect(events).toHaveLength(1);
       expect(events[0].event).toBe('address.delete');
       expect(events[0].outcome).toBe('not_found');
+    });
+  });
+
+  describe('US3 — DELETE refused by in-flight order', () => {
+    it('returns 409 ADDRESS_IN_USE for address with active order (FR-013)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const chef = await seedChef(prisma);
+      trackChef(chef.id);
+      trackUser(chef.userId);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const order = await seedActiveOrder(prisma, custA.id, addr.id, chef.id);
+      trackOrder(order.id);
+
+      const res = await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(409);
+
+      expect(res.body.code).toBe('ADDRESS_IN_USE');
+      expect(res.body.activeOrderId).toBe(order.id);
+
+      const getRes = await request(app.getHttpServer())
+        .get('/api/v1/addresses')
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(200);
+
+      expect(getRes.body).toHaveLength(1);
+      expect(getRes.body[0].id).toBe(addr.id);
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.delete');
+      expect(events[0].outcome).toBe('in_use');
+      expect(events[0].actorId).toBe(custA.id);
+      expect(events[0].addressId).toBe(addr.id);
+    });
+
+    it('allows DELETE after order reaches terminal status (DELIVERED)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const chef = await seedChef(prisma);
+      trackChef(chef.id);
+      trackUser(chef.userId);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const order = await seedTerminalOrder(prisma, custA.id, addr.id, chef.id);
+      trackOrder(order.id);
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(204);
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.delete');
+      expect(events[0].outcome).toBe('success');
+    });
+
+    it('409 response body has no coordinate keys (SC-012)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const chef = await seedChef(prisma);
+      trackChef(chef.id);
+      trackUser(chef.userId);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const order = await seedActiveOrder(prisma, custA.id, addr.id, chef.id);
+      trackOrder(order.id);
+
+      const res = await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(409);
+
+      expect(res.body).toHaveProperty('activeOrderId');
+      expect(res.body).not.toHaveProperty('latitude');
+      expect(res.body).not.toHaveProperty('longitude');
+      expect(res.body).not.toHaveProperty('coordinates');
+
+      assertNoCoordsInLogs(cap.lines);
     });
   });
 });

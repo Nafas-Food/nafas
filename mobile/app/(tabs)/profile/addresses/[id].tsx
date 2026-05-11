@@ -1,3 +1,4 @@
+// US3 acceptance scenario 3 — verified manually per quickstart Step 6.
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';

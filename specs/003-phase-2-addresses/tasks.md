@@ -1728,7 +1728,7 @@ SC-005, SC-011 (delete in_use event).
 > contract. Phase 5 adds **only fixtures and tests** that exercise
 > the wired path.
 
-- [ ] T029 [US3] Add a `seedChef` helper to `<repo>\backend\test\helpers\address.fixtures.ts` so `seedActiveOrder` / `seedTerminalOrder` have a valid chef FK. **Precondition (L3 from `/speckit-analyze`)**: from `<repo>\backend` first run `npx prisma migrate status` and confirm zero drift, then open `<repo>\backend\prisma\schema.prisma` and locate `model Chef`; cross-check the non-null fields against the helper below. If the schema requires more non-null columns than the helper sets (e.g., `logo`, `banner`, `isOpen` defaulting), extend the `data: { ... }` object before continuing — a missing non-null FK or required field will fail the seed at runtime, not at TS compile. Append:
+- [X] T029 [US3] Add a `seedChef` helper to `<repo>\backend\test\helpers\address.fixtures.ts` so `seedActiveOrder` / `seedTerminalOrder` have a valid chef FK. **Precondition (L3 from `/speckit-analyze`)**: from `<repo>\backend` first run `npx prisma migrate status` and confirm zero drift, then open `<repo>\backend\prisma\schema.prisma` and locate `model Chef`; cross-check the non-null fields against the helper below. If the schema requires more non-null columns than the helper sets (e.g., `logo`, `banner`, `isOpen` defaulting), extend the `data: { ... }` object before continuing — a missing non-null FK or required field will fail the seed at runtime, not at TS compile. Append:
   ```ts
   import { Chef } from '@prisma/client';
 
@@ -1758,14 +1758,14 @@ SC-005, SC-011 (delete in_use event).
   ```
   Adjust the field set if `Chef` requires more non-null columns; consult `<repo>\backend\prisma\schema.prisma`. Expected outcome: TS compiles.
 
-- [ ] T030 [US3] Extend `<repo>\backend\test\addresses.e2e-spec.ts` with US3 cases under a new `describe('US3 — DELETE refused by in-flight order')` block. Reuse the `captureLogs()` helper from T021's helpers:
+- [X] T030 [US3] Extend `<repo>\backend\test\addresses.e2e-spec.ts` with US3 cases under a new `describe('US3 — DELETE refused by in-flight order')` block. Reuse the `captureLogs()` helper from T021's helpers:
   - It seeds customer A, an address on A, a chef, and an active order linking the two; DELETE on the address returns 409 with body `{ code: 'ADDRESS_IN_USE', activeOrderId: <orderId> }`. A subsequent GET /addresses still includes the address (SC-005, FR-013). Asserts `cap.addressEvents()` contains exactly one `{ event: 'address.delete', outcome: 'in_use', actorId, addressId }` line; `assertNoCoordsInLogs(cap.lines)` passes.
   - It seeds customer A, an address on A, a chef, and a terminal (DELIVERED) order linking the two; DELETE on the address returns 204 (User Story 3 acceptance scenario 2). Asserts the captured line is `address.delete / success`.
   - It seeds an active order, attempts DELETE, captures the 409 response body, and asserts the body contains `activeOrderId` but **does NOT contain** `latitude`, `longitude`, or `coordinates` (SC-012 — the redaction filter pass T007 step 4 strips these from any error envelope).
 
   Expected outcome: `npm test -- addresses.e2e-spec` passes all US1 + US2 + US3 cases.
 
-- [ ] T031 [US3] Mobile UI verification of US3 acceptance scenario 3. The modal shipped in T027 is sufficient — this task is a manual on-device check during the Phase 6 quickstart, NOT a code task. Add a TODO comment in `[id].tsx` (the edit screen): `// US3 acceptance scenario 3 — verified manually per quickstart Step 6.` Expected outcome: comment present; nothing else changes.
+- [X] T031 [US3] Mobile UI verification of US3 acceptance scenario 3. The modal shipped in T027 is sufficient — this task is a manual on-device check during the Phase 6 quickstart, NOT a code task. Add a TODO comment in `[id].tsx` (the edit screen): `// US3 acceptance scenario 3 — verified manually per quickstart Step 6.` Expected outcome: comment present; nothing else changes.
 
 **Checkpoint**: User Story 3 is verified. The DELETE path refuses
 in-flight orders, the address remains saved on refusal, and the
