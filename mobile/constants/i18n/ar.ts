@@ -6,6 +6,7 @@ export const ar: I18nDict = {
     cancel: 'إلغاء',
     submit: 'إرسال',
     loading: 'جارٍ التحميل...',
+    networkError: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مجددًا.',
   },
   welcome: {
     title: 'أهلاً بك في نَفَس',
@@ -49,6 +50,56 @@ export const ar: I18nDict = {
   home: {
     greeting: 'أهلاً، {name}',
     chefPlaceholder: 'الصفحة الرئيسية للشيف (مؤقتة)',
+  },
+  addresses: {
+    list: {
+      title: 'عناويني',
+      empty: {
+        title: 'لا توجد عناوين محفوظة بعد',
+        body: 'أضف عنوان توصيل ليعرف الطهاة أين يرسلون طعامك.',
+      },
+      addCta: 'إضافة عنوان',
+    },
+    form: {
+      label: 'الاسم',
+      labelPlaceholder: 'مثال: المنزل',
+      streetName: 'اسم الشارع',
+      streetNamePlaceholder: 'اختياري — اسحب الدبوس ليُعبأ تلقائيًا',
+      moreDetailsToggle: 'تفاصيل إضافية (اختياري)',
+      building: 'العمارة',
+      floor: 'الدور',
+      apartment: 'الشقة',
+      notes: 'ملاحظات للطاهي',
+      save: 'حفظ',
+      cancel: 'إلغاء',
+    },
+    picker: {
+      pinAccessibility: 'دبوس الخريطة — اسحب الخريطة لتحديد الموقع',
+      useMyLocationCta: 'استخدم موقعي',
+      permissionDeniedHint: 'إذن الموقع مغلق؛ اسحب الخريطة لتحديد موقع الدبوس.',
+    },
+    edit: {
+      title: 'تعديل العنوان',
+      delete: 'حذف العنوان',
+    },
+    deleteConfirm: {
+      title: 'هل تريد حذف هذا العنوان؟',
+      body: 'يمكنك إضافته مرة أخرى لاحقًا.',
+      confirm: 'حذف',
+      cancel: 'إلغاء',
+    },
+    inUse: {
+      title: 'العنوان قيد الاستخدام',
+      body: 'هذا العنوان مرتبط بطلب جارٍ. أنهِ الطلب أو ألغِه أولًا.',
+      viewOrderCta: 'عرض الطلب',
+      ok: 'حسنًا',
+    },
+    validation: {
+      labelRequired: 'الرجاء إعطاء العنوان اسمًا.',
+      labelTooLong: 'الاسم طويل جدًا (الحد الأقصى 80 حرفًا).',
+      streetTooLong: 'اسم الشارع طويل جدًا (الحد الأقصى 200 حرف).',
+      coordinatesInvalid: 'اختر موقعًا صالحًا للدبوس على الخريطة.',
+    },
   },
   errors: {
     AUTH_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',

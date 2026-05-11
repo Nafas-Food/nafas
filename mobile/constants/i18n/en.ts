@@ -9,6 +9,7 @@ export const en = {
     cancel: 'Cancel',
     submit: 'Submit',
     loading: 'Loading...',
+    networkError: 'Network error. Check your connection and try again.',
   },
   welcome: {
     title: 'Welcome to Nafas',
@@ -52,6 +53,56 @@ export const en = {
   home: {
     greeting: 'Hello, {name}',
     chefPlaceholder: 'Chef home (placeholder)',
+  },
+  addresses: {
+    list: {
+      title: 'My addresses',
+      empty: {
+        title: 'No saved addresses yet',
+        body: 'Add a delivery address so chefs know where to send your food.',
+      },
+      addCta: 'Add address',
+    },
+    form: {
+      label: 'Label',
+      labelPlaceholder: 'e.g., home',
+      streetName: 'Street name',
+      streetNamePlaceholder: 'Optional — drag the pin to fill automatically',
+      moreDetailsToggle: 'More details (optional)',
+      building: 'Building',
+      floor: 'Floor',
+      apartment: 'Apartment',
+      notes: 'Notes for the chef',
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    picker: {
+      pinAccessibility: 'Map pin — drag the map to position',
+      useMyLocationCta: 'Use my location',
+      permissionDeniedHint: 'Location permission is off; drag the map to position the pin.',
+    },
+    edit: {
+      title: 'Edit address',
+      delete: 'Delete address',
+    },
+    deleteConfirm: {
+      title: 'Delete this address?',
+      body: 'You can add it again later.',
+      confirm: 'Delete',
+      cancel: 'Cancel',
+    },
+    inUse: {
+      title: 'Address is in use',
+      body: 'This address is attached to an order in progress. Finish or cancel the order first.',
+      viewOrderCta: 'View that order',
+      ok: 'OK',
+    },
+    validation: {
+      labelRequired: 'Please give the address a label.',
+      labelTooLong: 'Label is too long (max 80 characters).',
+      streetTooLong: 'Street name is too long (max 200 characters).',
+      coordinatesInvalid: 'Pick a valid pin location on the map.',
+    },
   },
   errors: {
     AUTH_OTP_INVALID: 'The code is incorrect or has expired. Try again.',

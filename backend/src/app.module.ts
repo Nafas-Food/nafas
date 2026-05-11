@@ -15,6 +15,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TwilioModule } from './modules/twilio/twilio.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -34,6 +36,8 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     AuthModule,
     UsersModule,
     SettingsModule,
+    OrdersModule,
+    AddressesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
