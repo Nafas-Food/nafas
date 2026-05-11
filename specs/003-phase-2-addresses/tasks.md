@@ -120,7 +120,7 @@ files written yet.
 story depends on. **No user-story task may begin until Phase 2 is
 complete.**
 
-- [ ] T006 Create `<repo>\backend\src\common\logging\address-event.logger.ts` mirroring the Phase 1 `auth-event.logger.ts` shape. Full file content:
+- [X] T006 Create `<repo>\backend\src\common\logging\address-event.logger.ts` mirroring the Phase 1 `auth-event.logger.ts` shape. Full file content:
   ```ts
   import { Injectable, Logger } from '@nestjs/common';
   import { correlationStorage } from './correlation-id.context';
@@ -173,7 +173,7 @@ complete.**
   ```
   Then register the new logger as a provider in `<repo>\backend\src\common\logging\logging.module.ts`. Open the file, add `AddressEventLogger` to the `providers` and `exports` arrays alongside `AuthEventLogger`. Expected outcome: `npm run build` succeeds; `AddressEventLogger` is importable from elsewhere via `import { AddressEventLogger } from '../../common/logging/address-event.logger'`.
 
-- [ ] T007 Extend `<repo>\backend\src\common\errors\http-exception.filter.ts` with TWO additions per research R6 + the C1 fix from `/speckit-analyze`: (a) a coordinate-scrubber pass over the normalised error body, and (b) FR-019 emission for `address.* / {validation_rejected, not_found}` outcomes when the request path is under `/api/v1/addresses/*`. Both responsibilities live here because (i) controller-level filters bypass the global filter (so a per-controller `AddressEventFilter` would also bypass the scrubber), and (ii) the same Phase 1 chokepoint already emits `auth.password_validation` and `auth.rate_limit` for analogous before-controller triggers — we extend the established pattern.
+- [X] T007 Extend `<repo>\backend\src\common\errors\http-exception.filter.ts` with TWO additions per research R6 + the C1 fix from `/speckit-analyze`: (a) a coordinate-scrubber pass over the normalised error body, and (b) FR-019 emission for `address.* / {validation_rejected, not_found}` outcomes when the request path is under `/api/v1/addresses/*`. Both responsibilities live here because (i) controller-level filters bypass the global filter (so a per-controller `AddressEventFilter` would also bypass the scrubber), and (ii) the same Phase 1 chokepoint already emits `auth.password_validation` and `auth.rate_limit` for analogous before-controller triggers — we extend the established pattern.
 
   Step 1 — inject the new logger. Open the file and update the constructor:
   ```ts
@@ -257,7 +257,7 @@ complete.**
 
   Expected outcome: `npm run build` from `<repo>\backend` succeeds. The filter is a single class with two new methods (`scrubCoordinates`) and the new emission block. No `AddressEventFilter` file is introduced — that approach was retired by the C1 finding because controller-level filters do not delegate to global filters in NestJS.
 
-- [ ] T008 [P] Create `<repo>\backend\test\http-redaction.spec.ts` to verify both new responsibilities of the global filter. Full file content:
+- [X] T008 [P] Create `<repo>\backend\test\http-redaction.spec.ts` to verify both new responsibilities of the global filter. Full file content:
   ```ts
   import { Test } from '@nestjs/testing';
   import {
@@ -389,7 +389,7 @@ complete.**
   ```
   Expected outcome: from `<repo>\backend` run `npm test -- http-redaction.spec` and all nine cases pass.
 
-- [ ] T009 Create the Phase 2 `OrdersModule` shell. Per `plan.md` Summary point 2 and `data-model.md`, this is a one-method module that exists so `AddressesService` honours Constitution Principle III. Phase 6 will expand it. Create two files:
+- [X] T009 Create the Phase 2 `OrdersModule` shell. Per `plan.md` Summary point 2 and `data-model.md`, this is a one-method module that exists so `AddressesService` honours Constitution Principle III. Phase 6 will expand it. Create two files:
 
   `<repo>\backend\src\modules\orders\orders.service.ts` (full content):
   ```ts
@@ -441,13 +441,13 @@ complete.**
   ```
   Expected outcome: `npm run build` from `<repo>\backend` succeeds. The module ships ZERO controllers, ZERO request paths, ZERO DTOs — Phase 6 owns the public surface.
 
-- [ ] T010 Wire `OrdersModule` into `<repo>\backend\src\app.module.ts`. Open the file. Add the import:
+- [X] T010 Wire `OrdersModule` into `<repo>\backend\src\app.module.ts`. Open the file. Add the import:
   ```ts
   import { OrdersModule } from './modules/orders/orders.module';
   ```
   Add `OrdersModule` to the `imports` array of the root `AppModule` (placement order is not significant; group alphabetically next to `AuthModule`, `HealthModule`, `UsersModule`, etc.). **Do NOT add `AddressesModule` yet** — that arrives in T015. Expected outcome: `npm run build` succeeds; the boot logs (`docker compose -f docker-compose.dev.yml up backend`) list `OrdersModule` among the registered modules.
 
-- [ ] T011 [P] Seed Phase 2 i18n keys in BOTH `<repo>\mobile\constants\i18n\en.ts` and `<repo>\mobile\constants\i18n\ar.ts`. Add these keys (paste exactly; do not invent variants). Both languages are inlined below — paste each block under the appropriate locale's existing root object as a new `addresses` namespace.
+- [X] T011 [P] Seed Phase 2 i18n keys in BOTH `<repo>\mobile\constants\i18n\en.ts` and `<repo>\mobile\constants\i18n\ar.ts`. Add these keys (paste exactly; do not invent variants). Both languages are inlined below — paste each block under the appropriate locale's existing root object as a new `addresses` namespace.
 
   English values to merge into `en.ts`:
   ```ts
@@ -558,7 +558,7 @@ complete.**
   ```
   Expected outcome: from `<repo>\mobile` run `npx tsc --noEmit` and confirm no errors. T032 (US4) will run a parity script across both locale files; key sets MUST be identical.
 
-- [ ] T011a [P] Create the `useColors()` hook required by Constitution Principle V (no hex literals in components). Create `<repo>\mobile\hooks\useColors.ts` with full content:
+- [X] T011a [P] Create the `useColors()` hook required by Constitution Principle V (no hex literals in components). Create `<repo>\mobile\hooks\useColors.ts` with full content:
   ```ts
   import { useMemo } from 'react';
 
@@ -630,7 +630,7 @@ SC-012 (partial create-error redaction).
 
 ### Backend (CRUD foundation: list + create)
 
-- [ ] T012 [P] [US1] Create `<repo>\backend\src\modules\addresses\dto\create-address.dto.ts`. Full content:
+- [X] T012 [P] [US1] Create `<repo>\backend\src\modules\addresses\dto\create-address.dto.ts`. Full content:
   ```ts
   import {
     IsLatitude,
@@ -689,7 +689,7 @@ SC-012 (partial create-error redaction).
   ```
   Expected outcome: TS compiles. The DTO declares ONLY the fields the spec lets the client send; `userId`, `id`, timestamps are absent (`forbidNonWhitelisted: true` will reject any client that sends them — SC-008).
 
-- [ ] T013 [P] [US1] Create `<repo>\backend\src\modules\addresses\dto\address.response.dto.ts`. Full content:
+- [X] T013 [P] [US1] Create `<repo>\backend\src\modules\addresses\dto\address.response.dto.ts`. Full content:
   ```ts
   import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
   import { UserAddress } from '@prisma/client';
@@ -728,7 +728,7 @@ SC-012 (partial create-error redaction).
   ```
   Expected outcome: TS compiles. Decimal values are stringified per the Phase 0 convention recorded in `CLAUDE.md`. Soft-delete fields are NOT exposed.
 
-- [ ] T014 [US1] Create `<repo>\backend\src\modules\addresses\addresses.service.ts`. This task ships ONLY `list` and `create` (and a shared `findOwnedOrThrow` helper used by later tasks). `update` and `softDelete` arrive in T025 / T027. Full content:
+- [X] T014 [US1] Create `<repo>\backend\src\modules\addresses\addresses.service.ts`. This task ships ONLY `list` and `create` (and a shared `findOwnedOrThrow` helper used by later tasks). `update` and `softDelete` arrive in T025 / T027. Full content:
   ```ts
   import { Injectable, NotFoundException } from '@nestjs/common';
   import { PrismaService } from '../../common/prisma/prisma.service';
@@ -798,7 +798,7 @@ SC-012 (partial create-error redaction).
   ```
   Expected outcome: TS compiles. The constructor injects `OrdersService` even though `list`/`create` do not call it — keeps the constructor stable across T027.
 
-- [ ] T015 [US1] Create `<repo>\backend\src\modules\addresses\addresses.controller.ts`. This task ships ONLY `GET /addresses` and `POST /addresses`. `PATCH` and `DELETE` arrive in T028 / T029. Full content:
+- [X] T015 [US1] Create `<repo>\backend\src\modules\addresses\addresses.controller.ts`. This task ships ONLY `GET /addresses` and `POST /addresses`. `PATCH` and `DELETE` arrive in T028 / T029. Full content:
   ```ts
   import {
     Body,
@@ -845,7 +845,7 @@ SC-012 (partial create-error redaction).
   ```
   Expected outcome: TS compiles. The controller is THIN — every line either binds the route or forwards to the service.
 
-- [ ] T016 [US1] Create `<repo>\backend\src\modules\addresses\addresses.module.ts`. Full content:
+- [X] T016 [US1] Create `<repo>\backend\src\modules\addresses\addresses.module.ts`. Full content:
   ```ts
   import { Module } from '@nestjs/common';
   import { LoggingModule } from '../../common/logging/logging.module';
@@ -864,7 +864,7 @@ SC-012 (partial create-error redaction).
 
 ### Mobile (services + screens for US1)
 
-- [ ] T017 [P] [US1] Create `<repo>\mobile\services\addresses.ts`. This task ships ONLY `list` and `create`; `update` and `delete` arrive in T030. Full content:
+- [X] T017 [P] [US1] Create `<repo>\mobile\services\addresses.ts`. This task ships ONLY `list` and `create`; `update` and `delete` arrive in T030. Full content:
   ```ts
   import { api } from './api';
 
@@ -906,7 +906,7 @@ SC-012 (partial create-error redaction).
   ```
   Expected outcome: `npx tsc --noEmit` from `<repo>\mobile` returns 0.
 
-- [ ] T018 [P] [US1] Create `<repo>\mobile\components\AddressPickerMap.tsx` per research R3. The component is a controlled fixed-pin-over-draggable-map. Full content:
+- [X] T018 [P] [US1] Create `<repo>\mobile\components\AddressPickerMap.tsx` per research R3. The component is a controlled fixed-pin-over-draggable-map. Full content:
   ```tsx
   import React, { useEffect, useMemo, useRef } from 'react';
   import { StyleSheet, View } from 'react-native';
@@ -1053,7 +1053,7 @@ SC-012 (partial create-error redaction).
   ```
   Note: `useT()` is the Phase 1 hook from `LanguageContext` (Phase 1 uses an export named `useT`; if your Phase 1 implementation exports a different name, adjust the import). `useColors()` was introduced in T011a; it is the ONLY place hex literals live (Constitution Principle V). Expected outcome: `npx tsc --noEmit` from `<repo>\mobile` returns 0; the file contains no hex literal anywhere.
 
-- [ ] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list). Full content:
+- [X] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list). Full content:
   ```tsx
   import React, { useCallback, useMemo } from 'react';
   import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -1150,7 +1150,7 @@ SC-012 (partial create-error redaction).
   ```
   Replace the `useT` / `useIsRTL` import path if your Phase 1 LanguageContext exports differ (check `<repo>\mobile\context\LanguageContext.tsx` for the exact hook names and adjust). The `t('common.networkError')` key is assumed to exist from Phase 1; if not, add it to both locales. Expected outcome: `npx tsc --noEmit` returns 0; the screen renders the empty state on a dev client when no addresses exist; the file contains zero hex literals.
 
-- [ ] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen). Full content:
+- [X] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen). Full content:
   ```tsx
   import React, { useMemo, useState } from 'react';
   import { Alert, Pressable, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
@@ -1394,7 +1394,7 @@ delete events), SC-012 (update-error redaction).
 
 ### Backend (PATCH + DELETE)
 
-- [ ] T022 [P] [US2] Create `<repo>\backend\src\modules\addresses\dto\update-address.dto.ts`. Use `class-validator` `@IsOptional()` on every field; the DTO is a partial of `CreateAddressDto`'s validation rules. Full content:
+- [X] T022 [P] [US2] Create `<repo>\backend\src\modules\addresses\dto\update-address.dto.ts`. Use `class-validator` `@IsOptional()` on every field; the DTO is a partial of `CreateAddressDto`'s validation rules. Full content:
   ```ts
   import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
   import { CreateAddressDto } from './create-address.dto';
@@ -1411,7 +1411,7 @@ delete events), SC-012 (update-error redaction).
   ```
   The `_swaggerMarker` line keeps Swagger from emitting an empty schema; it is harmless. Expected outcome: TS compiles.
 
-- [ ] T023 [US2] Extend `AddressesService` (in `<repo>\backend\src\modules\addresses\addresses.service.ts`) with `update` and `softDelete`. Add:
+- [X] T023 [US2] Extend `AddressesService` (in `<repo>\backend\src\modules\addresses\addresses.service.ts`) with `update` and `softDelete`. Add:
   ```ts
   async update(
     userId: string,
@@ -1482,7 +1482,7 @@ delete events), SC-012 (update-error redaction).
 
 - [ ] T024 **[VOIDED by the C1 fix from `/speckit-analyze`]** [US2] No work to do. The `validation_rejected` and `not_found` outcomes for `/api/v1/addresses/*` paths are emitted by the extended global `HttpExceptionNormalizerFilter` (T007 in this revised tasks.md), NOT by a controller-level filter. Reason: NestJS controller-level filters do not delegate to global filters — once a controller filter handles an exception, the global filter is bypassed, which would defeat the FR-021 coordinate scrubber and the response normalisation. T007 already inlines the path-matching emission. Skip this task; do NOT create `address-event.filter.ts`. (The task ID is preserved so cross-references in plan.md / data-model.md / commits remain stable.)
 
-- [ ] T025 [US2] Extend `<repo>\backend\src\modules\addresses\addresses.controller.ts` with `PATCH /addresses/:id` and `DELETE /addresses/:id`. Do NOT add any `@UseFilters` decorator — the FR-019 `validation_rejected` / `not_found` outcomes are emitted by the extended global filter (T007), not by a controller-level filter (per the C1 fix that voided T024). Add the imports:
+- [X] T025 [US2] Extend `<repo>\backend\src\modules\addresses\addresses.controller.ts` with `PATCH /addresses/:id` and `DELETE /addresses/:id`. Do NOT add any `@UseFilters` decorator — the FR-019 `validation_rejected` / `not_found` outcomes are emitted by the extended global filter (T007), not by a controller-level filter (per the C1 fix that voided T024). Add the imports:
   ```ts
   import { Delete, HttpCode, HttpStatus, Param, Patch } from '@nestjs/common';
   import { UpdateAddressDto } from './dto/update-address.dto';
@@ -1508,7 +1508,7 @@ delete events), SC-012 (update-error redaction).
 
 ### Mobile (edit screen, delete confirm, services completion)
 
-- [ ] T026 [P] [US2] Extend `<repo>\mobile\services\addresses.ts` with `update` and `delete`. Append:
+- [X] T026 [P] [US2] Extend `<repo>\mobile\services\addresses.ts` with `update` and `delete`. Append:
   ```ts
   export interface UpdateAddressInput {
     label?: string;
@@ -1541,7 +1541,7 @@ delete events), SC-012 (update-error redaction).
   ```
   Expected outcome: `npx tsc --noEmit` returns 0.
 
-- [ ] T027 [US2] Create `<repo>\mobile\app\(tabs)\profile\addresses\[id].tsx` (the EDIT screen with delete CTA). The screen is structurally similar to T020 with these differences: it loads the address by ID on mount, pre-populates the form, calls `update` on save, and exposes a `Delete` button that confirms and calls `delete`. On `409 ADDRESS_IN_USE`, the Delete handler shows the in-use modal (T037) instead of the network-error toast. Full content:
+- [X] T027 [US2] Create `<repo>\mobile\app\(tabs)\profile\addresses\[id].tsx` (the EDIT screen with delete CTA). The screen is structurally similar to T020 with these differences: it loads the address by ID on mount, pre-populates the form, calls `update` on save, and exposes a `Delete` button that confirms and calls `delete`. On `409 ADDRESS_IN_USE`, the Delete handler shows the in-use modal (T037) instead of the network-error toast. Full content:
   ```tsx
   import React, { useEffect, useMemo, useState } from 'react';
   import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';

@@ -8,6 +8,7 @@ import {
 import { ThrottlerException } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthEventLogger } from '../logging/auth-event.logger';
+import { AddressEventLogger } from '../logging/address-event.logger';
 
 interface NormalizedError {
   code: string;
@@ -17,7 +18,10 @@ interface NormalizedError {
 
 @Catch(HttpException)
 export class HttpExceptionNormalizerFilter implements ExceptionFilter {
-  constructor(private readonly events: AuthEventLogger) {}
+  constructor(
+    private readonly authEvents: AuthEventLogger,
+    private readonly addressEvents: AddressEventLogger,
+  ) {}
 
   catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -27,11 +31,10 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
     const raw = exception.getResponse();
 
     const normalized = this.normalize(exception, status, raw);
+    this.scrubCoordinates(normalized as unknown as Record<string, unknown>);
 
-    // Side-effects — emit auth events for the cases FR-020 names that are
-    // unreachable from inside controllers/services.
     if (exception instanceof ThrottlerException) {
-      this.events.emit({
+      this.authEvents.emit({
         event: 'auth.rate_limit',
         outcome: 'tripped',
         extra: { path: req.url, method: req.method },
@@ -44,10 +47,42 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         (m) => /password/i.test(m) && /(short|longer|at least|min)/i.test(m),
       );
       if (passwordTooShort) {
-        this.events.emit({
+        this.authEvents.emit({
           event: 'auth.password_validation',
           outcome: 'too_short',
         });
+      }
+    }
+
+    if (req.url?.startsWith('/api/v1/addresses')) {
+      const method = req.method;
+      const event =
+        method === 'POST'
+          ? 'address.create'
+          : method === 'PATCH'
+            ? 'address.update'
+            : method === 'DELETE'
+              ? 'address.delete'
+              : null;
+      if (event) {
+        const outcome =
+          normalized.code === 'VALIDATION_ERROR'
+            ? ('validation_rejected' as const)
+            : status === HttpStatus.NOT_FOUND
+              ? ('not_found' as const)
+              : null;
+        if (outcome) {
+          const userSub = (req as Request & { user?: { sub?: string } }).user
+            ?.sub;
+          const segs = req.url.split('?')[0].split('/');
+          const addressId = segs.length >= 5 ? segs[4] : undefined;
+          this.addressEvents.emit({
+            event,
+            outcome,
+            actorId: userSub,
+            addressId,
+          });
+        }
       }
     }
 
@@ -59,7 +94,6 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
     status: number,
     raw: unknown,
   ): NormalizedError {
-    // 1) ThrottlerException — uniform rate-limit code
     if (exception instanceof ThrottlerException) {
       return {
         code: 'AUTH_RATE_LIMITED',
@@ -67,8 +101,6 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       };
     }
 
-    // 2) Class-validator failure (NestJS ValidationPipe default shape):
-    //    { statusCode, message: string[], error: 'Bad Request' }
     if (
       status === HttpStatus.BAD_REQUEST &&
       typeof raw === 'object' &&
@@ -84,16 +116,24 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       }
     }
 
-    // 3) Our own structured throws — `new ConflictException({ code, message })` etc.
     if (typeof raw === 'object' && raw !== null) {
-      const obj = raw as { code?: unknown; message?: unknown };
+      const obj = raw as {
+        code?: unknown;
+        message?: unknown;
+        details?: unknown;
+      };
       if (typeof obj.code === 'string') {
+        const details =
+          typeof obj.details === 'object' && obj.details !== null
+            ? (obj.details as Record<string, unknown>)
+            : undefined;
         return {
           code: obj.code,
           message:
             typeof obj.message === 'string'
               ? obj.message
               : 'An error occurred.',
+          ...(details ? { details } : {}),
         };
       }
       if (typeof obj.message === 'string') {
@@ -101,7 +141,6 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       }
     }
 
-    // 4) String body — bare HttpException('msg', 404) etc.
     if (typeof raw === 'string') {
       return { code: this.codeFromStatus(status), message: raw };
     }
@@ -119,6 +158,22 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         return 'NOT_FOUND';
       default:
         return 'UNKNOWN';
+    }
+  }
+
+  private scrubCoordinates(node: unknown): void {
+    if (Array.isArray(node)) {
+      for (const child of node) this.scrubCoordinates(child);
+      return;
+    }
+    if (node && typeof node === 'object') {
+      const obj = node as Record<string, unknown>;
+      delete obj.latitude;
+      delete obj.longitude;
+      delete obj.coordinates;
+      for (const key of Object.keys(obj)) {
+        this.scrubCoordinates(obj[key]);
+      }
     }
   }
 }
