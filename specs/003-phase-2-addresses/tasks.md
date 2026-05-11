@@ -1249,7 +1249,7 @@ SC-012 (partial create-error redaction).
 
 ### Backend integration tests for US1
 
-- [ ] T021 [US1] Create `<repo>\backend\test\addresses.e2e-spec.ts` covering US1's happy path. The fixture set MUST be reused by US2 / US3 / Polish, so seed helpers go into a shared file. First create `<repo>\backend\test\helpers\address.fixtures.ts`:
+- [X] T021 [US1] Create `<repo>\backend\test\addresses.e2e-spec.ts` covering US1's happy path. The fixture set MUST be reused by US2 / US3 / Polish, so seed helpers go into a shared file. First create `<repo>\backend\test\helpers\address.fixtures.ts`:
   ```ts
   import { OrderStatus, PaymentMethod, PrismaClient, Role, UserAddress } from '@prisma/client';
   import { hashSync } from 'bcrypt';

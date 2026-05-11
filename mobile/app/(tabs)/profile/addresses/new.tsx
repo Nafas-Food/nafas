@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, ScrollView, Text, TextInput } from 'react-native';
+import { Alert, Pressable, StyleSheet, ScrollView, Text, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AddressPickerMap } from '../../../../components/AddressPickerMap';
 import { addressesService } from '../../../../services/addresses';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { useColors } from '../../../../hooks/useColors';
 import { useRTL } from '../../../../hooks/useRTL';
-import { errorCodeOf } from '../../../../services/api';
 
 export default function NewAddressScreen() {
   const { t } = useLanguage();
@@ -18,19 +17,17 @@ export default function NewAddressScreen() {
   const [streetName, setStreetName] = useState('');
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const onSave = async () => {
     if (!label.trim()) {
-      setErrMsg(t('addresses.validation.labelRequired'));
+      Alert.alert(t('addresses.validation.labelRequired'));
       return;
     }
     if (!coords) {
-      setErrMsg(t('addresses.validation.coordinatesInvalid'));
+      Alert.alert(t('addresses.validation.coordinatesInvalid'));
       return;
     }
     setSaving(true);
-    setErrMsg(null);
     try {
       await addressesService.create({
         label: label.trim(),
@@ -39,8 +36,8 @@ export default function NewAddressScreen() {
         longitude: coords.longitude,
       });
       router.back();
-    } catch (e) {
-      setErrMsg(t(`errors.${errorCodeOf(e)}`));
+    } catch {
+      Alert.alert(t('common.networkError'));
     } finally {
       setSaving(false);
     }
@@ -54,8 +51,6 @@ export default function NewAddressScreen() {
         onReverseGeocode={setStreetName}
       />
       <Text style={[styles.hint, { textAlign }]}>{t('addresses.picker.permissionDeniedHint')}</Text>
-
-      {errMsg ? <Text style={[styles.error, { textAlign }]}>{errMsg}</Text> : null}
 
       <Text style={[styles.label, { textAlign }]}>{t('addresses.form.label')}</Text>
       <TextInput
@@ -95,6 +90,5 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     cta: { marginTop: 24, backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
     ctaDisabled: { opacity: 0.6 },
     ctaText: { color: colors.primaryText, fontSize: 16, fontWeight: '600' },
-    error: { color: colors.danger, marginTop: 8 },
   });
 }
