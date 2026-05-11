@@ -7,7 +7,7 @@ description: "Phase 2 Saved Delivery Addresses with Map Picker — implementatio
 **Input**: Design documents from `/specs/003-phase-2-addresses/`
 **Prerequisites**: plan.md ✓, spec.md ✓, research.md ✓, data-model.md ✓, contracts/ ✓, quickstart.md ✓
 **Branch**: `003-phase-2-addresses`
-**Repo root**: `C:\Users\faragelo\Desktop\nafas` (referred to below as `<repo>`)
+**Repo root**: `<repo>`
 
 > **Implementer guidance**: Each task is atomic and self-contained.
 > File paths are absolute or repo-relative. Where a file's full

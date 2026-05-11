@@ -1,5 +1,24 @@
 import type { ExpoConfig } from 'expo/config';
 
+function envKey(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+const iosMapsKey = envKey(process.env.GOOGLE_MAPS_API_KEY_IOS);
+const androidMapsKey = envKey(process.env.GOOGLE_MAPS_API_KEY_ANDROID);
+
+if (!iosMapsKey || !androidMapsKey) {
+  const missing: string[] = [];
+  if (!iosMapsKey) missing.push('GOOGLE_MAPS_API_KEY_IOS');
+  if (!androidMapsKey) missing.push('GOOGLE_MAPS_API_KEY_ANDROID');
+  console.warn(
+    `[app.config] Missing Google Maps key(s): ${missing.join(', ')}. ` +
+    'Map tiles may not render on affected platform(s).',
+  );
+}
+
 const config: ExpoConfig = {
   name: 'mobile',
   slug: 'mobile',
@@ -16,7 +35,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     config: {
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS,
+      ...(iosMapsKey ? { googleMapsApiKey: iosMapsKey } : {}),
     },
   },
   android: {
@@ -28,7 +47,7 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: false,
     config: {
       googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID,
+        ...(androidMapsKey ? { apiKey: androidMapsKey } : {}),
       },
     },
   },

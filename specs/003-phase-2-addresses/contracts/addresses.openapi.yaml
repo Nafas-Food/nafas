@@ -348,12 +348,18 @@ components:
     Error:
       type: object
       required: [code, message]
-      additionalProperties: false
+      additionalProperties: true
       description: |
         Standard error envelope. Per FR-021 / R6, the
         `HttpExceptionNormalizerFilter` strips any `latitude`,
         `longitude`, or `coordinates` properties from this object
         and from any `details` payload before serialisation.
+
+        `additionalProperties` is `true` so that `allOf` extensions
+        (e.g., `AddressInUseError`) can add their own properties
+        without being rejected by a strict base schema. Each
+        specialised error schema enforces `additionalProperties:
+        false` on its own composed object.
       properties:
         code:
           type: string
@@ -380,6 +386,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
+          additionalProperties: false
           required: [activeOrderId]
           properties:
             activeOrderId:

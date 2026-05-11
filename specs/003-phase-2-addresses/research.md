@@ -157,11 +157,13 @@ interface AddressPickerMapProps {
   (30.0444 N, 31.2357 E) at zoom level 13 — a sensible default
   consistent with FR-007.
 - Every region change (after a 500 ms debounce so we don't fire
-  during pan inertia) triggers `onChange` with the new centre and
-  calls `onReverseGeocode` with the result of
-  `Location.reverseGeocodeAsync`. A failed lookup calls neither —
-  the parent screen's street-name input keeps whatever the customer
-  last left in it (FR-008).
+  during pan inertia) triggers `onChange` with the new centre
+  unconditionally. A successful
+  `Location.reverseGeocodeAsync` result additionally calls
+  `onReverseGeocode` with the composed street string. A failed or
+  empty reverse-geocode skips `onReverseGeocode` only — `onChange`
+  always fires — so the parent screen's street-name input keeps
+  whatever the customer last left in it (FR-008).
 - The map itself is locale-neutral (street labels render in their
   source language regardless of the app's `isRTL` state). The pin's
   accessibility label, the "Use my location" CTA shown when

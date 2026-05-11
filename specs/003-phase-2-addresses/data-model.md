@@ -118,7 +118,7 @@ single Phase 2 read against `Order`.
 
 | Field | Type | Phase 2 usage |
 |---|---|---|
-| `id` | UUID | Selected for the boolean check (`select: { id: true }`); never returned to the client by Phase 2 — the FR-013 refusal payload mentions only the address ID and the active-order count. |
+| `id` | UUID | Selected for the boolean check (`select: { id: true }`); never returned to the client by Phase 2 — the FR-013 refusal payload carries the address ID and the `activeOrderId` of the blocking order. |
 | `userId` | UUID | Filter — narrows the check to the customer's own orders (defence in depth on top of the `addressId` filter). |
 | `addressId` | UUID | Filter target (FR-013). |
 | `status` | enum `OrderStatus` | Filter — `notIn: ['DELIVERED', 'CANCELLED']`. The active set is `PENDING / CONFIRMED / PREPARING / READY / ON_THE_WAY` per Constitution Principle VI. |

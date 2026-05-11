@@ -149,7 +149,10 @@ mobile service module.
   in the typical case where the lookup succeeds (SC-003); a failure
   is silently absorbed and never surfaces a user-visible error.
 - The FR-013 in-flight-order check is a single-row `findFirst` on the
-  `(addressId, status)` index, expected p95 latency ≪ 50 ms.
+  existing `(status)` index (filtered by `addressId` and `userId`),
+  expected p95 latency ≪ 50 ms. No dedicated `(addressId, status)`
+  composite index is introduced in Phase 2; the lookup is rare enough
+  that the existing indexes suffice (see data-model.md).
 
 **Constraints**:
 
@@ -173,11 +176,13 @@ mobile service module.
 - All three Phase 2 mobile screens MUST consume `t(key)` and `isRTL`;
   no hardcoded strings or `flexDirection: "row"` literals
   (Constitution Principle I, FR-017).
-- The Google Maps API key procured per implementation-plan D4c is
+- The Google Maps API keys procured per implementation-plan D4c are
   stored only in `mobile/app.config.ts` (read from
-  `process.env.GOOGLE_MAPS_API_KEY` at config-resolution time); the
-  key is restricted to the iOS bundle ID and Android package name,
-  never committed to the repo (R2).
+  `process.env.GOOGLE_MAPS_API_KEY_IOS` and
+  `process.env.GOOGLE_MAPS_API_KEY_ANDROID` at config-resolution
+  time); each key is restricted to its respective iOS bundle ID or
+  Android package name + SHA-1 fingerprint, never committed to the
+  repo (R2).
 - The `OrdersModule` shell shipped here MUST NOT add any controllers,
   request paths, or DTOs — only the single service method
   `hasActiveOrderForAddress`. Phase 6 owns the public surface.
