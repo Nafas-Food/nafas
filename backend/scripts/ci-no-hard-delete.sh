@@ -20,7 +20,7 @@ for model in "${SOFT_DELETE_MODELS[@]}"; do
   if grep -RInE "$pattern" "$SRC_DIR" --include='*.ts' --exclude-dir=node_modules; then
     echo ""
     echo "FORBIDDEN: hard delete on soft-delete model '$model'."
-    echo "Use prisma.<model>.softDelete({ where: { id } }) instead."
+    echo "Use prisma.<model>.softDelete({ id }) instead."
     fail=1
   fi
 done

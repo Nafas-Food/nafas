@@ -77,7 +77,8 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
   migration tooling only.
 - Hard `prisma.<model>.delete(...)` on soft-delete entities is blocked at
   CI by `backend/scripts/ci-no-hard-delete.sh`. Use
-  `prisma.<model>.softDelete({ where })` instead.
+  `prisma.<model>.softDelete({ id })` instead — the extension takes the
+  where clause directly (not wrapped in another `{ where: ... }`).
 - The admin-context escape hatch lives in
   `backend/src/common/admin-context/admin-context.service.ts`. A handler
   that legitimately needs deleted rows wraps its call in

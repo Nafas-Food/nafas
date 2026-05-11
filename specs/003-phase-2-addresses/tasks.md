@@ -1480,7 +1480,7 @@ delete events), SC-012 (update-error redaction).
 
   Expected outcome: `npm run build` succeeds.
 
-- [ ] T024 **[VOIDED by the C1 fix from `/speckit-analyze`]** [US2] No work to do. The `validation_rejected` and `not_found` outcomes for `/api/v1/addresses/*` paths are emitted by the extended global `HttpExceptionNormalizerFilter` (T007 in this revised tasks.md), NOT by a controller-level filter. Reason: NestJS controller-level filters do not delegate to global filters — once a controller filter handles an exception, the global filter is bypassed, which would defeat the FR-021 coordinate scrubber and the response normalisation. T007 already inlines the path-matching emission. Skip this task; do NOT create `address-event.filter.ts`. (The task ID is preserved so cross-references in plan.md / data-model.md / commits remain stable.)
+- [X] T024 **[VOIDED by the C1 fix from `/speckit-analyze`]** [US2] No work to do. The `validation_rejected` and `not_found` outcomes for `/api/v1/addresses/*` paths are emitted by the extended global `HttpExceptionNormalizerFilter` (T007 in this revised tasks.md), NOT by a controller-level filter. Reason: NestJS controller-level filters do not delegate to global filters — once a controller filter handles an exception, the global filter is bypassed, which would defeat the FR-021 coordinate scrubber and the response normalisation. T007 already inlines the path-matching emission. Skip this task; do NOT create `address-event.filter.ts`. (The task ID is preserved so cross-references in plan.md / data-model.md / commits remain stable.)
 
 - [X] T025 [US2] Extend `<repo>\backend\src\modules\addresses\addresses.controller.ts` with `PATCH /addresses/:id` and `DELETE /addresses/:id`. Do NOT add any `@UseFilters` decorator — the FR-019 `validation_rejected` / `not_found` outcomes are emitted by the extended global filter (T007), not by a controller-level filter (per the C1 fix that voided T024). Add the imports:
   ```ts
@@ -1684,7 +1684,7 @@ delete events), SC-012 (update-error redaction).
 
 ### Backend tests for US2
 
-- [ ] T028 [US2] Extend `<repo>\backend\test\addresses.e2e-spec.ts` with US2 cases. Reuse the `captureLogs()` helper from T021. Every test in this block also asserts `cap.addressEvents()` contains exactly one line of the expected `(event, outcome)` shape, never carrying `latitude` / `longitude` / `coordinates` (SC-011 + FR-021):
+- [X] T028 [US2] Extend `<repo>\backend\test\addresses.e2e-spec.ts` with US2 cases. Reuse the `captureLogs()` helper from T021. Every test in this block also asserts `cap.addressEvents()` contains exactly one line of the expected `(event, outcome)` shape, never carrying `latitude` / `longitude` / `coordinates` (SC-011 + FR-021):
   - **describe('US2 — PATCH /addresses/:id')**:
     - It seeds two addresses on customer A; PATCH on the first changes the label only; the response shows the new label and the unchanged street/coords. Asserts `address.update / success` line emitted.
     - It refuses PATCH on customer A's address when authenticated as customer B with 404 ADDRESS_NOT_FOUND (FR-015 / SC-006). Asserts `address.update / not_found` line emitted.

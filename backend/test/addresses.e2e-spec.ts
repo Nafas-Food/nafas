@@ -9,16 +9,25 @@ import {
   assertNoCoordsInLogs,
   seedCustomer,
   seedAddress,
+  seedChef,
+  seedActiveOrder,
 } from './helpers/address.fixtures';
 
-describe('Addresses (e2e) — US1', () => {
+describe('Addresses (e2e) — US1 & US2', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let signAccess: (userId: string) => string;
   let cap: ReturnType<typeof captureLogs>;
-  const cleanupIds: { users: string[]; addresses: string[] } = {
+  const cleanupIds: {
+    users: string[];
+    addresses: string[];
+    orders: string[];
+    chefs: string[];
+  } = {
     users: [],
     addresses: [],
+    orders: [],
+    chefs: [],
   };
 
   beforeAll(async () => {
@@ -52,12 +61,26 @@ describe('Addresses (e2e) — US1', () => {
 
   afterEach(async () => {
     cap.restore();
+    if (cleanupIds.orders.length) {
+      await (prisma as any).$executeRawUnsafe(
+        `DELETE FROM orders WHERE id = ANY($1::uuid[])`,
+        cleanupIds.orders,
+      );
+      cleanupIds.orders = [];
+    }
     if (cleanupIds.addresses.length) {
       await (prisma as any).$executeRawUnsafe(
         `DELETE FROM user_addresses WHERE id = ANY($1::uuid[])`,
         cleanupIds.addresses,
       );
       cleanupIds.addresses = [];
+    }
+    if (cleanupIds.chefs.length) {
+      await (prisma as any).$executeRawUnsafe(
+        `DELETE FROM chefs WHERE id = ANY($1::uuid[])`,
+        cleanupIds.chefs,
+      );
+      cleanupIds.chefs = [];
     }
     if (cleanupIds.users.length) {
       await (prisma as any).$executeRawUnsafe(
@@ -74,6 +97,8 @@ describe('Addresses (e2e) — US1', () => {
 
   const trackUser = (id: string) => cleanupIds.users.push(id);
   const trackAddress = (id: string) => cleanupIds.addresses.push(id);
+  const trackOrder = (id: string) => cleanupIds.orders.push(id);
+  const trackChef = (id: string) => cleanupIds.chefs.push(id);
 
   describe('US1 — POST /api/v1/addresses', () => {
     it('creates an address and returns 201 with correct shape', async () => {
@@ -225,6 +250,214 @@ describe('Addresses (e2e) — US1', () => {
 
       assertNoCoordsInLogs(cap.lines);
       expect(cap.addressEvents()).toHaveLength(0);
+    });
+  });
+
+  describe('US2 — PATCH /api/v1/addresses/:id', () => {
+    it('changes the label only and returns updated address', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const addr1 = await seedAddress(prisma, custA.id, {
+        label: 'home',
+        streetName: '15 Tahrir St',
+      });
+      trackAddress(addr1.id);
+      const addr2 = await seedAddress(prisma, custA.id, {
+        label: 'work',
+      });
+      trackAddress(addr2.id);
+
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/addresses/${addr1.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .send({ label: 'home-updated' })
+        .expect(200);
+
+      expect(res.body.label).toBe('home-updated');
+      expect(res.body.streetName).toBe('15 Tahrir St');
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.update');
+      expect(events[0].outcome).toBe('success');
+      expect(events[0].actorId).toBe(custA.id);
+      expect(events[0].addressId).toBe(addr1.id);
+    });
+
+    it('refuses PATCH on foreign-customer address with 404 (FR-015 / SC-006)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+      const custB = await seedCustomer(prisma, signAccess);
+      trackUser(custB.id);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custB.accessToken}`)
+        .send({ label: 'stolen' })
+        .expect(404);
+
+      expect(res.body.code).toBe('ADDRESS_NOT_FOUND');
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.update');
+      expect(events[0].outcome).toBe('not_found');
+    });
+
+    it('refuses PATCH with latitude: 999 and scrubs coordinates from response (SC-012)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .send({ latitude: 999 })
+        .expect(400);
+
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body).not.toHaveProperty('latitude');
+      expect(res.body).not.toHaveProperty('longitude');
+      if (res.body.details) {
+        expect(res.body.details).not.toHaveProperty('latitude');
+        expect(res.body.details).not.toHaveProperty('longitude');
+        expect(res.body.details).not.toHaveProperty('coordinates');
+      }
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.update');
+      expect(events[0].outcome).toBe('validation_rejected');
+    });
+
+    it('PATCH allowed during in-flight order (FR-011)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const chef = await seedChef(prisma);
+      trackChef(chef.id);
+      trackUser(chef.userId);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      const order = await seedActiveOrder(prisma, custA.id, addr.id, chef.id);
+      trackOrder(order.id);
+
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .send({ label: 'updated-during-flight' })
+        .expect(200);
+
+      expect(res.body.label).toBe('updated-during-flight');
+
+      const getRes = await request(app.getHttpServer())
+        .get('/api/v1/addresses')
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(200);
+
+      const found = getRes.body.find((a: any) => a.id === addr.id);
+      expect(found.label).toBe('updated-during-flight');
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.update');
+      expect(events[0].outcome).toBe('success');
+    });
+  });
+
+  describe('US2 — DELETE /api/v1/addresses/:id', () => {
+    it('deletes an address and returns 204', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(204);
+
+      const getRes = await request(app.getHttpServer())
+        .get('/api/v1/addresses')
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(200);
+
+      expect(getRes.body).toHaveLength(0);
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.delete');
+      expect(events[0].outcome).toBe('success');
+      expect(events[0].addressId).toBe(addr.id);
+    });
+
+    it('refuses DELETE of already-soft-deleted address with 404 (SC-009)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(204);
+
+      cap.restore();
+      cap = captureLogs();
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custA.accessToken}`)
+        .expect(404);
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.delete');
+      expect(events[0].outcome).toBe('not_found');
+    });
+
+    it('refuses DELETE on foreign-customer address with 404 (FR-015 / SC-006)', async () => {
+      const custA = await seedCustomer(prisma, signAccess);
+      trackUser(custA.id);
+      const custB = await seedCustomer(prisma, signAccess);
+      trackUser(custB.id);
+
+      const addr = await seedAddress(prisma, custA.id);
+      trackAddress(addr.id);
+
+      await request(app.getHttpServer())
+        .delete(`/api/v1/addresses/${addr.id}`)
+        .set('Authorization', `Bearer ${custB.accessToken}`)
+        .expect(404);
+
+      assertNoCoordsInLogs(cap.lines);
+
+      const events = cap.addressEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].event).toBe('address.delete');
+      expect(events[0].outcome).toBe('not_found');
     });
   });
 });

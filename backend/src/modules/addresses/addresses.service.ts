@@ -113,7 +113,7 @@ export class AddressesService {
       });
     }
 
-    await (this.prisma as any).userAddress.softDelete({ where: { id } });
+    await this.prisma.extended.userAddress.softDelete({ id });
     this.events.emit({
       event: 'address.delete',
       outcome: 'success',

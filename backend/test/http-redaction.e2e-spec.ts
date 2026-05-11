@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import {
   ArgumentsHost,
   BadRequestException,
+  ConflictException,
   HttpException,
   NotFoundException,
 } from '@nestjs/common';
@@ -167,6 +168,29 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
         method: 'GET',
       });
       expect(addressEvents.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ADDRESS_IN_USE activeOrderId preservation (FR-013)', () => {
+    it('keeps activeOrderId at the top level of the 409 body', () => {
+      const body = run(
+        new ConflictException({
+          code: 'ADDRESS_IN_USE',
+          message: 'Address is in use by an order in progress.',
+          activeOrderId: '11111111-2222-3333-4444-555555555555',
+        }),
+        {
+          url: '/api/v1/addresses/abc-123',
+          method: 'DELETE',
+          user: { sub: 'u-7' },
+        },
+      );
+      expect(body).toMatchObject({
+        code: 'ADDRESS_IN_USE',
+        activeOrderId: '11111111-2222-3333-4444-555555555555',
+      });
+      expect(body).not.toHaveProperty('latitude');
+      expect(body).not.toHaveProperty('longitude');
     });
   });
 });

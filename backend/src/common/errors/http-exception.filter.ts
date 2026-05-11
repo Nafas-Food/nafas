@@ -14,6 +14,7 @@ interface NormalizedError {
   code: string;
   message: string;
   details?: Record<string, unknown>;
+  activeOrderId?: string;
 }
 
 @Catch(HttpException)
@@ -121,13 +122,14 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         code?: unknown;
         message?: unknown;
         details?: unknown;
+        activeOrderId?: unknown;
       };
       if (typeof obj.code === 'string') {
         const details =
           typeof obj.details === 'object' && obj.details !== null
             ? (obj.details as Record<string, unknown>)
             : undefined;
-        return {
+        const result: NormalizedError = {
           code: obj.code,
           message:
             typeof obj.message === 'string'
@@ -135,6 +137,13 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
               : 'An error occurred.',
           ...(details ? { details } : {}),
         };
+        // FR-013: ADDRESS_IN_USE carries an `activeOrderId` deep-link hint
+        // at the top level of the body (per the OpenAPI AddressInUseError
+        // schema, which composes Error allOf { activeOrderId }).
+        if (typeof obj.activeOrderId === 'string') {
+          result.activeOrderId = obj.activeOrderId;
+        }
+        return result;
       }
       if (typeof obj.message === 'string') {
         return { code: this.codeFromStatus(status), message: obj.message };
