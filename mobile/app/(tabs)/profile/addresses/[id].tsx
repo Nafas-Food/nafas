@@ -23,18 +23,25 @@ export default function EditAddressScreen() {
   const [inUse, setInUse] = useState<AddressInUseError | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const all = await addressesService.list();
-      const found = all.find((a) => a.id === id);
-      if (!found) {
-        router.back();
-        return;
+      try {
+        const all = await addressesService.list();
+        if (cancelled) return;
+        const found = all.find((a) => a.id === id);
+        if (!found) {
+          router.back();
+          return;
+        }
+        setLoaded(found);
+        setLabel(found.label);
+        setStreetName(found.streetName);
+        setCoords({ latitude: parseFloat(found.latitude), longitude: parseFloat(found.longitude) });
+      } catch {
+        if (!cancelled) router.back();
       }
-      setLoaded(found);
-      setLabel(found.label);
-      setStreetName(found.streetName);
-      setCoords({ latitude: parseFloat(found.latitude), longitude: parseFloat(found.longitude) });
     })();
+    return () => { cancelled = true; };
   }, [id, router]);
 
   if (!loaded || !coords) {

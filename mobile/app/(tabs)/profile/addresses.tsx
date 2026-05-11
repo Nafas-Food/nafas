@@ -20,6 +20,7 @@ export default function AddressesScreen() {
     try {
       setItems(await addressesService.list());
     } catch {
+      setItems([]);
       setError(t('common.networkError'));
     }
   }, [t]);

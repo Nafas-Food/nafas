@@ -39,6 +39,15 @@ export function AddressPickerMap({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (initialRegion || value) return;
     let cancelled = false;
     (async () => {
