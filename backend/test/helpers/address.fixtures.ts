@@ -1,5 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { OrderStatus, PrismaClient, Role, UserAddress } from '@prisma/client';
+import {
+  Chef,
+  OrderStatus,
+  PrismaClient,
+  Role,
+  UserAddress,
+} from '@prisma/client';
 import { hashSync } from 'bcryptjs';
 
 export interface SeededCustomer {
@@ -80,6 +86,31 @@ export async function seedTerminalOrder(
       deliveryFee: 10,
       serviceFee: 5,
       total: 115,
+    },
+  });
+}
+
+export async function seedChef(prisma: PrismaClient): Promise<Chef> {
+  const user = await prisma.user.create({
+    data: {
+      phone: `+201${Math.floor(100000000 + Math.random() * 900000000)}`,
+      passwordHash: hashSync('password1234', 12),
+      fullName: 'Test Chef',
+      role: Role.CHEF,
+      phoneVerified: true,
+    },
+  });
+  return prisma.chef.create({
+    data: {
+      userId: user.id,
+      chefName: 'Test Kitchen',
+      bio: 'Seed',
+      latitude: 30.0,
+      longitude: 31.2,
+      minOrderPrice: 50,
+      isVerified: true,
+      logo: 'default.png',
+      banner: 'default-banner.png',
     },
   });
 }
