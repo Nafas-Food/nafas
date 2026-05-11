@@ -44,6 +44,11 @@ const config: ExpoConfig = {
       backgroundColor: '#FAF7F2',
     },
     edgeToEdgeEnabled: true,
+    // predictiveBackGestureEnabled is intentionally false: edge-to-edge is
+    // enabled for visual immersion, but Nafas uses custom back handling via
+    // expo-router (e.g., sheet dismiss, confirmation dialogs on unsaved
+    // edits). Enabling the predictive back animation would conflict with
+    // those interceptors on Android 15+.
     predictiveBackGestureEnabled: false,
     config: {
       googleMaps: {

@@ -78,7 +78,7 @@ Concretely it delivers:
 
 No new schema entities — `UserAddress` was migrated in Phase 0 and is
 *populated* for the first time in this phase. FR-013 references
-`Order.status` (also already migrated, also unpopulated until Phase 6);
+`Order.status` (already migrated; remains unpopulated until Phase 6);
 the read path against it is `findFirst` on a status set, no writes.
 
 ## Technical Context
