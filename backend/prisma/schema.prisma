@@ -53,6 +53,11 @@ enum DiscountUnit {
   PERCENT
 }
 
+enum OtpChannel {
+  SMS
+  EMAIL
+}
+
 enum NotificationType {
   ORDER_PLACED
   ORDER_CONFIRMED
@@ -384,4 +389,21 @@ model Setting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("settings")
+}
+
+// Short-lived OTP rows for the email channel only. SMS still goes through
+// Twilio Verify (stored on Twilio). No deletedAt — purged by the cleanup
+// job (`OtpCodeCleanupJob`) after consumption or expiry.
+model OtpCode {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  channel      OtpChannel
+  destination  String
+  codeHash     String     @map("code_hash")
+  expiresAt    DateTime   @map("expires_at")
+  attempts     Int        @default(0)
+  consumedAt   DateTime?  @map("consumed_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@index([channel, destination, consumedAt, expiresAt])
+  @@map("otp_codes")
 }

@@ -19,7 +19,7 @@ export interface Country {
 }
 
 export const MIDDLE_EAST_COUNTRIES: Country[] = [
-  { code: '+20', nameEn: 'Egypt', nameAr: 'مصر', flag: '🇪🇬', placeholder: '011 XXXX XXXX' },
+  { code: '+20', nameEn: 'Egypt', nameAr: 'مصر', flag: '🇪🇬', placeholder: '01X XXXX XXXX' },
   { code: '+966', nameEn: 'Saudi Arabia', nameAr: 'السعودية', flag: '🇸🇦', placeholder: '05X XXX XXXX' },
   { code: '+971', nameEn: 'UAE', nameAr: 'الإمارات', flag: '🇦🇪', placeholder: '05X XXX XXXX' },
   { code: '+965', nameEn: 'Kuwait', nameAr: 'الكويت', flag: '🇰🇼', placeholder: '5X XXX XXXX' },
@@ -86,7 +86,7 @@ export function CountryPicker({
                   }}
                 >
                   <Text style={styles.flag}>{country.flag}</Text>
-                  <Text style={styles.name}>
+                  <Text style={[styles.name, { textAlign: locale === 'ar' ? 'right' : 'left' }]}>
                     {locale === 'ar' ? country.nameAr : country.nameEn}
                   </Text>
                   <Text style={styles.code}>{country.code}</Text>
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.bodySm,
     fontFamily: Font.medium,
     color: Colors.foreground,
-  },
+    },
   code: {
     fontSize: FontSize.caption,
     fontFamily: Font.semibold,

@@ -56,7 +56,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 }
 
 function ProvidersInner({ children }: { children: React.ReactNode }) {
-  const { ready } = useLanguage();
+  const { ready, isRTL } = useLanguage();
   const [fontsLoaded, fontsError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -73,7 +73,11 @@ function ProvidersInner({ children }: { children: React.ReactNode }) {
       </View>
     );
   }
-  return <RouteGuard>{children}</RouteGuard>;
+  return (
+    <View key={isRTL ? 'rtl' : 'ltr'} style={{ flex: 1 }}>
+      <RouteGuard>{children}</RouteGuard>
+    </View>
+  );
 }
 
 export default function RootLayout() {

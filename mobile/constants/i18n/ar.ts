@@ -28,6 +28,8 @@ export const ar: I18nDict = {
     title: 'إنشاء حسابك',
     fullNameLabel: 'الاسم بالكامل',
     phoneLabel: 'رقم الهاتف',
+    emailLabel: 'البريد الإلكتروني (اختياري)',
+    emailHint: 'لو سيبت بريدك هنا، هنبعت لك الرمز عليه بدل الرسالة النصية — أسرع ومجاني.',
     passwordLabel: 'كلمة المرور (8 أحرف على الأقل)',
     confirmPasswordLabel: 'أكّد كلمة المرور',
     passwordTooShort: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
@@ -39,6 +41,7 @@ export const ar: I18nDict = {
   verifyOtp: {
     title: 'تحقق من رقمك',
     subtitle: 'أدخل الرمز الذي أرسلناه إلى {phone}.',
+    subtitleEmail: 'أدخل الرمز الذي أرسلناه إلى بريدك {email}.',
     codeLabel: 'رمز التحقق',
     submit: 'تحقق وأنشئ الحساب',
     resend: 'إعادة إرسال الرمز',
@@ -50,6 +53,13 @@ export const ar: I18nDict = {
   home: {
     greeting: 'أهلاً، {name}',
     chefPlaceholder: 'الصفحة الرئيسية للشيف (مؤقتة)',
+  },
+  tabs: {
+    home: 'الرئيسية',
+    explore: 'استكشاف',
+    favorites: 'المفضلة',
+    orders: 'الطلبات',
+    profile: 'حسابي',
   },
   addresses: {
     list: {
@@ -109,6 +119,9 @@ export const ar: I18nDict = {
     AUTH_RATE_LIMITED: 'محاولات كثيرة جدًا. الرجاء الانتظار قليلاً ثم المحاولة مجددًا.',
     PHONE_IN_USE: 'رقم الهاتف مسجَّل بالفعل.',
     EMAIL_IN_USE: 'البريد الإلكتروني مسجَّل بالفعل.',
+    EMAIL_INVALID: 'البريد الإلكتروني غير صحيح. راجعه وحاول مرة أخرى.',
+    EMAIL_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',
+    EMAIL_OTP_ATTEMPTS_EXCEEDED: 'محاولات خاطئة كثيرة. اطلب رمزًا جديدًا.',
     AUTH_UNAUTHENTICATED: 'أنت غير مسجّل الدخول. الرجاء تسجيل الدخول من جديد.',
     AUTH_FORBIDDEN: 'ليس لديك صلاحية للقيام بهذا الإجراء.',
     NOT_FOUND: 'المورد المطلوب غير موجود.',

@@ -120,9 +120,14 @@ context modules, and the `services/{api,auth,users}.ts` ground floor.
 - Rate-limit storage is in-memory in v1 (`@nestjs/throttler` default).
   Multi-instance deployments (Phase 13) will need a shared store; an open
   item is recorded in `research.md` R7.
-- All four Phase 1 auth screens MUST consume `t(key)` and `isRTL`; no
-  hardcoded strings or `flexDirection: "row"` literals (Constitution
-  Principle I, FR-018).
+- All four Phase 1 auth screens MUST consume `t(key)`; no hardcoded
+  strings (Constitution Principle I, FR-018).
+- No manual RTL layout branching. `I18nManager.forceRTL` is the single
+  source of truth for layout direction. Reusable components do not
+  accept an `isRTL` prop for layout purposes. All text stylesheets use
+  `textAlign: 'left'` (auto-mirrored by the native layer) and logical
+  spacing properties (`marginStart`/`marginEnd`, `paddingStart`/
+  `paddingEnd`).
 
 **Scale/Scope**:
 

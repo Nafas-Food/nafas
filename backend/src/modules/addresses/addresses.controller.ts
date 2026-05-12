@@ -11,7 +11,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AddressesService } from './addresses.service';
@@ -31,12 +42,36 @@ export class AddressesController {
   constructor(private readonly svc: AddressesService) {}
 
   @Get()
+  @ApiOperation({
+    summary:
+      "List the authenticated customer's saved addresses, ordered by creation time.",
+  })
+  @ApiOkResponse({
+    description: 'Saved addresses, possibly empty.',
+    type: [AddressResponseDto],
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Missing or invalid access credential.',
+  })
   list(@Req() req: JwtRequest): Promise<AddressResponseDto[]> {
     return this.svc.list(req.user.sub);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Save a new delivery address for the authenticated customer.',
+  })
+  @ApiCreatedResponse({
+    description: 'Address created.',
+    type: AddressResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation error (VALIDATION_ERROR).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Missing or invalid access credential.',
+  })
   create(
     @Req() req: JwtRequest,
     @Body() dto: CreateAddressDto,
@@ -45,6 +80,24 @@ export class AddressesController {
   }
 
   @Patch(':id')
+  @ApiOperation({
+    summary:
+      "Update one of the authenticated customer's saved addresses (partial merge).",
+  })
+  @ApiOkResponse({
+    description: 'Updated address.',
+    type: AddressResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation error (VALIDATION_ERROR).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Missing or invalid access credential.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'Address not found (or owned by a different customer — same response per FR-015).',
+  })
   update(
     @Req() req: JwtRequest,
     @Param('id') id: string,
@@ -55,6 +108,21 @@ export class AddressesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: "Soft-delete one of the authenticated customer's saved addresses.",
+  })
+  @ApiNoContentResponse({ description: 'Address soft-deleted.' })
+  @ApiUnauthorizedResponse({
+    description: 'Missing or invalid access credential.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'Address not found (or owned by a different customer — same response per FR-015).',
+  })
+  @ApiConflictResponse({
+    description:
+      'Address is in use by an order in non-terminal status (ADDRESS_IN_USE).',
+  })
   remove(@Req() req: JwtRequest, @Param('id') id: string): Promise<void> {
     return this.svc.softDelete(req.user.sub, id);
   }

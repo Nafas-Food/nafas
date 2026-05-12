@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import Feather from '@expo/vector-icons/Feather';
 import { useAuth } from '../../context/AuthContext';
+import { signOut as signOutApi } from '../../services/auth';
 import { useLanguage } from '../../context/LanguageContext';
 import { useRTL } from '../../hooks/useRTL';
 import { useColors } from '../../hooks/useColors';
 
-export default function HomePlaceholder() {
-  const { user } = useAuth();
+export default function ExploreScreen() {
   const { t } = useLanguage();
   const { textAlign } = useRTL();
   const colors = useColors();
@@ -14,9 +16,8 @@ export default function HomePlaceholder() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.greeting, { textAlign }]}>
-        {user ? t('home.greeting', { name: user.fullName }) : t('common.loading')}
-      </Text>
+      <Feather name="search" size={40} color={colors.muted} />
+      <Text style={[styles.title, { textAlign }]}>{t('common.loading')}</Text>
     </View>
   );
 }
@@ -25,15 +26,15 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
   return StyleSheet.create({
     wrap: {
       flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
-      padding: 24,
+      justifyContent: 'center',
+      gap: 12,
       backgroundColor: colors.background,
     },
-    greeting: {
-      fontSize: 20,
+    title: {
+      fontSize: 16,
       fontWeight: '600',
-      color: colors.text,
+      color: colors.muted,
     },
   });
 }

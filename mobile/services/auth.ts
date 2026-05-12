@@ -7,8 +7,8 @@ export interface SessionResponse {
   refreshToken: string;
 }
 
-export async function sendOtp(phone: string): Promise<void> {
-  await api.post('/auth/send-otp', { phone });
+export async function sendOtp(phone: string, email?: string): Promise<void> {
+  await api.post('/auth/send-otp', { phone, ...(email ? { email } : {}) });
 }
 
 export async function register(input: {
@@ -17,6 +17,7 @@ export async function register(input: {
   password: string;
   birthdate: string;
   otpCode: string;
+  email?: string;
 }): Promise<SessionResponse> {
   const { data } = await api.post<SessionResponse>('/auth/register', input);
   return data;

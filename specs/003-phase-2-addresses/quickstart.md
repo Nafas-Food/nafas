@@ -191,7 +191,7 @@ tested in-process.
    ```bash
    cd backend
    npm run test:e2e -- addresses.e2e-spec
-   npm run test -- http-redaction.spec
+   npm run test:e2e -- http-redaction.e2e-spec
    ```
 
    **Verify** all tests pass. Specific cases asserted by these

@@ -436,6 +436,12 @@ restarts the app, and observes the override has stuck.
   platform MUST honour the device system language on first run, MUST
   honour and persist a manual in-app language override across app
   restarts, and MUST render Arabic with right-to-left layout end-to-end.
+  RTL correctness is achieved via `I18nManager.forceRTL(true)` combined
+  with explicit `textAlign: 'left'` in component stylesheets (mirrored
+  automatically by the native layer). Manual conditional styles based on
+  an `isRTL` flag (e.g., `textAlign: isRTL ? 'right' : 'left'`) are
+  explicitly prohibited because they double-mirror on Android, causing
+  Arabic text to appear left-aligned.
 - **FR-019**: All Phase 1 request shapes MUST inherit, not re-implement,
   the Foundation phase's request-shape validation: requests with extra
   fields beyond the documented shape MUST be refused with a clear
@@ -527,7 +533,9 @@ already migrated:
 - **SC-011**: 100% of strings shown on the welcome, sign-in, register, and
   OTP-entry screens are localised in both English and Arabic, and the
   Arabic version renders with right-to-left layout end-to-end on a real
-  device. (User Story 6, FR-018.)
+  device. RTL layout relies exclusively on `I18nManager.forceRTL`; no
+  manual `isRTL`-based conditional styles are present in any auth screen
+  or shared component. (User Story 6, FR-018.)
 - **SC-012**: A wrong-password sign-in attempt and an unknown-phone sign-in
   attempt return the same externally visible error message in 100% of
   cases (no enumeration possible). (FR-017.)

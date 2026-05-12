@@ -6,7 +6,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -33,7 +38,7 @@ export class AuthController {
     description: 'Code dispatched to the verification provider.',
   })
   async sendOtp(@Body() dto: SendOtpDto): Promise<void> {
-    await this.auth.sendOtp(dto.phone);
+    await this.auth.sendOtp(dto);
   }
 
   @Public()

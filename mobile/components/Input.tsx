@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import {
-  View,
   TextInput,
   Pressable,
   StyleSheet,
@@ -8,20 +7,20 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Font, FontSize, Spacing, Radius } from '../constants/theme';
+import { useRTL } from '../hooks/useRTL';
 
 interface InputProps extends TextInputProps {
   leftIcon?: keyof typeof Feather.glyphMap;
   showToggle?: boolean;
-  isRTL?: boolean;
 }
 
 export function Input({
   leftIcon,
   showToggle,
-  isRTL,
   secureTextEntry,
   ...textInputProps
 }: InputProps) {
+  const { rowDirection, start, end, textAlign } = useRTL();
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(!secureTextEntry);
   const inputRef = useRef<TextInput>(null);
@@ -29,8 +28,12 @@ export function Input({
   return (
     <Pressable
       onPress={() => inputRef.current?.focus()}
+      // Drive flexDirection from useRTL so the leading icon stays on the
+      // correct side even when I18nManager.isRTL has not flipped yet (cold
+      // launch in Arabic before the LanguageContext-issued reload lands).
       style={[
         styles.container,
+        { flexDirection: rowDirection },
         focused ? styles.containerFocused : undefined,
       ]}
     >
@@ -39,7 +42,10 @@ export function Input({
           name={leftIcon}
           size={20}
           color={Colors.sand}
-          style={styles.leftIcon}
+          // Use a side-specific margin instead of `marginEnd` so the gap
+          // between icon and text input is correct regardless of the
+          // framework's RTL state.
+          style={[styles.leadingIcon, { [`margin${end === 'right' ? 'Right' : 'Left'}` as 'marginRight' | 'marginLeft']: Spacing.s2 }]}
         />
       )}
       <TextInput
@@ -47,9 +53,13 @@ export function Input({
         ref={inputRef}
         style={[
           styles.input,
-          leftIcon ? styles.inputWithLeftIcon : undefined,
-          showToggle ? styles.inputWithRightIcon : undefined,
-          isRTL ? styles.inputRTL : undefined,
+          leftIcon
+            ? { [`padding${start === 'left' ? 'Left' : 'Right'}` as 'paddingLeft' | 'paddingRight']: Spacing.s1 }
+            : undefined,
+          showToggle
+            ? { [`padding${end === 'left' ? 'Left' : 'Right'}` as 'paddingLeft' | 'paddingRight']: Spacing.s1 }
+            : undefined,
+          { textAlign },
           textInputProps.style,
         ]}
         secureTextEntry={showToggle ? !visible : secureTextEntry}
@@ -66,7 +76,8 @@ export function Input({
       {showToggle && (
         <Pressable
           onPress={() => setVisible((v) => !v)}
-          style={styles.rightIcon}
+          // Same margin trick as the leading icon — use a side-specific key.
+          style={[styles.trailingIcon, { [`margin${start === 'left' ? 'Left' : 'Right'}` as 'marginLeft' | 'marginRight']: Spacing.s2 }]}
           hitSlop={8}
         >
           <Feather
@@ -82,7 +93,6 @@ export function Input({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.card,
     borderWidth: 1.5,
@@ -99,9 +109,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  leftIcon: {
-    marginRight: Spacing.s2,
-  },
+  leadingIcon: {},
   input: {
     flex: 1,
     fontSize: FontSize.body,
@@ -109,17 +117,7 @@ const styles = StyleSheet.create({
     color: Colors.foreground,
     paddingVertical: 0,
   },
-  inputWithLeftIcon: {
-    paddingLeft: Spacing.s1,
-  },
-  inputWithRightIcon: {
-    paddingRight: Spacing.s1,
-  },
-  inputRTL: {
-    textAlign: 'right',
-  },
-  rightIcon: {
-    marginLeft: Spacing.s2,
+  trailingIcon: {
     padding: Spacing.s1,
   },
 });

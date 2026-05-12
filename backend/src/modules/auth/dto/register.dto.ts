@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsString, Length, Matches, MinLength } from 'class-validator';
+import {
+  IsDate,
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Mona Hassan', minLength: 2, maxLength: 80 })
@@ -32,4 +41,15 @@ export class RegisterDto {
   @IsString()
   @Matches(/^\d{4,8}$/)
   otpCode!: string;
+
+  @ApiProperty({
+    example: 'mona@example.com',
+    required: false,
+    description:
+      'Optional email. When provided, the OTP is verified against the email channel instead of SMS, and the address is bound to the new account.',
+  })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(254)
+  email?: string;
 }

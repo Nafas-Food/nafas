@@ -69,22 +69,21 @@ export default function SignInScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.title')}</Text>
+          <Text style={[styles.title, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('signIn.title')}</Text>
 
-          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.phoneLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('signIn.phoneLabel')}</Text>
             <PhoneInput
               value={phone}
               onChangeText={setPhone}
               locale={locale}
-              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('signIn.passwordLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('signIn.passwordLabel')}</Text>
             <Input
               leftIcon="lock"
               showToggle
@@ -93,7 +92,6 @@ export default function SignInScreen() {
               secureTextEntry
               textContentType="password"
               autoComplete="password"
-              isRTL={isRTL}
             />
           </View>
 

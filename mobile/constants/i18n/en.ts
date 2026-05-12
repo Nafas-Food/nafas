@@ -31,6 +31,8 @@ export const en = {
     title: 'Create your account',
     fullNameLabel: 'Full name',
     phoneLabel: 'Phone number',
+    emailLabel: 'Email (optional)',
+    emailHint: "We'll email your code.",
     passwordLabel: 'Password (8 characters or more)',
     confirmPasswordLabel: 'Confirm password',
     passwordTooShort: 'Password must be at least 8 characters.',
@@ -40,8 +42,9 @@ export const en = {
     datePlaceholder: 'YYYY-MM-DD',
   },
   verifyOtp: {
-    title: 'Verify your phone',
+    title: 'Verify your account',
     subtitle: 'Enter the code we sent to {phone}.',
+    subtitleEmail: 'Enter the code we emailed to {email}.',
     codeLabel: 'Verification code',
     submit: 'Verify and create account',
     resend: 'Resend code',
@@ -53,6 +56,13 @@ export const en = {
   home: {
     greeting: 'Hello, {name}',
     chefPlaceholder: 'Chef home (placeholder)',
+  },
+  tabs: {
+    home: 'Home',
+    explore: 'Explore',
+    favorites: 'Favorites',
+    orders: 'Orders',
+    profile: 'Profile',
   },
   addresses: {
     list: {
@@ -112,6 +122,9 @@ export const en = {
     AUTH_RATE_LIMITED: 'Too many attempts. Please wait a moment and try again.',
     PHONE_IN_USE: 'This phone number is already in use.',
     EMAIL_IN_USE: 'This email is already in use.',
+    EMAIL_INVALID: 'That email address looks wrong. Check it and try again.',
+    EMAIL_OTP_INVALID: 'The code is incorrect or has expired. Try again.',
+    EMAIL_OTP_ATTEMPTS_EXCEEDED: 'Too many wrong attempts. Request a fresh code.',
     AUTH_UNAUTHENTICATED: 'You are not signed in. Please sign in again.',
     AUTH_FORBIDDEN: 'You do not have permission to do this.',
     NOT_FOUND: 'The requested resource was not found.',
