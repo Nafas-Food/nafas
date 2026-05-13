@@ -31,8 +31,10 @@ export default function NewAddressScreen() {
 
   const [step, setStep] = useState<'map' | 'form'>('map');
   const [coords, setCoords] = useState<Coords | null>(null);
+  const [label, setLabel] = useState('');
   const [streetName, setStreetName] = useState('');
   const [building, setBuilding] = useState('');
+  const [floor, setFloor] = useState('');
   const [apartment, setApartment] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -46,6 +48,10 @@ export default function NewAddressScreen() {
   };
 
   const onSave = async () => {
+    if (!label.trim()) {
+      Alert.alert(t('addresses.validation.labelRequired'));
+      return;
+    }
     if (!streetName.trim()) {
       Alert.alert(t('addresses.form.streetName'));
       return;
@@ -58,9 +64,10 @@ export default function NewAddressScreen() {
     setSaving(true);
     try {
       await addressesService.create({
-        label: streetName.trim() || 'Saved address',
+        label: label.trim(),
         streetName: streetName.trim(),
         building: building.trim() || undefined,
+        floor: floor.trim() || undefined,
         apartment: apartment.trim() || undefined,
         notes: notes.trim() || undefined,
         latitude: coords.latitude,
@@ -88,7 +95,10 @@ export default function NewAddressScreen() {
       : t('addresses.form.addAddressTitle');
 
   return (
-    <View style={styles.wrap}>
+    <KeyboardAvoidingView
+      style={styles.wrap}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable
           onPress={goBack}
@@ -127,10 +137,14 @@ export default function NewAddressScreen() {
           rowDirection={rowDirection}
           textAlign={textAlign}
           insetsBottom={insets.bottom}
+          label={label}
+          setLabel={setLabel}
           streetName={streetName}
           setStreetName={setStreetName}
           building={building}
           setBuilding={setBuilding}
+          floor={floor}
+          setFloor={setFloor}
           apartment={apartment}
           setApartment={setApartment}
           notes={notes}
@@ -141,7 +155,7 @@ export default function NewAddressScreen() {
           t={t}
         />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -210,10 +224,14 @@ function FormStep({
   rowDirection,
   textAlign,
   insetsBottom,
+  label,
+  setLabel,
   streetName,
   setStreetName,
   building,
   setBuilding,
+  floor,
+  setFloor,
   apartment,
   setApartment,
   notes,
@@ -227,10 +245,14 @@ function FormStep({
   rowDirection: 'row' | 'row-reverse';
   textAlign: 'left' | 'right';
   insetsBottom: number;
+  label: string;
+  setLabel: (s: string) => void;
   streetName: string;
   setStreetName: (s: string) => void;
   building: string;
   setBuilding: (s: string) => void;
+  floor: string;
+  setFloor: (s: string) => void;
   apartment: string;
   setApartment: (s: string) => void;
   notes: string;
@@ -243,15 +265,11 @@ function FormStep({
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-    >
+    <View style={styles.flex}>
       <ScrollView
         contentContainerStyle={[
           styles.formScroll,
-          { paddingBottom: insetsBottom + 120 },
+          { paddingBottom: 32 },
         ]}
         keyboardShouldPersistTaps="handled"
       >
@@ -275,6 +293,20 @@ function FormStep({
 
         <View style={styles.field}>
           <Text style={[styles.fieldLabel, { textAlign }]}>
+            {t('addresses.form.label')} <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, { textAlign }]}
+            value={label}
+            onChangeText={setLabel}
+            placeholder={t('addresses.form.labelPlaceholder')}
+            placeholderTextColor={colors.muted}
+            maxLength={80}
+          />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={[styles.fieldLabel, { textAlign }]}>
             {t('addresses.form.streetName')} <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
@@ -288,7 +320,7 @@ function FormStep({
         </View>
 
         <View style={[styles.row, { flexDirection: rowDirection }]}>
-          <View style={styles.halfField}>
+          <View style={styles.thirdField}>
             <Text style={[styles.fieldLabel, { textAlign }]}>
               {t('addresses.form.buildingLabel')}
             </Text>
@@ -302,7 +334,20 @@ function FormStep({
               keyboardType="default"
             />
           </View>
-          <View style={styles.halfField}>
+          <View style={styles.thirdField}>
+            <Text style={[styles.fieldLabel, { textAlign }]}>
+              {t('addresses.form.floor')}
+            </Text>
+            <TextInput
+              style={[styles.input, { textAlign }]}
+              value={floor}
+              onChangeText={setFloor}
+              placeholder={t('addresses.form.floorPlaceholder')}
+              placeholderTextColor={colors.muted}
+              maxLength={20}
+            />
+          </View>
+          <View style={styles.thirdField}>
             <Text style={[styles.fieldLabel, { textAlign }]}>
               {t('addresses.form.apartmentLabel')}
             </Text>
@@ -362,7 +407,7 @@ function FormStep({
           </View>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -448,6 +493,7 @@ function makeStyles(colors: NafasColors) {
     field: { gap: 6 },
     row: { gap: 12 },
     halfField: { flex: 1, gap: 6 },
+    thirdField: { flex: 1, gap: 6 },
     fieldLabel: {
       fontSize: 15,
       fontWeight: '700',

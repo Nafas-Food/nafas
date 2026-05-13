@@ -71,6 +71,8 @@ export const ar: I18nDict = {
         body: 'أضف عنوانًا لاستخدامه عند الدفع',
       },
       addCta: 'إضافة عنوان جديد',
+      defaultBadge: 'افتراضي',
+      setDefaultA11y: 'تعيين كعنوان افتراضي',
     },
     form: {
       setLocationTitle: 'تحديد الموقع',
@@ -83,6 +85,7 @@ export const ar: I18nDict = {
       streetNamePlaceholder: 'مثال: شارع التحرير',
       buildingLabel: 'رقم المنزل / العمارة',
       buildingPlaceholder: '١٢',
+      floorPlaceholder: '٣',
       apartmentLabel: 'رقم الشقة',
       apartmentPlaceholder: '٣',
       notesLabel: 'ملاحظات إضافية',

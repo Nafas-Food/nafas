@@ -74,6 +74,8 @@ export const en = {
         body: 'Add an address to use during checkout',
       },
       addCta: 'Add New Address',
+      defaultBadge: 'Default',
+      setDefaultA11y: 'Set as default address',
     },
     form: {
       setLocationTitle: 'Set Location',
@@ -86,6 +88,7 @@ export const en = {
       streetNamePlaceholder: 'e.g. Tahrir Street',
       buildingLabel: 'House / Building No.',
       buildingPlaceholder: '12',
+      floorPlaceholder: '3',
       apartmentLabel: 'Apartment No.',
       apartmentPlaceholder: '3',
       notesLabel: 'Additional Notes',

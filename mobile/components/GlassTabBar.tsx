@@ -4,9 +4,15 @@ import { BlurView } from 'expo-blur';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
 import { useLanguage } from '../context/LanguageContext';
 import { useRTL } from '../hooks/useRTL';
 import { useColors, type NafasColors } from '../hooks/useColors';
+
+// Hide the tab bar on focused-task screens (add / edit). The list page
+// `/profile/addresses` keeps the bar; only routes with a trailing segment
+// (e.g. `/new`, `/<id>`) match this pattern.
+const HIDDEN_TAB_PATHS = [/^\/profile\/addresses\/[^/]+$/];
 
 function TabButton({
   tab,
@@ -53,6 +59,11 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = makeStyles(colors);
+  const pathname = usePathname();
+
+  if (HIDDEN_TAB_PATHS.some((re) => re.test(pathname))) {
+    return null;
+  }
 
   const filteredRoutes = state.routes.filter((route) =>
     TOP_LEVEL_TABS.includes(route.name),

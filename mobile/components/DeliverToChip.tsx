@@ -6,6 +6,7 @@ import { useColors, type NafasColors } from '../hooks/useColors';
 import { useLanguage } from '../context/LanguageContext';
 import { useRTL } from '../hooks/useRTL';
 import { addressesService, type Address } from '../services/addresses';
+import { defaultAddressStore } from '../services/defaultAddress';
 
 type State =
   | { kind: 'loading' }
@@ -22,12 +23,18 @@ export function DeliverToChip() {
 
   const refresh = useCallback(async () => {
     try {
-      const items = await addressesService.list();
+      const [items, storedDefault] = await Promise.all([
+        addressesService.list(),
+        defaultAddressStore.get(),
+      ]);
       if (items.length === 0) {
         setState({ kind: 'empty' });
-      } else {
-        setState({ kind: 'ready', address: items[0] });
+        return;
       }
+      const picked =
+        (storedDefault && items.find((a) => a.id === storedDefault)) ||
+        items[0];
+      setState({ kind: 'ready', address: picked });
     } catch {
       setState({ kind: 'empty' });
     }

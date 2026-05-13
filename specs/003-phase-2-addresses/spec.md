@@ -504,11 +504,18 @@ read Order rows beyond what FR-013 requires for the delete check.
   bundle ID, origin allow-lists) are planning-level decisions and
   not part of this specification. Substituting either provider
   MUST NOT invalidate this spec.
-- **No "default address" concept in v1.** The customer's saved
-  list is a flat set; the cart/checkout flow (Phase 5) chooses
-  which address to use on a per-order basis. A future "default
-  address" feature, if desired, would be additive and is out of
-  scope here.
+- **Client-side default address only in v1.** The backend's saved
+  list is a flat set with no `isDefault` flag — the cart/checkout
+  flow (Phase 5) is still free to choose which address to use on a
+  per-order basis. As a UX convenience, the mobile client persists
+  a single "default delivery address" preference *locally*
+  (AsyncStorage, key `nafas.defaultAddressId`) and surfaces it on
+  the Home delivery chip and on the addresses list (radio toggle +
+  "Default" badge). This preference is device-local and is not
+  synchronised across devices; first-ever saved address is
+  auto-promoted, and a stale ID (referring to a deleted address)
+  falls back to the first available. Promoting this to a
+  server-side `isDefault` flag remains a future, additive change.
 - **Address label is free text, not an enum.** The product does
   not prescribe a fixed set of labels (e.g., Home / Work / Other).
   Customers often have culturally specific labels ("الست الوالدة"

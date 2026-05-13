@@ -10,7 +10,9 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { addressesService, Address } from '../../../services/addresses';
+import { defaultAddressStore } from '../../../services/defaultAddress';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useColors, type NafasColors } from '../../../hooks/useColors';
 import { useRTL } from '../../../hooks/useRTL';
@@ -26,16 +28,35 @@ export default function AddressesScreen() {
   const router = useRouter();
   const [items, setItems] = useState<Address[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [defaultId, setDefaultId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      setItems(await addressesService.list());
+      const [list, storedDefault] = await Promise.all([
+        addressesService.list(),
+        defaultAddressStore.get(),
+      ]);
+      setItems(list);
+      if (storedDefault && list.some((a) => a.id === storedDefault)) {
+        setDefaultId(storedDefault);
+      } else if (list.length > 0) {
+        // First-run / stale-default fallback — promote the first address.
+        await defaultAddressStore.set(list[0].id);
+        setDefaultId(list[0].id);
+      } else {
+        setDefaultId(null);
+      }
     } catch {
       setItems([]);
       setError(t('common.networkError'));
     }
   }, [t]);
+
+  const onSetDefault = useCallback(async (id: string) => {
+    setDefaultId(id);
+    await defaultAddressStore.set(id);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -97,13 +118,17 @@ export default function AddressesScreen() {
           renderItem={({ item }) => (
             <AddressRow
               item={item}
+              isDefault={item.id === defaultId}
               onPress={() =>
                 router.push(`/(tabs)/profile/addresses/${item.id}`)
               }
+              onSetDefault={() => onSetDefault(item.id)}
               colors={colors}
               rowDirection={rowDirection}
               textAlign={textAlign}
               isRTL={isRTL}
+              defaultLabel={t('addresses.list.defaultBadge')}
+              setDefaultA11y={t('addresses.list.setDefaultA11y')}
             />
           )}
         />
@@ -134,18 +159,26 @@ export default function AddressesScreen() {
 
 function AddressRow({
   item,
+  isDefault,
   onPress,
+  onSetDefault,
   colors,
   rowDirection,
   textAlign,
   isRTL,
+  defaultLabel,
+  setDefaultA11y,
 }: {
   item: Address;
+  isDefault: boolean;
   onPress: () => void;
+  onSetDefault: () => void;
   colors: NafasColors;
   rowDirection: 'row' | 'row-reverse';
   textAlign: 'left' | 'right';
   isRTL: boolean;
+  defaultLabel: string;
+  setDefaultA11y: string;
 }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const detailLine = [
@@ -161,19 +194,32 @@ function AddressRow({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      style={({ pressed }) => [
+        styles.row,
+        isDefault && styles.rowDefault,
+        pressed && styles.rowPressed,
+      ]}
     >
       <View style={[styles.rowInner, { flexDirection: rowDirection }]}>
         <View style={styles.rowIconWrap}>
           <Feather name="map-pin" size={18} color={colors.primary} />
         </View>
         <View style={styles.rowText}>
-          <Text
-            style={[styles.rowLabel, { textAlign }]}
-            numberOfLines={1}
+          <View
+            style={[styles.rowLabelRow, { flexDirection: rowDirection }]}
           >
-            {item.label}
-          </Text>
+            <Text
+              style={[styles.rowLabel, { textAlign }]}
+              numberOfLines={1}
+            >
+              {item.label}
+            </Text>
+            {isDefault ? (
+              <View style={styles.defaultBadge}>
+                <Text style={styles.defaultBadgeText}>{defaultLabel}</Text>
+              </View>
+            ) : null}
+          </View>
           {detailLine ? (
             <Text
               style={[styles.rowDetail, { textAlign }]}
@@ -183,6 +229,21 @@ function AddressRow({
             </Text>
           ) : null}
         </View>
+        <Pressable
+          onPress={onSetDefault}
+          disabled={isDefault}
+          hitSlop={10}
+          style={styles.starBtn}
+          accessibilityRole="button"
+          accessibilityLabel={setDefaultA11y}
+          accessibilityState={{ selected: isDefault }}
+        >
+          <Ionicons
+            name={isDefault ? 'radio-button-on' : 'radio-button-off'}
+            size={24}
+            color={isDefault ? colors.primary : colors.muted}
+          />
+        </Pressable>
         <Feather
           name={isRTL ? 'chevron-left' : 'chevron-right'}
           size={20}
@@ -259,6 +320,10 @@ function makeStyles(colors: NafasColors) {
       shadowRadius: 8,
       elevation: 1,
     },
+    rowDefault: {
+      borderColor: colors.primary,
+      borderWidth: 1.5,
+    },
     rowPressed: {
       backgroundColor: colors.primaryLight,
     },
@@ -277,15 +342,38 @@ function makeStyles(colors: NafasColors) {
       justifyContent: 'center',
     },
     rowText: { flex: 1, gap: 2 },
+    rowLabelRow: {
+      alignItems: 'center',
+      gap: 8,
+    },
     rowLabel: {
       fontSize: 16,
       fontWeight: '700',
       color: colors.text,
+      flexShrink: 1,
     },
     rowDetail: {
       fontSize: 13,
       color: colors.muted,
       lineHeight: 18,
+    },
+    defaultBadge: {
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+    },
+    defaultBadgeText: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    starBtn: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     fabWrap: {
       position: 'absolute',
