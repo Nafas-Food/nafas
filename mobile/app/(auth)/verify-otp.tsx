@@ -62,7 +62,9 @@ export default function VerifyOtpScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!phone || !fullName || !password || !birthdate) {
+    const missingBasics = !fullName || !password || !birthdate;
+  const missingTarget = channel === 'email' ? !email : !phone;
+  if (missingBasics || missingTarget) {
       router.replace('/(auth)/register');
       return;
     }

@@ -45,12 +45,21 @@ function TabButton({
   );
 }
 
+const TOP_LEVEL_TABS = ['index', 'explore', 'favorites', 'orders', 'profile'];
+
 export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { t } = useLanguage();
   const { isRTL } = useRTL();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = makeStyles(colors);
+
+  const filteredRoutes = state.routes.filter((route) =>
+    TOP_LEVEL_TABS.includes(route.name),
+  );
+  const filteredIndex = filteredRoutes.findIndex(
+    (route) => route.key === state.routes[state.index]?.key,
+  );
 
   const iconMap: Record<string, keyof typeof Feather.glyphMap> = {
     index: 'home',
@@ -77,8 +86,8 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
       ]}
     >
       <BlurView intensity={60} tint="light" style={styles.glassPill}>
-        {state.routes.map((route, index) => {
-          const isFocused = state.index === index;
+        {filteredRoutes.map((route, index) => {
+          const isFocused = index === filteredIndex;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -147,7 +156,7 @@ function makeStyles(colors: NafasColors) {
       borderColor: 'rgba(255, 255, 255, 0.75)',
       ...Platform.select({
         ios: {
-          shadowColor: '#C4622D',
+          shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.12,
           shadowRadius: 32,

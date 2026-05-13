@@ -9,36 +9,11 @@ export default function TabsLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-        }}
-      />
-      <Tabs.Screen
-        name="favorites"
-        options={{
-          title: 'Favorites',
-        }}
-      />
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: 'Orders',
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-        }}
-      />
+      <Tabs.Screen name="index" options={{ href: undefined }} />
+      <Tabs.Screen name="explore" options={{ href: undefined }} />
+      <Tabs.Screen name="favorites" options={{ href: undefined }} />
+      <Tabs.Screen name="orders" options={{ href: undefined }} />
+      <Tabs.Screen name="profile" options={{ href: undefined }} />
       <Tabs.Screen name="profile/addresses" options={{ href: null }} />
       <Tabs.Screen name="profile/addresses/new" options={{ href: null }} />
       <Tabs.Screen name="profile/addresses/[id]" options={{ href: null }} />

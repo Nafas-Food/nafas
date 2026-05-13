@@ -29,18 +29,17 @@ export class ResendEmailClient implements EmailClient {
         ? `رمز التحقق الخاص بك في نفس هو ${code}. صالح لمدة 10 دقائق.`
         : `Your nafas verification code is ${code}. It is valid for 10 minutes.`;
 
-    try {
-      await this.client.emails.send({
-        from: this.from,
-        to,
-        subject,
-        text,
-      });
-    } catch (err) {
+    const { data, error } = await this.client.emails.send({
+      from: this.from,
+      to,
+      subject,
+      text,
+    });
+    if (error) {
       this.log.error(
-        `Resend send failed for ${this.maskEmail(to)}: ${(err as Error).message}`,
+        `Resend send failed for ${this.maskEmail(to)}: ${error.message}`,
       );
-      throw err;
+      throw new Error(`Resend API error: ${error.message}`);
     }
   }
 }

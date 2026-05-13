@@ -59,6 +59,12 @@ export class AuthService {
     return phone.slice(0, -4).replace(/\d/g, '*') + phone.slice(-4);
   }
 
+  private maskEmail(email: string): string {
+    const at = email.indexOf('@');
+    if (at <= 1) return '***' + email.slice(at);
+    return email[0] + '***' + email.slice(at);
+  }
+
   /**
    * Channel routing: if `dto.email` is present we dispatch via the
    * email-OTP path (our own short-lived row + Resend/logger). Phone is
@@ -115,6 +121,11 @@ export class AuthService {
       // Throws UnauthorizedException(EMAIL_OTP_INVALID) or
       // 429(EMAIL_OTP_ATTEMPTS_EXCEEDED) on failure.
       await this.emailOtp.verify(dto.email, dto.otpCode);
+      this.events.emit({
+        event: 'otp.verify',
+        outcome: 'success',
+        extra: { channel: 'email', email: this.maskEmail(dto.email) },
+      });
     } else {
       const verified = await this.twilio.checkOtp(dto.phone, dto.otpCode);
       if (!verified) {

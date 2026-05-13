@@ -18,7 +18,7 @@ Auto-generated from all feature plans. Last updated: 2026-05-04
 ```text
 backend/
   prisma/
-    schema.prisma          # Canonical 17-table schema
+    schema.prisma          # Canonical 18-table schema
     migrations/            # Forward-versioned migrations
   src/
     main.ts                # NestJS bootstrap
@@ -94,12 +94,17 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
 ## Phase 1 conventions (do not regress)
 
 - The global `@nestjs/throttler` configuration registers **a single
-  default tier** of `10 requests / 15 min / IP`.
-  SMS-dispatching endpoints (`/auth/send-otp`,
-  `/users/me/change-phone/start`) override it per-route with
-  `@Throttle({ default: { limit: 3, ttl: 60_000 } })`. Never add a
-  second named tier globally — multi-tier configs compound and
-  over-throttle (research R7).
+  default tier** named `default` (research R7 — never add a second
+  named tier globally; multi-tier configs compound and over-throttle).
+  Its baseline is `60 requests / 60 s / IP` — a sane API default that
+  authenticated normal-use polling can tolerate. Sensitive endpoints
+  tighten it per-route via `@Throttle({ default: {...} })`:
+  - **FR-016** (SMS / cost-protected): `/auth/send-otp`,
+    `/users/me/change-phone/start` → `limit: 3, ttl: 60_000`.
+  - **FR-016a** (credential-stuffing slow-down): `/auth/register`,
+    `/auth/sign-in`, `/auth/refresh` → `limit: 10, ttl: 900_000`.
+  Per-route overrides reuse the `default` tier name to stay within the
+  single-tier rule.
 - The global `HttpExceptionNormalizerFilter`
   (`backend/src/common/errors/http-exception.filter.ts`) is the
   canonical place to emit `auth.password_validation` and

@@ -2,16 +2,16 @@ import React, { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
-import { useAuth } from '../../context/AuthContext';
-import { signOut as signOutApi } from '../../services/auth';
-import { useLanguage } from '../../context/LanguageContext';
-import { useRTL } from '../../hooks/useRTL';
-import { useColors } from '../../hooks/useColors';
+import { useAuth } from '../../../context/AuthContext';
+import { signOut as signOutApi } from '../../../services/auth';
+import { useLanguage } from '../../../context/LanguageContext';
+import { useRTL } from '../../../hooks/useRTL';
+import { useColors } from '../../../hooks/useColors';
 
 export default function ProfileScreen() {
   const { user, clearSession, getRefreshToken } = useAuth();
   const { t } = useLanguage();
-  const { rowDirection, textAlign } = useRTL();
+  const { rowDirection, textAlign, isRTL } = useRTL();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
@@ -81,7 +81,7 @@ export default function ProfileScreen() {
               {item.label}
             </Text>
             {!item.danger && (
-              <Feather name="chevron-right" size={18} color={colors.muted} />
+              <Feather name={isRTL ? 'chevron-left' : 'chevron-right'} size={18} color={colors.muted} />
             )}
           </Pressable>
         ))}

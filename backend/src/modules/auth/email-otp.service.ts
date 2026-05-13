@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import {
   HttpException,
   HttpStatus,
@@ -51,8 +52,7 @@ export class EmailOtpService {
   }
 
   private generateCode(): string {
-    // 6-digit, zero-padded. Uniform across 000000..999999.
-    return String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
+    return String(randomInt(0, 1_000_000)).padStart(6, '0');
   }
 
   /**
