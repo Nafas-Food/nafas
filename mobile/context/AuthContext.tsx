@@ -1,11 +1,17 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { api, _setAccessTokenGetter, _setRefreshHook } from '../services/api';
 import { refresh, getMe } from '../services/auth';
 import { registerFcmToken } from '../services/users';
 
 const REFRESH_KEY = 'nafas.refreshToken';
+
+// Expo Go (SDK 53+) dropped remote-push support. Importing `expo-notifications`
+// there triggers a noisy auto-registration error, so we only touch the module
+// in a real dev/production build — never in Expo Go.
+const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export type Role = 'CUSTOMER' | 'CHEF' | 'ADMIN' | 'DRIVER';
 
@@ -109,19 +115,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (fcmRegisteredForRef.current === user.id) return;
     fcmRegisteredForRef.current = user.id;
+    // Expo Go has no remote-push support — skip the whole path so the
+    // `expo-notifications` module is never even loaded there.
+    if (isExpoGo) return;
     (async () => {
-      const perm = await Notifications.getPermissionsAsync();
-      let status = perm.status;
-      if (status === 'undetermined') {
-        status = (await Notifications.requestPermissionsAsync()).status;
-      }
-      if (status === 'granted') {
-        try {
+      try {
+        const Notifications = await import('expo-notifications');
+        const perm = await Notifications.getPermissionsAsync();
+        let status = perm.status;
+        if (status === 'undetermined') {
+          status = (await Notifications.requestPermissionsAsync()).status;
+        }
+        if (status === 'granted') {
           const token = await Notifications.getExpoPushTokenAsync();
           await registerFcmToken(token.data);
-        } catch {
-          // ignore — registration is best-effort
         }
+      } catch {
+        // ignore — registration is best-effort
       }
     })();
   }, [user?.id]);

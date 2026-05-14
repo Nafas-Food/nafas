@@ -74,28 +74,36 @@ screen (signed-in session restored from Phase 1). Confirm the
 (Customer is signed in; the addresses screen is empty.)
 
 1. Tap **Profile → Addresses**. **Verify**: empty-state copy is
-   visible, the "add address" CTA is prominent, and (in Arabic
+   visible, the "Add New Address" CTA is prominent, and (in Arabic
    mode) the layout is right-to-left (User Story 1 acceptance
    scenario 1; SC-007 partial).
-2. Tap **Add address**. The map renders within 2 s. **Verify**:
-   the map centres on the device's current location (location
-   permission must be granted; if it is the first time, accept the
-   prompt). User Story 1 acceptance scenario 5; FR-007.
-3. Pan the map so the fixed centre pin sits over a chosen building.
-   **Verify**: within ~2 s of the pan settling, the street-name
-   field auto-populates with the reverse-geocoder's result. User
-   Story 1 acceptance scenario 2; SC-003.
-4. Type "home" into the **Label** field.
-5. Tap **Save**. **Verify**: the screen pops back to the addresses
-   list, and the new address appears at the top of the list with
+2. Tap **Add New Address**. The add flow opens on its **map step**;
+   the map renders within 2 s. **Verify**: the map centres on the
+   device's current location (location permission must be granted;
+   if it is the first time, accept the prompt). User Story 1
+   acceptance scenario 5; FR-007.
+3. Pan the map so the fixed centre pin sits over a chosen building,
+   then tap **Confirm Location**. The flow advances to the **form
+   step**. **Verify**: the **Street Name** field is pre-populated
+   with the reverse-geocoder's result for the dropped pin (the
+   lookup ran while the pin settled on the map step). User Story 1
+   acceptance scenario 2; SC-003.
+4. Type "home" into the **Label** field. **Verify**: the **Pinned
+   location** chip at the top of the form confirms the coordinates
+   are captured — the raw lat/lng is never shown to the customer
+   (FR-021); tapping its **Change** link returns to the map step
+   with the form input preserved.
+5. Tap **Save Address**. **Verify**: the screen pops back to the
+   addresses list, and the new address appears in the list with
    label "home" and the typed street-name text. User Story 1
    acceptance scenario 3.
 6. Force-close the Expo dev-client app. Reopen. Sign back in if
    prompted. Tap **Profile → Addresses**. **Verify**: the same
    address appears, unchanged. SC-002.
 
-**Budget**: ≤ 60 s end-to-end (SC-001). Steps 1, 2, 3 are the
-budget; the persistence verification (steps 4–6) is independent.
+**Budget**: ≤ 60 s end-to-end (SC-001). Steps 1–5 are the budget
+(the extra **Confirm Location** tap is part of it); the persistence
+re-check (step 6) is independent.
 
 ---
 
@@ -165,17 +173,21 @@ Phase 6 placement flow.
 
 ## Step 7 — User Story 4: bilingual + RTL parity (~60 s)
 
-1. Open **Profile → Settings → Language**, switch to Arabic.
+1. On the **Profile** tab, tap the **عربي** segment of the language
+   toggle in the top-right corner (the same toggle also sits in the
+   top-right of the signed-out welcome screen).
 2. Re-enter the addresses surface. **Verify** every visible string
    on the **list**, **add**, **edit**, **delete confirmation**, and
    the **in-use refusal dialog** (use the still-mounted Step 6
    fixture or trigger a refusal manually) is in Arabic and the
    layout direction is right-to-left (User Story 4 acceptance
    scenarios 1–3; SC-007).
-3. Trigger a validation error: open **Add address**, leave the
-   label empty, tap **Save**. **Verify** the error message is in
-   Arabic (User Story 4 acceptance scenario 3).
-4. Switch back to English. Re-enter the surfaces. **Verify** every
+3. Trigger a validation error: open **Add New Address**, tap
+   **Confirm Location** on the map step, leave the **Label** field
+   empty on the form step, tap **Save Address**. **Verify** the
+   error message is in Arabic (User Story 4 acceptance scenario 3).
+4. Switch back to English by tapping the **EN** segment of the
+   Profile language toggle. Re-enter the surfaces. **Verify** every
    visible string flips to English with left-to-right layout, no
    app restart required (User Story 4 acceptance scenario 2).
 

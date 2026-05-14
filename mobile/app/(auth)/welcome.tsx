@@ -8,19 +8,22 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../../context/LanguageContext';
 import { useRTL } from '../../hooks/useRTL';
 import { Colors, Font, FontSize, Spacing, Radius } from '../../constants/theme';
 import { fetchSettings } from '../../services/settings';
+import { LanguageToggle } from '../../components/LanguageToggle';
 
 const FALLBACK_IMAGE = require('../../assets/hero_vertical.png');
 
 export default function WelcomeScreen() {
-  const { t, locale, setLocale } = useLanguage();
+  const { t } = useLanguage();
   // Drive RTL from useRTL so the wordmark row flips correctly whether or not
   // I18nManager.isRTL has caught up (cold-launch in Arabic before
   // LanguageContext's reload lands).
   const { rowDirection } = useRTL();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
@@ -52,6 +55,10 @@ export default function WelcomeScreen() {
       onError={() => setBgUrl(null)}
     >
       <View style={styles.overlay} />
+
+      <View style={[styles.langToggleWrap, { top: insets.top + 12 }]}>
+        <LanguageToggle />
+      </View>
 
       <View style={styles.content}>
         <View style={[styles.wordmark, { flexDirection: rowDirection }]}>
@@ -94,15 +101,6 @@ export default function WelcomeScreen() {
           </Pressable>
         </View>
       </View>
-
-      <Pressable
-        style={styles.langToggle}
-        onPress={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-      >
-        <Text style={styles.langToggleText}>
-          {t('welcome.languageToggle')}
-        </Text>
-      </Pressable>
     </ImageBackground>
   );
 }
@@ -191,19 +189,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
   },
-  langToggle: {
+  langToggleWrap: {
     position: 'absolute',
-    bottom: Spacing.s8,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.s4,
-    paddingVertical: Spacing.s2,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: Radius.pill,
-    zIndex: 1,
-  },
-  langToggleText: {
-    color: Colors.primaryForeground,
-    fontSize: FontSize.bodySm,
-    fontFamily: Font.semibold,
+    right: Spacing.s4,
+    zIndex: 2,
   },
 });

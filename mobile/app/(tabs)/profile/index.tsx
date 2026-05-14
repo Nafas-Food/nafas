@@ -1,18 +1,21 @@
 import React, { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { useAuth } from '../../../context/AuthContext';
 import { signOut as signOutApi } from '../../../services/auth';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useRTL } from '../../../hooks/useRTL';
 import { useColors } from '../../../hooks/useColors';
+import { LanguageToggle } from '../../../components/LanguageToggle';
 
 export default function ProfileScreen() {
   const { user, clearSession, getRefreshToken } = useAuth();
   const { t } = useLanguage();
   const { rowDirection, textAlign, isRTL } = useRTL();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
 
@@ -50,6 +53,10 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.wrap}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <LanguageToggle />
+      </View>
+
       <View style={[styles.header, { flexDirection: rowDirection }]}>
         <View style={styles.avatar}>
           <Feather name="user" size={24} color={colors.primary} />
@@ -96,11 +103,17 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       flex: 1,
       backgroundColor: colors.background,
     },
+    topBar: {
+      paddingHorizontal: 20,
+      paddingBottom: 8,
+      alignItems: 'flex-end',
+      backgroundColor: colors.surface,
+    },
     header: {
       alignItems: 'center',
       gap: 16,
       padding: 20,
-      paddingTop: 60,
+      paddingTop: 8,
       backgroundColor: colors.surface,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,

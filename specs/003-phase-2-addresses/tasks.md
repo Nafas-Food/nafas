@@ -1053,7 +1053,10 @@ SC-012 (partial create-error redaction).
   ```
   Note: `useT()` is the Phase 1 hook from `LanguageContext` (Phase 1 uses an export named `useT`; if your Phase 1 implementation exports a different name, adjust the import). `useColors()` was introduced in T011a; it is the ONLY place hex literals live (Constitution Principle V). Expected outcome: `npx tsc --noEmit` from `<repo>\mobile` returns 0; the file contains no hex literal anywhere.
 
-- [X] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list). Full content:
+- [X] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list).
+  > **Note:** Screen redesigned post-implementation (custom header, card rows, floating "Add New Address" CTA, client-side default-address radio selector) — see current source. The embedded content below is the original as-authored snapshot.
+
+  Full content:
   ```tsx
   import React, { useCallback, useMemo } from 'react';
   import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -1150,7 +1153,10 @@ SC-012 (partial create-error redaction).
   ```
   Replace the `useT` / `useIsRTL` import path if your Phase 1 LanguageContext exports differ (check `<repo>\mobile\context\LanguageContext.tsx` for the exact hook names and adjust). The `t('common.networkError')` key is assumed to exist from Phase 1; if not, add it to both locales. Expected outcome: `npx tsc --noEmit` returns 0; the screen renders the empty state on a dev client when no addresses exist; the file contains zero hex literals.
 
-- [X] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen). Full content:
+- [X] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen).
+  > **Note:** Screen redesigned post-implementation into a two-step flow (map step → **Confirm Location** → form step with label/street/building/floor/apartment/notes; raw lat/lng never shown) — see current source. The embedded content below is the original as-authored snapshot.
+
+  Full content:
   ```tsx
   import React, { useMemo, useState } from 'react';
   import { Alert, Pressable, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
