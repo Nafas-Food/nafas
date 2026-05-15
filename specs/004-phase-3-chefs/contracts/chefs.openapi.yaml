@@ -389,7 +389,7 @@ paths:
       operationId: replaceChefBanner
       summary: Replace the authenticated chef's banner image.
       description: |
-        Same shape as `POST /chef/logo` but targets the
+        Same shape as `POST /api/v1/chef/logo` but targets the
         `chef-banners` Supabase Storage bucket and replaces the
         chef's `banner` URL.
       tags: [ChefProfile]
