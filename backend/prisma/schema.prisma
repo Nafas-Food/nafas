@@ -19,57 +19,57 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 enum Role {
-  ADMIN
-  CUSTOMER
-  CHEF
-  DRIVER // reserved for v2 per Constitution Principle VII
+  admin
+  customer
+  chef
+  driver // reserved for v2 per Constitution Principle VII
 }
 
 enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PREPARING
-  READY
-  ON_THE_WAY
-  DELIVERED
-  CANCELLED
+  pending
+  confirmed
+  preparing
+  ready
+  on_the_way
+  delivered
+  cancelled
 }
 
 enum PaymentMethod {
-  CASH
-  VISA     // reserved for v2
-  INSTAPAY // reserved for v2
+  cash
+  visa     // reserved for v2
+  instapay // reserved for v2
 }
 
 enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
+  pending
+  completed
+  failed
+  refunded
 }
 
 enum DiscountUnit {
-  FIXED
-  PERCENT
+  fixed
+  percent
 }
 
 enum OtpChannel {
-  SMS
-  EMAIL
+  sms
+  email
 }
 
 enum NotificationType {
-  ORDER_PLACED
-  ORDER_CONFIRMED
-  ORDER_PREPARING
-  ORDER_READY
-  ORDER_ON_THE_WAY
-  ORDER_DELIVERED
-  ORDER_CANCELLED
-  ORDER_REVIEW
-  CHEF_VERIFIED
-  CHEF_REJECTED
-  SYSTEM
+  order_placed
+  order_confirmed
+  order_preparing
+  order_ready
+  order_on_the_way
+  order_delivered
+  order_cancelled
+  order_review
+  chef_verified
+  chef_rejected
+  system
 }
 
 // ----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ model User {
   fullName           String              @map("full_name")
   birthdate          DateTime?           @db.Date
   passwordHash       String              @map("password_hash")
-  role               Role                @default(CUSTOMER)
+  role               Role                @default(customer)
   phoneVerified      Boolean             @default(false) @map("phone_verified")
   fcmToken           String?             @map("fcm_token")
   isTest             Boolean             @default(false) @map("is_test")
@@ -194,7 +194,7 @@ model Item {
   description     Json
   price           Decimal      @db.Decimal(10, 2)
   discountValue   Decimal      @default(0) @db.Decimal(10, 2) @map("discount_value")
-  discountUnit    DiscountUnit @default(FIXED) @map("discount_unit")
+  discountUnit    DiscountUnit @default(fixed) @map("discount_unit")
   quantity        Int
   images          String[]
   displayOrder    Int          @default(0) @map("display_order")
@@ -224,7 +224,7 @@ model Order {
   total                    Decimal        @db.Decimal(10, 2)
   notes                    String?
   cancelledReason          String?        @map("cancelled_reason")
-  status                   OrderStatus    @default(PENDING)
+  status                   OrderStatus    @default(pending)
   createdAt                DateTime       @default(now()) @map("created_at")
   updatedAt                DateTime       @updatedAt @map("updated_at")
   deletedAt                DateTime?      @map("deleted_at")
@@ -266,10 +266,10 @@ model UserReview {
 model Transaction {
   id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orderId           String             @unique @map("order_id") @db.Uuid
-  paymentMethod     PaymentMethod      @default(CASH) @map("payment_method")
+  paymentMethod     PaymentMethod      @default(cash) @map("payment_method")
   amount            Decimal            @db.Decimal(10, 2)
   cardAmount        Decimal?           @db.Decimal(10, 2) @map("card_amount")
-  status            TransactionStatus  @default(PENDING)
+  status            TransactionStatus  @default(pending)
   gatewayReference  String?            @map("gateway_reference")
   paidAt            DateTime?          @map("paid_at")
   failureReason     String?            @map("failure_reason")

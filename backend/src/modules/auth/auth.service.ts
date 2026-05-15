@@ -157,7 +157,7 @@ export class AuthService {
           passwordHash,
           birthdate: dto.birthdate,
           phoneVerified: !dto.email, // verified via SMS only; email path doesn't prove phone
-          role: Role.CUSTOMER,
+          role: Role.customer,
         },
       });
 

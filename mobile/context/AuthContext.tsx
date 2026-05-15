@@ -13,7 +13,7 @@ const REFRESH_KEY = 'nafas.refreshToken';
 const isExpoGo =
   Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-export type Role = 'CUSTOMER' | 'CHEF' | 'ADMIN' | 'DRIVER';
+export type Role = 'customer' | 'chef' | 'admin' | 'driver';
 
 export interface AuthUser {
   id: string;

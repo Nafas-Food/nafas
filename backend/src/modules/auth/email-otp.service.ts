@@ -70,7 +70,7 @@ export class EmailOtpService {
     await this.prisma.$transaction(async (tx) => {
       await tx.otpCode.updateMany({
         where: {
-          channel: OtpChannel.EMAIL,
+          channel: OtpChannel.email,
           destination: email,
           consumedAt: null,
         },
@@ -78,7 +78,7 @@ export class EmailOtpService {
       });
       await tx.otpCode.create({
         data: {
-          channel: OtpChannel.EMAIL,
+          channel: OtpChannel.email,
           destination: email,
           codeHash,
           expiresAt,
@@ -114,7 +114,7 @@ export class EmailOtpService {
     const now = new Date();
     const row = await this.prisma.otpCode.findFirst({
       where: {
-        channel: OtpChannel.EMAIL,
+        channel: OtpChannel.email,
         destination: email,
         consumedAt: null,
         expiresAt: { gt: now },

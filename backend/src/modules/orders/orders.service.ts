@@ -23,7 +23,7 @@ export class OrdersService {
       where: {
         addressId,
         userId,
-        status: { notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED] },
+        status: { notIn: [OrderStatus.delivered, OrderStatus.cancelled] },
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
