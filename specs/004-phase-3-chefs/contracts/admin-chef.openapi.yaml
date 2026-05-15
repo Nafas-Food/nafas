@@ -1,0 +1,400 @@
+openapi: 3.1.0
+info:
+  title: Nafas Admin Chef Workflow API
+  version: 0.4.0
+  description: |
+    Phase 3 admin endpoints: read the pending-applications queue,
+    verify or reject a pending application, and revoke a verified
+    chef. Verification and revocation are the server-authoritative
+    role transitions Constitution Principle II exists for — they
+    run inside a `prisma.$transaction` that atomically writes the
+    Chef state change, the User role change, and the Notification
+    row (research R3 / R6).
+
+    Per FR-011 / FR-012c / FR-028 every endpoint in this file is
+    admin-only on the server side. A non-admin authenticated
+    caller receives `403 FORBIDDEN_ROLE` from the Phase 1
+    `RolesGuard`. Role claims in the JWT are signed RS256 — claim
+    tampering requires the private key.
+
+    Per FR-039 no error response body returned by any endpoint
+    below MAY include `latitude`, `longitude`, or any nested
+    `coordinates` property. The global
+    `HttpExceptionNormalizerFilter` strips these fields before
+    serialisation.
+
+servers:
+  - url: http://localhost:3000
+  - url: https://api.nafas.app
+
+tags:
+  - name: AdminChefs
+    description: Admin chef-verification workflow (pending queue, verify, reject, revoke).
+
+paths:
+  /api/v1/admin/chefs/pending:
+    get:
+      operationId: listPendingApplications
+      summary: List pending chef applications (admin only).
+      description: |
+        Returns every chef row in pending state (`isVerified=false,
+        rejectedAt=NULL, deletedAt=NULL`) ordered oldest-first
+        (FIFO per FR-008). Already verified, already rejected, and
+        soft-deleted (revoked) rows are NEVER returned by this
+        endpoint.
+      tags: [AdminChefs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 50, default: 30 }
+      responses:
+        "200":
+          description: Page of pending applications.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PendingApplication" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+
+  /api/v1/admin/chefs:
+    get:
+      operationId: listVerifiedChefs
+      summary: List verified chefs (admin only; Phase 11 expands this).
+      description: |
+        Returns every verified, non-soft-deleted chef row. Phase 3
+        ships this read-only list to support the revoke action; the
+        full Phase 11 admin chef-management surface (view menus,
+        force-close availability) extends this endpoint additively
+        without changing its response shape.
+      tags: [AdminChefs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string, minLength: 1, maxLength: 200 }
+          description: Optional substring search on chef name.
+        - in: query
+          name: cursor
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 50, default: 30 }
+      responses:
+        "200":
+          description: Page of verified chefs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminChefSummary" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+
+  /api/v1/admin/chefs/{id}/verify:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: verifyChef
+      summary: Verify a pending chef application (admin only).
+      description: |
+        Atomically (one `prisma.$transaction` — R3): sets
+        `Chef.isVerified=true`, sets `Chef.verifiedAt=now`, flips
+        the applicant's `User.role` from `customer` to `chef` via
+        `users.service.setRole` (R6), and creates a
+        `chef_verified` Notification row carrying bilingual
+        title / body (FR-009 / FR-035 / SC-004 / SC-017).
+
+        A push notification is dispatched after the transaction
+        commits (best-effort; failure logs but never rolls back —
+        SC-004).
+
+        Returns `409 APPLICATION_NOT_PENDING` if the target chef
+        is no longer in the pending state — covers both the
+        concurrent-admin race and any client retry after a
+        successful first commit (FR-012).
+
+        Emits `chef.verify / {success | application_not_pending}`
+        on the FR-038 event stream.
+      tags: [AdminChefs]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Chef verified.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChefSummary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "404":
+          description: Chef row not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: |
+            `APPLICATION_NOT_PENDING` — the target chef is
+            already verified, already rejected, or already
+            revoked. The platform does NOT double-flip or
+            re-dispatch the notification.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/admin/chefs/{id}/reject:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: rejectChefApplication
+      summary: Reject a pending chef application (admin only).
+      description: |
+        Atomically (one `prisma.$transaction`): sets
+        `Chef.rejectedAt=now`, and creates a `chef_rejected`
+        Notification row carrying the admin-typed reason in both
+        English and Arabic body fields (the admin types one
+        reason; Phase 3 echoes it verbatim into both locale
+        slots per spec FR-036 — the platform does not translate
+        admin-typed text). The applicant's `User.role` is NOT
+        changed (they remain a customer).
+
+        A push notification is dispatched after the transaction
+        commits (best-effort).
+
+        After rejection, the customer may submit a fresh
+        application after the 24-hour cooldown elapses (FR-006).
+
+        Emits `chef.reject / {success | application_not_pending}`
+        on the FR-038 event stream.
+      tags: [AdminChefs]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RejectApplicationRequest" }
+      responses:
+        "200":
+          description: Application rejected.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminChefSummary" }
+        "400":
+          description: Validation error (missing or invalid `reason`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "404":
+          description: Chef row not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: `APPLICATION_NOT_PENDING` — same shape as for verify.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/admin/chefs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    delete:
+      operationId: revokeChef
+      summary: Revoke a verified chef (admin only).
+      description: |
+        Atomically (one `prisma.$transaction` — R3): soft-deletes
+        the chef row (`Chef.deletedAt=now`), flips the
+        underlying `User.role` from `chef` back to `customer` via
+        `users.service.setRole`, and creates a `chef_revoked`
+        Notification row carrying the admin-typed reason in both
+        English and Arabic body fields (FR-012a). The chef row
+        is preserved in the data store for audit (constitution
+        principle IV); subsequent public reads filter it out.
+
+        A push notification is dispatched after the transaction
+        commits (best-effort).
+
+        After revocation, the user may submit a fresh chef
+        application after the 24-hour cooldown elapses
+        (FR-012b).
+
+        Emits `chef.revoke / {success | chef_not_verified}` on
+        the FR-038 event stream. The `chef_not_verified` outcome
+        covers any attempt to revoke a pending / rejected / already
+        soft-deleted chef row.
+      tags: [AdminChefs]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RevokeChefRequest" }
+      responses:
+        "204":
+          description: Chef revoked.
+        "400":
+          description: Validation error (missing or invalid `reason`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "404":
+          description: Chef row not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: `CHEF_NOT_VERIFIED` — the target chef is not currently in the verified state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid access credential.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ForbiddenRole:
+      description: Caller's role does not permit this action (`FORBIDDEN_ROLE`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    PendingApplication:
+      type: object
+      required: [id, userId, applicantFullName, applicantPhone, chefName, bio, latitude, longitude, minOrderPrice, createdAt]
+      description: |
+        Admin-only shape for the pending queue. Carries the
+        applicant's contact info (so the admin can reach out if
+        the application is unclear) AND the kitchen coordinates
+        (the admin needs them to assess plausibility — this is
+        the only Phase 3 surface that exposes a chef's lat/lng,
+        and it is gated to admin-only).
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        applicantFullName: { type: string }
+        applicantPhone: { type: string }
+        chefName: { type: string }
+        bio: { type: string }
+        latitude: { type: string, description: Decimal as JS string. }
+        longitude: { type: string, description: Decimal as JS string. }
+        minOrderPrice: { type: string, description: Decimal as JS string. }
+        createdAt: { type: string, format: date-time }
+        priorRejections:
+          type: array
+          description: |
+            Optional. Populated when the applicant previously had
+            a rejection / revocation. The admin sees the history
+            of reasons to decide whether the new application
+            addresses prior feedback.
+          items:
+            type: object
+            required: [outcome, reason, occurredAt]
+            properties:
+              outcome:
+                type: string
+                enum: [chef_rejected, chef_revoked]
+              reason: { type: string }
+              occurredAt: { type: string, format: date-time }
+
+    AdminChefSummary:
+      type: object
+      required: [id, userId, chefName, bio, isVerified, isOpen, minOrderPrice, logo, banner, createdAt]
+      description: |
+        Admin-list shape for verified chefs. Includes kitchen
+        coordinates (admin-only surface — FR-039 redaction
+        applies to public surfaces, not the admin diagnostic
+        view).
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        chefName: { type: string }
+        bio: { type: string }
+        isVerified: { type: boolean }
+        isOpen: { type: boolean }
+        latitude: { type: string }
+        longitude: { type: string }
+        minOrderPrice: { type: string }
+        logo: { type: string }
+        banner: { type: string }
+        ratings: { type: string }
+        totalReviews: { type: integer }
+        verifiedAt: { type: string, format: date-time, nullable: true }
+        rejectedAt: { type: string, format: date-time, nullable: true }
+        deletedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    RejectApplicationRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: |
+            Free-text reason. Stored verbatim and surfaced to the
+            applicant via the `chef_rejected` Notification body
+            (FR-010 / FR-036). Phase 3 does not translate admin-
+            typed text.
+
+    RevokeChefRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: |
+            Free-text reason. Stored verbatim and surfaced to the
+            revoked user via the `chef_revoked` Notification body
+            (FR-012a).
+
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: true
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true

@@ -1,0 +1,594 @@
+openapi: 3.1.0
+info:
+  title: Nafas Chefs API
+  version: 0.4.0
+  description: |
+    Phase 3 ships the marketplace's supply-side substrate: chef
+    application, public discovery, public profile, and chef-owned
+    profile management (open/closed toggle, edits, logo + banner
+    uploads). The admin verification / rejection / revocation
+    endpoints live in `admin-chef.openapi.yaml`; the food-category
+    catalogue lives in `categories.openapi.yaml`.
+
+    The contract intentionally returns server-side error *codes*
+    (stable string identifiers like `APPLICATION_PENDING`) rather
+    than user-facing messages. The mobile client maps codes to
+    bilingual messages on the device per Constitution Principle I —
+    no language leaks from the server.
+
+    Per FR-039 and research R6 from Phase 2 (broadened in Phase 3),
+    no error response body returned by any chef endpoint MAY
+    include `latitude`, `longitude`, or any nested `coordinates`
+    property. The global `HttpExceptionNormalizerFilter` strips
+    these fields before serialisation; the schema definitions for
+    error responses therefore do not declare them.
+
+    Per FR-024 / SC-012, a chef-profile mutation request whose
+    target chef is owned by a different user returns the same
+    `404 CHEF_NOT_FOUND` response as a request for a chef that
+    genuinely does not exist. Identifier enumeration across
+    accounts is therefore not possible through any chef-self
+    endpoint below.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: Discovery
+    description: Public, authenticated reads of verified chefs.
+  - name: ChefApply
+    description: The customer-facing chef-application flow.
+  - name: ChefProfile
+    description: Chef-owned profile mutations (post-verification).
+
+paths:
+  /api/v1/chefs:
+    get:
+      operationId: discoverChefs
+      summary: List verified chefs (paginated, with filters).
+      description: |
+        Returns a paginated list of verified, non-soft-deleted
+        chefs. Pending and rejected applications are NEVER returned
+        (FR-013 / SC-008). Currently-open chefs surface ahead of
+        currently-closed chefs (FR-013). When the caller supplies
+        coordinates, the result is sorted by distance ascending
+        and excluded outside the effective radius (default 15 km,
+        capped at 50 km — FR-016); otherwise the secondary sort
+        is verified-newest-first within each open / closed group.
+
+        The Phase 3 implementation uses a pure-Prisma bounding-box
+        pre-filter followed by an in-JS Haversine sort (research
+        R2) — no raw SQL, no PostGIS extension needed.
+      tags: [Discovery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+          description: Filter to chefs with at least one active menu in this category (FR-014).
+        - in: query
+          name: q
+          schema: { type: string, minLength: 1, maxLength: 200 }
+          description: Case-insensitive substring search on chef name OR bio (FR-015).
+        - in: query
+          name: lat
+          schema: { type: number, format: double, minimum: -90, maximum: 90 }
+          description: Customer latitude. When supplied with `lng`, enables the geographic-radius filter.
+        - in: query
+          name: lng
+          schema: { type: number, format: double, minimum: -180, maximum: 180 }
+        - in: query
+          name: radiusKm
+          schema: { type: number, format: double, minimum: 0, maximum: 50 }
+          description: Optional radius override (km). Default 15 when `lat`+`lng` supplied; hard cap 50 (FR-016).
+        - in: query
+          name: cursor
+          schema: { type: integer, minimum: 0 }
+          description: Offset-based cursor (page number × pageSize).
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 50, default: 30 }
+      responses:
+        "200":
+          description: Page of chefs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChefCard" }
+        "400":
+          description: Validation error on the query string (`VALIDATION_ERROR`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/chefs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+
+    get:
+      operationId: getChefPublicProfile
+      summary: Read a chef's public profile.
+      description: |
+        Returns the public profile of a verified, non-soft-deleted
+        chef (FR-018). A request for a chef whose application is
+        pending, rejected, or whose row is soft-deleted returns
+        `404 CHEF_NOT_FOUND` (FR-013 / SC-008).
+      tags: [Discovery]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Chef public profile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPublicProfile" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Chef not found, pending, rejected, or soft-deleted (same response per FR-013).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/chefs/{id}/reviews:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+
+    get:
+      operationId: getChefReviews
+      summary: List reviews for a chef (paginated).
+      description: |
+        Returns paginated reviews for a chef (FR-019). Phase 3
+        ships the read endpoint so it exists from the moment the
+        public profile does; the write path is wired by Phase 7
+        (Reviews). Phase 3 returns an empty array for every chef
+        until Phase 7 starts writing.
+      tags: [Discovery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Page of reviews (empty until Phase 7 starts writing).
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ReviewSummary" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Chef not found / not verified / soft-deleted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/chef/apply:
+    post:
+      operationId: applyToBeAChef
+      summary: Submit a chef application.
+      description: |
+        Captures a chef application in a pending state (FR-001 /
+        FR-003). The applicant is the authenticated customer
+        (server-derived from JWT sub — no `userId` accepted in
+        the request body).
+
+        Phase 3 gates this endpoint server-side (R4) and emits
+        one of the following responses on a non-eligible call:
+
+        - `409 ALREADY_CHEF` — caller is already verified (FR-005).
+        - `409 APPLICATION_PENDING` — caller already has a pending
+          application (FR-004).
+        - `409 APPLICATION_COOLDOWN_IN_EFFECT` — caller is within
+          the 24-hour cooldown after a prior rejection or
+          revocation (FR-006 / FR-012b). The response body
+          carries `earliestResubmitAt` (ISO 8601) the client uses
+          to render a "you may re-apply after [timestamp]"
+          message.
+
+        Re-applying after a prior rejection / revocation
+        UPDATES the existing Chef row in place (the schema's
+        `@unique` constraint on `Chef.userId` enforces 1:1 with
+        User). The prior rejection / revocation reason is
+        preserved on the Notification rows that were emitted at
+        the time.
+
+        Emits one structured log line of shape
+        `chef.apply / {success | validation_rejected |
+        application_pending | already_chef |
+        rejected_cooldown_in_effect}`. None of the lines carry
+        kitchen lat/lng (FR-039).
+      tags: [ChefApply]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApplyChefRequest" }
+      responses:
+        "201":
+          description: Application captured in a pending state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
+        "400":
+          description: Validation error (`VALIDATION_ERROR`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: |
+            Apply not currently eligible. The response `code` is
+            one of `ALREADY_CHEF`, `APPLICATION_PENDING`,
+            `APPLICATION_COOLDOWN_IN_EFFECT`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AlreadyChefError"
+                  - $ref: "#/components/schemas/ApplicationPendingError"
+                  - $ref: "#/components/schemas/ApplicationCooldownError"
+
+  /api/v1/chef/profile:
+    patch:
+      operationId: updateChefProfile
+      summary: Update the authenticated chef's public profile.
+      description: |
+        Updates any subset of `{chefName, bio, latitude, longitude,
+        minOrderPrice}` on the authenticated caller's own Chef row
+        (FR-021). The caller's chef row is derived from JWT sub;
+        a non-chef caller receives `403 FORBIDDEN_ROLE` from the
+        Phase 1 `RolesGuard`.
+
+        Emits one structured log line of shape
+        `chef.profile_update / {success | validation_rejected |
+        not_found}`. The line never carries kitchen lat/lng
+        (FR-039).
+      tags: [ChefProfile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateChefProfileRequest" }
+      responses:
+        "200":
+          description: Updated chef.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+        "404":
+          description: Chef row not found for the authenticated caller.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/chef/availability:
+    patch:
+      operationId: toggleChefAvailability
+      summary: Toggle the authenticated chef's kitchen open/closed.
+      description: |
+        Sets `isOpen` to the value in the request body. The change
+        is reflected on the public discovery surface on the next
+        read (FR-020 / SC-009).
+      tags: [ChefProfile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAvailabilityRequest" }
+      responses:
+        "200":
+          description: Updated chef (with new `isOpen`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+
+  /api/v1/chef/logo:
+    post:
+      operationId: replaceChefLogo
+      summary: Replace the authenticated chef's logo image.
+      description: |
+        Multipart upload of one image file. The platform accepts
+        only `image/jpeg`, `image/png`, `image/webp` (spec
+        clarification Q1 / FR-022). Files larger than 5 MB are
+        refused with `413 PAYLOAD_TOO_LARGE`. The previously-
+        stored logo (default placeholder or prior upload) is no
+        longer visible after a successful upload.
+
+        Emits `chef.logo_upload / {success | unsupported_media_type
+        | payload_too_large | not_found}` on the FR-038 event
+        stream.
+      tags: [ChefProfile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              additionalProperties: false
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG / PNG / WebP, ≤ 5 MB.
+      responses:
+        "200":
+          description: Updated chef (with new `logo` URL).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
+        "400":
+          description: Multipart validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+        "413":
+          description: File exceeds 5 MB.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "415":
+          description: File type not in the JPEG / PNG / WebP whitelist.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/chef/banner:
+    post:
+      operationId: replaceChefBanner
+      summary: Replace the authenticated chef's banner image.
+      description: |
+        Same shape as `POST /chef/logo` but targets the
+        `chef-banners` Supabase Storage bucket and replaces the
+        chef's `banner` URL.
+      tags: [ChefProfile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              additionalProperties: false
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated chef (with new `banner` URL).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
+        "400": { description: Multipart validation error., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "413": { description: File exceeds 5 MB., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "415": { description: File type not in the whitelist., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid access credential.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ForbiddenRole:
+      description: Caller's role does not permit this action (`FORBIDDEN_ROLE`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    ChefCard:
+      type: object
+      required: [id, chefName, bio, logo, banner, isOpen, ratings, totalReviews, minOrderPrice, verifiedAt]
+      description: Discovery-list card shape. Coordinates are NEVER returned on the public discovery surface (FR-039); the optional `distanceKm` is the only location-derived value the client receives.
+      properties:
+        id: { type: string, format: uuid }
+        chefName: { type: string, maxLength: 80 }
+        bio: { type: string, maxLength: 1000 }
+        logo: { type: string, description: Public URL into the chef-logos bucket. }
+        banner: { type: string, description: Public URL into the chef-banners bucket. }
+        isOpen: { type: boolean }
+        ratings: { type: string, description: "Decimal as JS string per Phase 0 convention. Example: \"4.50\"." }
+        totalReviews: { type: integer, minimum: 0 }
+        minOrderPrice: { type: string, description: Decimal as JS string. }
+        verifiedAt: { type: string, format: date-time, description: When the chef was verified by an admin. Used by the FR-016 secondary sort. }
+        distanceKm:
+          type: number
+          format: double
+          description: Set only when the caller supplied `lat`+`lng`. Server-computed Haversine distance (R2).
+
+    ChefPublicProfile:
+      allOf:
+        - $ref: "#/components/schemas/ChefCard"
+        - type: object
+          required: [categoryIds]
+          properties:
+            categoryIds:
+              type: array
+              items: { type: string, format: uuid }
+              description: |
+                IDs of categories the chef currently has at least
+                one active menu in. Sourced via
+                `menus.service.categoriesForChef(chefId)` per
+                Constitution Principle III. Phase 4 ships the
+                menu writes that populate this; until then it is
+                an empty array.
+
+    ChefPrivateProfile:
+      description: |
+        Same shape as `ChefPublicProfile` but additionally carries
+        the chef's own latitude / longitude (only the chef itself
+        receives them on the response — the public surface never
+        does, per FR-039).
+      allOf:
+        - $ref: "#/components/schemas/ChefPublicProfile"
+        - type: object
+          required: [latitude, longitude]
+          properties:
+            latitude: { type: string, description: Decimal as JS string. }
+            longitude: { type: string, description: Decimal as JS string. }
+
+    ApplyChefRequest:
+      type: object
+      required: [chefName, bio, latitude, longitude, minOrderPrice]
+      additionalProperties: false
+      properties:
+        chefName: { type: string, minLength: 1, maxLength: 80 }
+        bio: { type: string, minLength: 1, maxLength: 1000 }
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
+        minOrderPrice: { type: number, format: double, exclusiveMinimum: 0 }
+
+    UpdateChefProfileRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        Every field is optional; the server merges the supplied
+        subset onto the existing row (FR-021). Sending an empty
+        body is accepted (no-op update). Sending server-owned
+        fields (`id`, `userId`, `isVerified`, `verifiedAt`,
+        `rejectedAt`, `deletedAt`, `ratings`, `totalReviews`,
+        `logo`, `banner`) is refused with `400 VALIDATION_ERROR`
+        per the global pipe contract (FR-037).
+      properties:
+        chefName: { type: string, minLength: 1, maxLength: 80 }
+        bio: { type: string, minLength: 1, maxLength: 1000 }
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
+        minOrderPrice: { type: number, format: double, exclusiveMinimum: 0 }
+
+    UpdateAvailabilityRequest:
+      type: object
+      required: [isOpen]
+      additionalProperties: false
+      properties:
+        isOpen: { type: boolean }
+
+    ReviewSummary:
+      type: object
+      required: [id, userFullName, rating, body, createdAt]
+      description: Read-only shape Phase 7 will populate. Phase 3 ships only the read endpoint.
+      properties:
+        id: { type: string, format: uuid }
+        userFullName: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string }
+        images:
+          type: array
+          items: { type: string, description: Public URL into review-images bucket. }
+        createdAt: { type: string, format: date-time }
+
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: true
+      description: |
+        Standard error envelope. Per FR-039 / R6 (broadened in
+        Phase 3), the `HttpExceptionNormalizerFilter` strips any
+        `latitude`, `longitude`, or `coordinates` properties from
+        this object and from any `details` payload before
+        serialisation.
+      properties:
+        code: { type: string }
+        message: { type: string, description: English fallback; client renders bilingual via `code`. }
+        details:
+          type: object
+          additionalProperties: true
+
+    AlreadyChefError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          required: [chefId]
+          additionalProperties: false
+          properties:
+            chefId: { type: string, format: uuid }
+
+    ApplicationPendingError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          required: [applicationId]
+          additionalProperties: false
+          properties:
+            applicationId: { type: string, format: uuid }
+
+    ApplicationCooldownError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          required: [earliestResubmitAt]
+          additionalProperties: false
+          properties:
+            earliestResubmitAt:
+              type: string
+              format: date-time
+              description: |
+                ISO 8601 timestamp the client renders as
+                "you may re-apply after [timestamp]". Server-
+                computed from `rejectedAt + 24h` or
+                `deletedAt + 24h` whichever applies (FR-006 /
+                FR-012b). Never sent BY the client (no input
+                field on `ApplyChefRequest` accepts a timestamp).

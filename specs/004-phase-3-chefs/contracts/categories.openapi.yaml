@@ -1,0 +1,265 @@
+openapi: 3.1.0
+info:
+  title: Nafas Categories API
+  version: 0.4.0
+  description: |
+    Phase 3 ships the platform's food-category catalogue: a
+    pre-seeded set of eight Egyptian cuisine types
+    (`Koshary, Mahshi, Molokheya, Hawawshi, Sweets, Feteer,
+    Fattah, Other` per FR-025), a public read endpoint, and an
+    admin curation surface (CRUD + atomic bulk reorder per
+    FR-027 / SC-014).
+
+    Per FR-026 the read response carries both English and Arabic
+    display names so the mobile client can render in the
+    customer's current language without a server round-trip
+    (Constitution Principle I).
+
+    Per FR-028 every mutation endpoint is admin-only. A non-admin
+    authenticated caller receives `403 FORBIDDEN_ROLE` from the
+    Phase 1 `RolesGuard`. Role transitions are NEVER client-
+    claimed.
+
+servers:
+  - url: http://localhost:3000
+  - url: https://api.nafas.app
+
+tags:
+  - name: Categories
+    description: Public read of the catalogue + admin curation.
+
+paths:
+  /api/v1/categories:
+    get:
+      operationId: listCategories
+      summary: List active food categories.
+      description: |
+        Returns every active (`isActive=true`, `deletedAt=NULL`)
+        category ordered by `displayOrder` ascending. Soft-deleted
+        categories are filtered out by the Phase 0 Prisma
+        extension. The response shape carries both `en` and `ar`
+        display names per FR-026.
+
+        Server-side caching: `categories.service.listActive()`
+        keeps a 60-second in-process TTL cache (research R7);
+        every mutation path on the same service invalidates it.
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/admin/categories:
+    post:
+      operationId: createCategory
+      summary: Create a new category (admin only).
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCategoryRequest" }
+      responses:
+        "201":
+          description: New category created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Category" }
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+
+  /api/v1/admin/categories/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+
+    patch:
+      operationId: updateCategory
+      summary: Update a category (admin only).
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCategoryRequest" }
+      responses:
+        "200":
+          description: Updated category.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Category" }
+        "400": { description: Validation error., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "404": { description: Category not found., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+    delete:
+      operationId: softDeleteCategory
+      summary: Soft-delete a category (admin only).
+      description: |
+        Sets `deletedAt = now()` on the category. The row remains
+        in the data store; subsequent reads (public + admin) filter
+        it out by the Phase 0 Prisma extension. Existing menu rows
+        that reference this category are preserved (audit history
+        per FR-029); Phase 4 surfaces the orphaned-reference
+        warning on the chef-side menu editor.
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Category soft-deleted.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+        "404": { description: Category not found., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /api/v1/admin/categories/reorder:
+    patch:
+      operationId: reorderCategories
+      summary: Bulk-reorder categories (admin only, atomic).
+      description: |
+        Updates every supplied category's `displayOrder` inside a
+        single `prisma.$transaction` so a partial reorder is never
+        observable (FR-027 / SC-014). Categories not listed in
+        the request body keep their existing displayOrder; the
+        request body's `items` array MUST contain unique category
+        IDs (`@ArrayUnique('id')`).
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReorderCategoriesRequest" }
+      responses:
+        "200":
+          description: Reorder committed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+        "400": { description: Validation error., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenRole" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid access credential.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ForbiddenRole:
+      description: Caller's role does not permit this action (`FORBIDDEN_ROLE`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Category:
+      type: object
+      required: [id, name, displayOrder, isActive, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name:
+          type: object
+          required: [en, ar]
+          additionalProperties: false
+          properties:
+            en: { type: string, minLength: 1, maxLength: 80 }
+            ar: { type: string, minLength: 1, maxLength: 80 }
+        icon:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 40
+          description: Feather icon name (e.g., "coffee").
+        displayOrder: { type: integer, minimum: 0 }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateCategoryRequest:
+      type: object
+      required: [name, displayOrder]
+      additionalProperties: false
+      properties:
+        name:
+          type: object
+          required: [en, ar]
+          additionalProperties: false
+          properties:
+            en: { type: string, minLength: 1, maxLength: 80 }
+            ar: { type: string, minLength: 1, maxLength: 80 }
+        icon: { type: string, minLength: 1, maxLength: 40 }
+        displayOrder: { type: integer, minimum: 0 }
+
+    UpdateCategoryRequest:
+      type: object
+      additionalProperties: false
+      description: Every field optional; merged onto existing row.
+      properties:
+        name:
+          type: object
+          additionalProperties: false
+          properties:
+            en: { type: string, minLength: 1, maxLength: 80 }
+            ar: { type: string, minLength: 1, maxLength: 80 }
+        icon: { type: string, minLength: 1, maxLength: 40 }
+        displayOrder: { type: integer, minimum: 0 }
+
+    ReorderCategoriesRequest:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [id, displayOrder]
+            additionalProperties: false
+            properties:
+              id: { type: string, format: uuid }
+              displayOrder: { type: integer, minimum: 0 }
+
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: true
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
