@@ -562,7 +562,6 @@ components:
         - $ref: "#/components/schemas/Error"
         - type: object
           required: [chefId]
-          additionalProperties: false
           properties:
             chefId: { type: string, format: uuid }
 
@@ -571,7 +570,6 @@ components:
         - $ref: "#/components/schemas/Error"
         - type: object
           required: [applicationId]
-          additionalProperties: false
           properties:
             applicationId: { type: string, format: uuid }
 
@@ -580,7 +578,6 @@ components:
         - $ref: "#/components/schemas/Error"
         - type: object
           required: [earliestResubmitAt]
-          additionalProperties: false
           properties:
             earliestResubmitAt:
               type: string

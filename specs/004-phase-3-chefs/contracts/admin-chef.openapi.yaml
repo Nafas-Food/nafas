@@ -210,7 +210,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "409":
-          description: `APPLICATION_NOT_PENDING` — same shape as for verify.
+          description: "APPLICATION_NOT_PENDING — same shape as for verify."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -269,7 +269,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "409":
-          description: `CHEF_NOT_VERIFIED` — the target chef is not currently in the verified state.
+          description: "CHEF_NOT_VERIFIED — the target chef is not currently in the verified state."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
