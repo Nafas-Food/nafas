@@ -326,6 +326,11 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/ForbiddenRole"
+        "404":
+          description: Chef row not found for the authenticated caller.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/v1/chef/logo:
     post:
@@ -373,6 +378,11 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/ForbiddenRole"
+        "404":
+          description: Chef row not found for the authenticated caller.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "413":
           description: File exceeds 5 MB.
           content:
@@ -413,11 +423,30 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ChefPrivateProfile" }
-        "400": { description: Multipart validation error., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/ForbiddenRole" }
-        "413": { description: File exceeds 5 MB., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
-        "415": { description: File type not in the whitelist., content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "400":
+          description: Multipart validation error.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ForbiddenRole"
+        "404":
+          description: Chef row not found for the authenticated caller.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413":
+          description: File exceeds 5 MB.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "415":
+          description: File type not in the whitelist.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
 components:
   securitySchemes:
