@@ -453,7 +453,10 @@ components:
         ratings: { type: string, description: "Decimal as JS string per Phase 0 convention. Example: \"4.50\"." }
         totalReviews: { type: integer, minimum: 0 }
         minOrderPrice: { type: string, description: Decimal as JS string. }
-        verifiedAt: { type: string, format: date-time, description: When the chef was verified by an admin. Used by the FR-016 secondary sort. }
+        verifiedAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the chef was verified by an admin. Used by the FR-016 secondary sort. Null for pending applications.
         distanceKm:
           type: number
           format: double
