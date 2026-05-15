@@ -43,8 +43,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Synchronous guard: never flash protected UI for unsupported roles.
+  // Session clearing for this case is handled by the effect above —
+  // calling clearSession() here would be a side effect during render.
   if (user && user.role !== 'customer' && user.role !== 'chef') {
-    clearSession().catch(() => {});
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />

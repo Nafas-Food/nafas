@@ -29,7 +29,7 @@ export class ResendEmailClient implements EmailClient {
         ? `رمز التحقق الخاص بك في نفس هو ${code}. صالح لمدة 10 دقائق.`
         : `Your nafas verification code is ${code}. It is valid for 10 minutes.`;
 
-    const { data, error } = await this.client.emails.send({
+    const { error } = await this.client.emails.send({
       from: this.from,
       to,
       subject,
