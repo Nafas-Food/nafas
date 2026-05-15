@@ -9,12 +9,12 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { Colors, Font, FontSize, Spacing, Radius } from '../constants/theme';
 import { CountryPicker, MIDDLE_EAST_COUNTRIES, type Country } from './CountryPicker';
+import { useRTL } from '../hooks/useRTL';
 
 interface PhoneInputProps extends Omit<TextInputProps, 'value' | 'onChangeText'> {
   value: string;
   onChangeText: (fullNumber: string) => void;
   locale: 'en' | 'ar';
-  isRTL?: boolean;
 }
 
 const DEFAULT_COUNTRY = MIDDLE_EAST_COUNTRIES[0]; // Egypt +20
@@ -27,10 +27,14 @@ export function PhoneInput({
   value,
   onChangeText,
   locale,
-  isRTL,
   placeholder,
   ...textInputProps
 }: PhoneInputProps) {
+  // `locale` is still accepted as a prop for the CountryPicker's localised
+  // country labels, but we derive layout direction from useRTL so the row
+  // flips correctly even when the framework's I18nManager has not caught
+  // up with the stored language preference (cold-launch in Arabic).
+  const { rowDirection, textAlign } = useRTL();
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [localNumber, setLocalNumber] = useState('');
   const [showPicker, setShowPicker] = useState(false);
@@ -72,11 +76,12 @@ export function PhoneInput({
         onPress={() => inputRef.current?.focus()}
         style={[
           styles.container,
+          { flexDirection: rowDirection },
           focused ? styles.containerFocused : undefined,
         ]}
       >
         <Pressable
-          style={styles.countrySection}
+          style={[styles.countrySection, { flexDirection: rowDirection }]}
           onPress={() => setShowPicker(true)}
           hitSlop={{ top: 12, bottom: 12, left: 8, right: 4 }}
         >
@@ -105,7 +110,7 @@ export function PhoneInput({
           ref={inputRef}
           style={[
             styles.input,
-            isRTL ? styles.inputRTL : undefined,
+            { textAlign },
             textInputProps.style,
           ]}
           value={localNumber}
@@ -140,7 +145,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   container: {
-    flexDirection: 'row',
+    // flexDirection is set inline from useRTL().rowDirection.
     alignItems: 'center',
     backgroundColor: Colors.card,
     borderWidth: 1.5,
@@ -158,7 +163,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   countrySection: {
-    flexDirection: 'row',
+    // flexDirection is set inline from useRTL().rowDirection so this row
+    // flips correctly even when I18nManager has not yet caught up.
     alignItems: 'center',
     gap: Spacing.s1,
   },
@@ -176,7 +182,9 @@ const styles = StyleSheet.create({
     width: 40,
   },
   chevron: {
-    marginLeft: Spacing.s1,
+    // Symmetric horizontal margin — same visual gap whichever side the
+    // chevron lands on after the row flip.
+    marginHorizontal: Spacing.s1,
   },
   divider: {
     width: 1,
@@ -190,8 +198,5 @@ const styles = StyleSheet.create({
     fontFamily: Font.regular,
     color: Colors.foreground,
     paddingVertical: 0,
-  },
-  inputRTL: {
-    textAlign: 'right',
-  },
+    },
 });

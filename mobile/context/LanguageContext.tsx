@@ -7,9 +7,8 @@ import { en, type I18nDict } from '../constants/i18n/en';
 import { ar } from '../constants/i18n/ar';
 
 async function reloadApp(): Promise<void> {
-  // Updates.reloadAsync only works in production / EAS builds. In dev (Expo Go,
-  // dev client) it throws "Updates.reloadAsync is not available" — fall back to
-  // DevSettings.reload so the layout actually flips after I18nManager.forceRTL.
+  // Production / EAS builds: Updates.reloadAsync. Dev (Expo Go, dev client):
+  // fall back to DevSettings.reload so the bundle actually restarts.
   try {
     await Updates.reloadAsync();
   } catch {
@@ -19,6 +18,11 @@ async function reloadApp(): Promise<void> {
 
 type Locale = 'en' | 'ar';
 const STORAGE_KEY = '@nafas/lang';
+// One-shot guard for the legacy framework-RTL cleanup at boot. If a prior
+// build of this app called I18nManager.forceRTL(true), the native flag
+// persists across installs/sessions and would fight our context-driven
+// manual flips. We reset it once on first boot of this build.
+const CLEANUP_GUARD_KEY = '@nafas/lang-framework-cleanup';
 const dicts: Record<Locale, I18nDict> = { en, ar };
 
 interface LanguageContextValue {
@@ -55,24 +59,31 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const stored = (await AsyncStorage.getItem(STORAGE_KEY)) as Locale | null;
-        let next: Locale;
-        if (stored === 'en' || stored === 'ar') {
-          next = stored;
-        } else {
-          next = Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
+        // Lock the framework to LTR so its auto-flip never fights our
+        // context-driven manual flip in useRTL().
+        I18nManager.allowRTL(false);
+
+        if (I18nManager.isRTL) {
+          // Legacy state from a prior build that called forceRTL(true).
+          // forceRTL(false) needs a bundle reload to take effect, so do it
+          // once (guarded) and let the next boot proceed cleanly.
+          const cleaned = await AsyncStorage.getItem(CLEANUP_GUARD_KEY);
+          if (!cleaned) {
+            await AsyncStorage.setItem(CLEANUP_GUARD_KEY, '1');
+            I18nManager.forceRTL(false);
+            await reloadApp();
+            return; // bundle reloading
+          }
+          // Reload didn't clear native state (Expo Go etc). We accept the
+          // residual framework RTL — manual flips still produce a
+          // recognisable layout, just mirrored from the intended one.
         }
-        setLocaleState(next);
-        const wantRTL = next === 'ar';
-        if (I18nManager.isRTL !== wantRTL) {
-          // Apply the RTL flag silently. We do NOT reload here: on iOS / Expo
-          // dev clients, forceRTL is session-scoped and may not survive a JS
-          // reload, which would put us in an infinite reload loop on cold
-          // launch (T-T see prior incident — the app appeared to crash on
-          // open). The next user-initiated setLocale() will reload cleanly
-          // because by then forceRTL is already in effect for the session.
-          I18nManager.allowRTL(wantRTL);
-          I18nManager.forceRTL(wantRTL);
+
+        const stored = (await AsyncStorage.getItem(STORAGE_KEY)) as Locale | null;
+        if (stored === 'en' || stored === 'ar') {
+          setLocaleState(stored);
+        } else {
+          setLocaleState(Localization.getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en');
         }
       } catch {
         setLocaleState('en');
@@ -83,20 +94,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLocale = useCallback(async (next: Locale) => {
+    // No forceRTL, no reload. Layout flips synchronously via:
+    //   1. setLocaleState -> context.isRTL changes
+    //   2. <View key={isRTL ? 'rtl' : 'ltr'}> in _layout remounts subtree
+    //   3. useRTL() re-reads context and returns flipped primitives
     try {
       await AsyncStorage.setItem(STORAGE_KEY, next);
-      const wantRTL = next === 'ar';
-      if (I18nManager.isRTL !== wantRTL) {
-        I18nManager.allowRTL(wantRTL);
-        I18nManager.forceRTL(wantRTL);
-        // Reload required for native primitives to flip direction (R9).
-        await reloadApp();
-      } else {
-        setLocaleState(next);
-      }
     } catch {
-      setLocaleState(next);
+      // best-effort persistence; UI still flips
     }
+    setLocaleState(next);
   }, []);
 
   const t = useCallback(

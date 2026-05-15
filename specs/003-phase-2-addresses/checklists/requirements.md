@@ -36,7 +36,7 @@
     of coordinates, and on persistence layer (only the Foundation phase
     is referenced as an existing capability).
   - Two intentional v1 simplifications are clearly recorded as
-    Assumptions (no "default address" concept; editing an address used
+    Assumptions (client-side-only default address — backend stays flat; editing an address used
     by an in-flight order is permitted) so they cannot be mistaken for
     omissions during planning.
   - The deletion-safety rule (FR-013) deliberately names the future

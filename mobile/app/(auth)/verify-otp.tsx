@@ -51,6 +51,8 @@ export default function VerifyOtpScreen() {
   const fullName = pendingRegistration.fullName;
   const password = pendingRegistration.password;
   const birthdate = pendingRegistration.birthdate;
+  const email = pendingRegistration.email;
+  const channel = pendingRegistration.channel;
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,9 @@ export default function VerifyOtpScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!phone || !fullName || !password || !birthdate) {
+    const missingBasics = !fullName || !password || !birthdate;
+  const missingTarget = channel === 'email' ? !email : !phone;
+  if (missingBasics || missingTarget) {
       router.replace('/(auth)/register');
       return;
     }
@@ -72,7 +76,7 @@ export default function VerifyOtpScreen() {
     if (isResending) return;
     setIsResending(true);
     try {
-      await sendOtp(phone);
+      await sendOtp(phone, channel === 'email' ? email : undefined);
       startTimer(timerRef, setResendTimer);
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
@@ -91,6 +95,7 @@ export default function VerifyOtpScreen() {
         password,
         birthdate,
         otpCode: code,
+        email: channel === 'email' ? email : undefined,
       });
       await setSession({
         user: session.user,
@@ -124,15 +129,19 @@ export default function VerifyOtpScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.title')}</Text>
-          <Text style={[styles.subtitle, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.subtitle', { phone })}</Text>
+          <Text style={[styles.title, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('verifyOtp.title')}</Text>
+          <Text style={[styles.subtitle, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>
+            {channel === 'email'
+              ? t('verifyOtp.subtitleEmail', { email })
+              : t('verifyOtp.subtitle', { phone })}
+          </Text>
 
-          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('verifyOtp.codeLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('verifyOtp.codeLabel')}</Text>
             <TextInput
-              style={[styles.input, { textAlign: isRTL ? 'right' : 'center' }]}
+              style={styles.input}
               value={code}
               onChangeText={setCode}
               keyboardType="number-pad"

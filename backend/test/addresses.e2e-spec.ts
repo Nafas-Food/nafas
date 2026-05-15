@@ -51,7 +51,7 @@ describe('Addresses (e2e) — US1 & US2', () => {
     const jwt = app.get(JwtService);
     signAccess = (userId: string) =>
       jwt.sign(
-        { sub: userId, role: 'CUSTOMER', type: 'access' },
+        { sub: userId, role: 'customer', type: 'access' },
         { expiresIn: 900 },
       );
   });

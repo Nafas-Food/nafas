@@ -15,6 +15,7 @@ import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 import { Role } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { serializeUser } from '../users/user.serializer';
+import { EmailOtpService } from './email-otp.service';
 
 export interface SessionPair {
   accessToken: string;
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly events: AuthEventLogger,
     @Inject(TWILIO_VERIFY_CLIENT) private readonly twilio: TwilioVerifyClient,
     private readonly users: UsersService,
+    private readonly emailOtp: EmailOtpService,
   ) {}
 
   async issueSession(userId: string, role: Role): Promise<SessionPair> {
@@ -57,19 +59,51 @@ export class AuthService {
     return phone.slice(0, -4).replace(/\d/g, '*') + phone.slice(-4);
   }
 
-  async sendOtp(phone: string): Promise<void> {
+  private maskEmail(email: string): string {
+    const at = email.indexOf('@');
+    if (at <= 1) return '***' + email.slice(at);
+    return email[0] + '***' + email.slice(at);
+  }
+
+  /**
+   * Channel routing: if `dto.email` is present we dispatch via the
+   * email-OTP path (our own short-lived row + Resend/logger). Phone is
+   * still required and remains the identity anchor, but no SMS is sent
+   * — that saves the Twilio cost. Email-in-use is pre-checked so we
+   * never burn an email send on a duplicate.
+   */
+  async sendOtp(dto: { phone: string; email?: string }): Promise<void> {
+    if (dto.email) {
+      const existing = await this.prisma.extended.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existing && existing.phone !== dto.phone) {
+        this.events.emit({
+          event: 'otp.send',
+          outcome: 'mismatch',
+          extra: { channel: 'email', reason: 'email_in_use' },
+        });
+        throw new ConflictException({
+          code: 'EMAIL_IN_USE',
+          message: 'Email is already in use.',
+        });
+      }
+      await this.emailOtp.issue(dto.email, 'en');
+      return;
+    }
+
     try {
-      await this.twilio.sendOtp(phone);
+      await this.twilio.sendOtp(dto.phone);
       this.events.emit({
         event: 'otp.send',
         outcome: 'success',
-        extra: { phone: this.maskPhone(phone) },
+        extra: { channel: 'sms', phone: this.maskPhone(dto.phone) },
       });
     } catch (err) {
       this.events.emit({
         event: 'otp.send',
         outcome: 'provider_failure',
-        extra: { phone: this.maskPhone(phone) },
+        extra: { channel: 'sms', phone: this.maskPhone(dto.phone) },
       });
       throw err;
     }
@@ -81,24 +115,36 @@ export class AuthService {
     password: string;
     birthdate: Date;
     otpCode: string;
+    email?: string;
   }) {
-    const verified = await this.twilio.checkOtp(dto.phone, dto.otpCode);
-    if (!verified) {
+    if (dto.email) {
+      // Throws UnauthorizedException(EMAIL_OTP_INVALID) or
+      // 429(EMAIL_OTP_ATTEMPTS_EXCEEDED) on failure.
+      await this.emailOtp.verify(dto.email, dto.otpCode);
       this.events.emit({
         event: 'otp.verify',
-        outcome: 'mismatch',
-        extra: { phone: this.maskPhone(dto.phone) },
+        outcome: 'success',
+        extra: { channel: 'email', email: this.maskEmail(dto.email) },
       });
-      throw new UnauthorizedException({
-        code: 'AUTH_OTP_INVALID',
-        message: 'OTP code does not match or has expired.',
+    } else {
+      const verified = await this.twilio.checkOtp(dto.phone, dto.otpCode);
+      if (!verified) {
+        this.events.emit({
+          event: 'otp.verify',
+          outcome: 'mismatch',
+          extra: { channel: 'sms', phone: this.maskPhone(dto.phone) },
+        });
+        throw new UnauthorizedException({
+          code: 'AUTH_OTP_INVALID',
+          message: 'OTP code does not match or has expired.',
+        });
+      }
+      this.events.emit({
+        event: 'otp.verify',
+        outcome: 'success',
+        extra: { channel: 'sms', phone: this.maskPhone(dto.phone) },
       });
     }
-    this.events.emit({
-      event: 'otp.verify',
-      outcome: 'success',
-      extra: { phone: this.maskPhone(dto.phone) },
-    });
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
@@ -107,10 +153,11 @@ export class AuthService {
         data: {
           fullName: dto.fullName,
           phone: dto.phone,
+          email: dto.email ?? null,
           passwordHash,
           birthdate: dto.birthdate,
-          phoneVerified: true,
-          role: Role.CUSTOMER,
+          phoneVerified: !dto.email, // verified via SMS only; email path doesn't prove phone
+          role: Role.customer,
         },
       });
 
@@ -118,11 +165,20 @@ export class AuthService {
       return { user: serializeUser(user), ...tokens };
     } catch (err) {
       const e = err as { code?: string; meta?: { target?: string[] } };
-      if (e.code === 'P2002' && e.meta?.target?.includes('phone')) {
-        throw new ConflictException({
-          code: 'PHONE_IN_USE',
-          message: 'Phone is already in use.',
-        });
+      if (e.code === 'P2002') {
+        if (e.meta?.target?.includes('phone')) {
+          throw new ConflictException({
+            code: 'PHONE_IN_USE',
+            message: 'Phone is already in use.',
+          });
+        }
+        if (e.meta?.target?.includes('email')) {
+          // Defence in depth: race window between pre-check and create.
+          throw new ConflictException({
+            code: 'EMAIL_IN_USE',
+            message: 'Email is already in use.',
+          });
+        }
       }
       throw err;
     }

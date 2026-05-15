@@ -18,7 +18,7 @@ Auto-generated from all feature plans. Last updated: 2026-05-04
 ```text
 backend/
   prisma/
-    schema.prisma          # Canonical 17-table schema
+    schema.prisma          # Canonical 18-table schema
     migrations/            # Forward-versioned migrations
   src/
     main.ts                # NestJS bootstrap
@@ -94,16 +94,57 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
 ## Phase 1 conventions (do not regress)
 
 - The global `@nestjs/throttler` configuration registers **a single
-  default tier** of `10 requests / 15 min / IP`.
-  SMS-dispatching endpoints (`/auth/send-otp`,
-  `/users/me/change-phone/start`) override it per-route with
-  `@Throttle({ default: { limit: 3, ttl: 60_000 } })`. Never add a
-  second named tier globally — multi-tier configs compound and
-  over-throttle (research R7).
+  default tier** named `default` (research R7 — never add a second
+  named tier globally; multi-tier configs compound and over-throttle).
+  Its baseline is `60 requests / 60 s / IP` — a sane API default that
+  authenticated normal-use polling can tolerate. Sensitive endpoints
+  tighten it per-route via `@Throttle({ default: {...} })`:
+  - **FR-016** (SMS / cost-protected): `/auth/send-otp`,
+    `/users/me/change-phone/start` → `limit: 3, ttl: 60_000`.
+  - **FR-016a** (credential-stuffing slow-down): `/auth/register`,
+    `/auth/sign-in`, `/auth/refresh` → `limit: 10, ttl: 900_000`.
+  Per-route overrides reuse the `default` tier name to stay within the
+  single-tier rule.
 - The global `HttpExceptionNormalizerFilter`
   (`backend/src/common/errors/http-exception.filter.ts`) is the
   canonical place to emit `auth.password_validation` and
   `auth.rate_limit` structured-log events, because the underlying
   triggers (`ValidationPipe` rejection and `ThrottlerException`) happen
   before any controller code runs.
+## Phase 2 conventions (do not regress)
+
+- `OrdersService.hasActiveOrderForAddress` is the **canonical** chokepoint
+  for checking whether an address is in use by a non-terminal order.
+  `AddressesService` (and any future service) MUST call this method
+  instead of reading `prisma.order` directly — Constitution Principle III.
+- Single-find ownership shape: every `UserAddress` mutation (update,
+  delete) re-derives the owner from the JWT `sub` claim via
+  `findOwnedOrThrow`. An address owned by a different customer returns
+  the same `404 ADDRESS_NOT_FOUND` as a genuinely missing ID (FR-015,
+  SC-006).
+- The global `HttpExceptionNormalizerFilter` now also scrubs
+  `latitude`, `longitude`, and `coordinates` keys from every error
+  response payload (FR-021 / SC-012) and emits
+  `address.* / {validation_rejected, not_found}` structured-log events
+  for `/api/v1/addresses/*` paths (FR-019, C1 fix). The filter is the
+  single chokepoint for both responsibilities — do NOT introduce a
+  controller-level `AddressEventFilter`.
+- Address-mutation structured logs use `AddressEventLogger`
+  (`backend/src/common/logging/address-event.logger.ts`), a sibling
+  to the Phase 1 `AuthEventLogger`. Both stamp the same envelope keys
+  (`event`, `outcome`, `actorId`, `sourceIp`, `correlationId`,
+  `timestamp`). A future cleanup phase MAY merge them into one
+  namespaced logger.
+- `mobile/hooks/useColors.ts` is the **only** place hex literals are
+  allowed in the mobile app. All Phase 2 components consume tokens via
+  the `useColors()` hook — zero hex literals in components (Constitution
+  Principle V).
+- Google Maps API keys are stored exclusively in
+  `mobile/app.config.ts` (read from `process.env.GOOGLE_MAPS_API_KEY_IOS`
+  and `process.env.GOOGLE_MAPS_API_KEY_ANDROID`). Each key is
+  platform-restricted in the Cloud Console. `mobile/.env` is gitignored.
+- Soft-delete on `UserAddress` goes through
+  `prismaService.extended.userAddress.softDelete({ id })`. The CI
+  grep gate (`backend/scripts/ci-no-hard-delete.sh`) continues to
+  enforce this.
 <!-- MANUAL ADDITIONS END -->

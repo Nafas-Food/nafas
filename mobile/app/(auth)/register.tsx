@@ -29,7 +29,19 @@ function formatIsoDate(d: Date): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export const pendingRegistration = { fullName: '', phone: '', password: '', birthdate: '' };
+export const pendingRegistration: {
+  fullName: string;
+  phone: string;
+  email: string;
+  password: string;
+  birthdate: string;
+  channel: 'sms' | 'email';
+} = { fullName: '', phone: '', email: '', password: '', birthdate: '', channel: 'sms' };
+
+// Permissive client-side check — the backend still runs class-validator's
+// @IsEmail, this is just to bail before we round-trip a clearly broken
+// address.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterScreen() {
   const { t, locale, isRTL } = useLanguage();
@@ -37,6 +49,7 @@ export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [birthdate, setBirthdate] = useState<Date | null>(null);
@@ -54,12 +67,21 @@ export default function RegisterScreen() {
     setLoading(true);
     const name = fullName.trim();
     const tel = phone.trim();
+    const mail = email.trim();
+    if (mail && !EMAIL_REGEX.test(mail)) {
+      setError(t('errors.EMAIL_INVALID'));
+      setLoading(false);
+      isSubmittingRef.current = false;
+      return;
+    }
     try {
-      await sendOtp(tel);
+      await sendOtp(tel, mail || undefined);
       pendingRegistration.fullName = name;
       pendingRegistration.phone = tel;
+      pendingRegistration.email = mail;
       pendingRegistration.password = password;
       pendingRegistration.birthdate = formatIsoDate(birthdate);
+      pendingRegistration.channel = mail ? 'email' : 'sms';
       router.push('/(auth)/verify-otp');
     } catch (err) {
       setError(t(`errors.${errorCodeOf(err)}`));
@@ -102,67 +124,80 @@ export default function RegisterScreen() {
             { paddingTop: insets.top + Spacing.s7 },
           ]}
         >
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.title')}</Text>
+          <Text style={[styles.title, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.title')}</Text>
 
-          {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{error}</Text>}
+          {error && <Text style={[styles.errorText, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{error}</Text>}
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.fullNameLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.fullNameLabel')}</Text>
             <Input
               leftIcon="user"
               value={fullName}
               onChangeText={setFullName}
               autoCapitalize="words"
-              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.phoneLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.phoneLabel')}</Text>
             <PhoneInput
               value={phone}
               onChangeText={setPhone}
               locale={locale}
-              isRTL={isRTL}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.passwordLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.emailLabel')}</Text>
+            <Input
+              leftIcon="mail"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
+            />
+            <Text style={[styles.hintText, styles.hintTextNeutral, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>
+              {t('register.emailHint')}
+            </Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.passwordLabel')}</Text>
             <Input
               leftIcon="lock"
               showToggle
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              isRTL={isRTL}
             />
             {password.length > 0 && password.length < 8 && (
-              <Text style={[styles.hintText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>
+              <Text style={[styles.hintText, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>
                 {t('register.passwordTooShort')}
               </Text>
             )}
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.confirmPasswordLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.confirmPasswordLabel')}</Text>
             <Input
               leftIcon="lock"
               showToggle
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
-              isRTL={isRTL}
             />
             {confirmPassword.length > 0 && password !== confirmPassword && (
-              <Text style={[styles.hintText, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>
+              <Text style={[styles.hintText, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>
                 {t('register.passwordMismatch')}
               </Text>
             )}
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left', alignSelf: 'stretch' }]}>{t('register.birthdateLabel')}</Text>
+            <Text style={[styles.label, { alignSelf: 'stretch', textAlign: isRTL ? 'right' : 'left' }]}>{t('register.birthdateLabel')}</Text>
             <Pressable style={styles.dateInput} onPress={() => setPickerOpen(true)}>
               <Text style={[birthdate ? styles.dateValue : styles.datePlaceholder, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {birthdate ? formatIsoDate(birthdate) : t('register.datePlaceholder')}
@@ -269,5 +304,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.micro,
     fontFamily: Font.regular,
     marginTop: Spacing.s1,
+  },
+  // Same shape as hintText but neutral copy (always-visible cost-saving
+  // tip on the email field, not a validation error).
+  hintTextNeutral: {
+    color: Colors.mutedForeground,
   },
 });

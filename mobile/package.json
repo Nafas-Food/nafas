@@ -16,6 +16,7 @@
     "@react-native-community/datetimepicker": "8.4.4",
     "axios": "^1.16.0",
     "expo": "~54.0.33",
+    "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
     "expo-font": "^55.0.6",
     "expo-localization": "~17.0.8",

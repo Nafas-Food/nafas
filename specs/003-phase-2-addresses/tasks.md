@@ -1053,7 +1053,10 @@ SC-012 (partial create-error redaction).
   ```
   Note: `useT()` is the Phase 1 hook from `LanguageContext` (Phase 1 uses an export named `useT`; if your Phase 1 implementation exports a different name, adjust the import). `useColors()` was introduced in T011a; it is the ONLY place hex literals live (Constitution Principle V). Expected outcome: `npx tsc --noEmit` from `<repo>\mobile` returns 0; the file contains no hex literal anywhere.
 
-- [X] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list). Full content:
+- [X] T019 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses.tsx` (the LIST screen). This screen is the entry point for both US1 (empty state + add CTA) and US2 (populated list).
+  > **Note:** Screen redesigned post-implementation (custom header, card rows, floating "Add New Address" CTA, client-side default-address radio selector) — see current source. The embedded content below is the original as-authored snapshot.
+
+  Full content:
   ```tsx
   import React, { useCallback, useMemo } from 'react';
   import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -1150,7 +1153,10 @@ SC-012 (partial create-error redaction).
   ```
   Replace the `useT` / `useIsRTL` import path if your Phase 1 LanguageContext exports differ (check `<repo>\mobile\context\LanguageContext.tsx` for the exact hook names and adjust). The `t('common.networkError')` key is assumed to exist from Phase 1; if not, add it to both locales. Expected outcome: `npx tsc --noEmit` returns 0; the screen renders the empty state on a dev client when no addresses exist; the file contains zero hex literals.
 
-- [X] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen). Full content:
+- [X] T020 [US1] Create `<repo>\mobile\app\(tabs)\profile\addresses\new.tsx` (the ADD screen).
+  > **Note:** Screen redesigned post-implementation into a two-step flow (map step → **Confirm Location** → form step with label/street/building/floor/apartment/notes; raw lat/lng never shown) — see current source. The embedded content below is the original as-authored snapshot.
+
+  Full content:
   ```tsx
   import React, { useMemo, useState } from 'react';
   import { Alert, Pressable, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
@@ -1810,13 +1816,14 @@ hardcoded strings or directional literals to the mobile bundle.
 **Purpose**: Final hardening, Swagger annotations, quickstart pass,
 contributor-doc updates.
 
-- [ ] T035 [P] Annotate the Phase 2 endpoints in Swagger. In `<repo>\backend\src\modules\addresses\addresses.controller.ts`, add `@ApiOperation`, `@ApiOkResponse` / `@ApiCreatedResponse` / `@ApiNoContentResponse`, `@ApiBadRequestResponse`, `@ApiUnauthorizedResponse`, `@ApiNotFoundResponse`, and (on DELETE) `@ApiConflictResponse` decorators on each route handler. Reference `contracts/addresses.openapi.yaml` for the exact response codes per route. Use `AddressResponseDto` as the response type wherever the contract is `Address`. Expected outcome: the Swagger UI at `/api/v1/docs` renders the four endpoints with full request/response detail and the `Address` schema linked from the response.
+- [X] T035 [P] Annotate the Phase 2 endpoints in Swagger. In `<repo>\backend\src\modules\addresses\addresses.controller.ts`, add `@ApiOperation`, `@ApiOkResponse` / `@ApiCreatedResponse` / `@ApiNoContentResponse`, `@ApiBadRequestResponse`, `@ApiUnauthorizedResponse`, `@ApiNotFoundResponse`, and (on DELETE) `@ApiConflictResponse` decorators on each route handler. Reference `contracts/addresses.openapi.yaml` for the exact response codes per route. Use `AddressResponseDto` as the response type wherever the contract is `Address`. Expected outcome: the Swagger UI at `/api/v1/docs` renders the four endpoints with full request/response detail and the `Address` schema linked from the response.
 
-- [ ] T036 [P] Run the full backend security & observability sweep from `quickstart.md` Step 8. From `<repo>\backend`:
+- [X] T036 [P] Run the full backend security & observability sweep from `quickstart.md` Step 8. From `<repo>\backend`:
   ```powershell
-  npm test -- addresses.e2e-spec
-  npm test -- http-redaction.spec
+  npm run test:e2e -- addresses.e2e-spec
+  npm run test:e2e -- http-redaction.e2e-spec
   ```
+  (Both suites live in `backend/test/` and are picked up by `test/jest-e2e.json`. The default `npm test` only scans `src/**/*.spec.ts` and will not find them.)
   Both suites pass. Tail the backend logs while running Steps 3–6 of the quickstart manually on a real device, and confirm:
   - One `address.create / success` line per save.
   - One `address.update / success` line per edit.
@@ -1831,9 +1838,9 @@ contributor-doc updates.
 
 - [ ] T037 Run the full Phase 2 quickstart from `quickstart.md` end-to-end on a real device. Tick every box in the Done Criteria section at the bottom of `quickstart.md`. Specifically verify the SC-001 budget: the add-address flow on a real device under 60 seconds. If any step fails, do NOT mark the task done — fix the underlying code and rerun the step.
 
-- [ ] T038 Decide whether to add a Phase 2 conventions block to `<repo>\CLAUDE.md`. The auto-generated section currently lists Phase 0 and Phase 1 conventions only. If you want future agents to inherit the Phase 2 invariants — `OrdersService.hasActiveOrderForAddress` is the canonical Order chokepoint, single-find ownership shape on `UserAddress`, scrubber-redaction in the global filter, namespaced event loggers, `useColors()` is the only place hex literals live, Maps API key custody — append a "Phase 2 conventions (do not regress)" block under the `<!-- MANUAL ADDITIONS START -->` marker mirroring the Phase 0 / Phase 1 blocks. Skip if you prefer to leave CLAUDE.md untouched; the spec dir is the canonical reference either way.
+- [X] T038 Decide whether to add a Phase 2 conventions block to `<repo>\CLAUDE.md`. The auto-generated section currently lists Phase 0 and Phase 1 conventions only. If you want future agents to inherit the Phase 2 invariants — `OrdersService.hasActiveOrderForAddress` is the canonical Order chokepoint, single-find ownership shape on `UserAddress`, scrubber-redaction in the global filter, namespaced event loggers, `useColors()` is the only place hex literals live, Maps API key custody — append a "Phase 2 conventions (do not regress)" block under the `<!-- MANUAL ADDITIONS START -->` marker mirroring the Phase 0 / Phase 1 blocks. Skip if you prefer to leave CLAUDE.md untouched; the spec dir is the canonical reference either way.
 
-- [ ] T039 Final lint + typecheck across all three workspaces.
+- [X] T039 Final lint + typecheck across all three workspaces.
   ```powershell
   # Backend:
   cd <repo>\backend; npm run lint; npm run build; npm test

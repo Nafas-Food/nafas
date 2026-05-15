@@ -6,7 +6,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -27,16 +32,17 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('send-otp')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Request a phone-verification code.' })
+  @ApiOperation({ summary: 'Request a verification code via email or phone.' })
   @ApiResponse({
     status: 204,
     description: 'Code dispatched to the verification provider.',
   })
   async sendOtp(@Body() dto: SendOtpDto): Promise<void> {
-    await this.auth.sendOtp(dto.phone);
+    await this.auth.sendOtp(dto);
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 900_000 } }) // FR-016a — credential-stuffing slow-down (10 req / 15 min / IP)
   @Post('register')
   @HttpCode(201)
   @ApiOperation({
@@ -53,6 +59,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 900_000 } }) // FR-016a — credential-stuffing slow-down (10 req / 15 min / IP)
   @Post('sign-in')
   @HttpCode(200)
   @ApiOperation({ summary: 'Authenticate with phone and password.' })
@@ -64,6 +71,7 @@ export class AuthController {
 
   @Public()
   @UseGuards(JwtRefreshGuard)
+  @Throttle({ default: { limit: 10, ttl: 900_000 } }) // FR-016a — credential-stuffing slow-down (10 req / 15 min / IP)
   @Post('refresh')
   @HttpCode(200)
   @ApiOperation({

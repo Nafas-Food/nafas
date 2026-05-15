@@ -21,7 +21,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
     // The mobile app is customer/chef only. Admin and driver accounts must
     // not be allowed past sign-in — they have separate surfaces.
-    if (user && user.role !== 'CUSTOMER' && user.role !== 'CHEF') {
+    if (user && user.role !== 'customer' && user.role !== 'chef') {
       clearSession().catch(() => {});
       return;
     }
@@ -30,7 +30,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     if (!user && !inAuth) {
       router.replace('/(auth)/welcome');
     } else if (user && inAuth) {
-      router.replace(user.role === 'CHEF' ? '/(chef)' : '/(tabs)');
+      router.replace(user.role === 'chef' ? '/(chef)' : '/(tabs)');
     }
   }, [isLoading, user, segments, router, clearSession]);
 
@@ -43,8 +43,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Synchronous guard: never flash protected UI for unsupported roles.
-  if (user && user.role !== 'CUSTOMER' && user.role !== 'CHEF') {
-    clearSession().catch(() => {});
+  // Session clearing for this case is handled by the effect above —
+  // calling clearSession() here would be a side effect during render.
+  if (user && user.role !== 'customer' && user.role !== 'chef') {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
@@ -56,7 +57,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 }
 
 function ProvidersInner({ children }: { children: React.ReactNode }) {
-  const { ready } = useLanguage();
+  const { ready, isRTL } = useLanguage();
   const [fontsLoaded, fontsError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -73,7 +74,11 @@ function ProvidersInner({ children }: { children: React.ReactNode }) {
       </View>
     );
   }
-  return <RouteGuard>{children}</RouteGuard>;
+  return (
+    <View key={isRTL ? 'rtl' : 'ltr'} style={{ flex: 1 }}>
+      <RouteGuard>{children}</RouteGuard>
+    </View>
+  );
 }
 
 export default function RootLayout() {

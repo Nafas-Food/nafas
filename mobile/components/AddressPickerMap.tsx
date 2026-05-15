@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,6 +15,7 @@ interface Props {
   onChange: (next: Coords) => void;
   onReverseGeocode?: (street: string) => void;
   initialRegion?: Region;
+  style?: StyleProp<ViewStyle>;
   testID?: string;
 }
 
@@ -30,6 +31,7 @@ export function AddressPickerMap({
   onChange,
   onReverseGeocode,
   initialRegion,
+  style,
   testID,
 }: Props) {
   const { t } = useLanguage();
@@ -102,7 +104,7 @@ export function AddressPickerMap({
       : CAIRO);
 
   return (
-    <View style={styles.wrap} testID={testID}>
+    <View style={[styles.wrap, style]} testID={testID}>
       <MapView
         ref={mapRef}
         style={styles.map}

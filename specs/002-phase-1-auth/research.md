@@ -326,9 +326,27 @@ Context that:
 
 All four Phase 1 auth screens consume `LanguageContext` and reference
 the `nafas-design-system` skill's welcome / form / OTP mockups for
-visual composition. No screen contains hardcoded strings or
-`flexDirection: "row"` literals; layout flips read `isRTL` through
-the design-system layout primitives.
+visual composition. No screen contains hardcoded strings.
+
+**RTL layout rules** (to prevent the Android double-mirroring bug):
+
+1. All text styles use `textAlign: 'left'` explicitly in the
+   StyleSheet. When `I18nManager.forceRTL(true)` is active, React
+   Native automatically mirrors this to `'right'` at the native layer.
+   Omitting `textAlign` leaves the default unset, which does **not**
+   mirror reliably on all Android versions.
+2. Never use `isRTL ? 'right' : 'left'` or manual `flexDirection`
+   flipping (`isRTL ? 'row-reverse' : 'row'`). These manual overrides
+   compose with the native auto-mirror and produce double-mirroring on
+   Android — text that should be right-aligned ends up left-aligned.
+3. Use logical margin and padding properties (`marginStart`,
+   `marginEnd`, `paddingStart`, `paddingEnd`) instead of physical
+   `Left`/`Right` variants. The native RTL engine swaps `Start`/`End`
+   automatically; physical properties do not swap and leave icons or
+   toggles on the wrong side in Arabic.
+4. `isRTL` remains exposed on `LanguageContext` for **non-layout**
+   concerns only (e.g., choosing Arabic vs. English imagery, locale-aware
+   number formatting). It MUST NOT be used for layout direction.
 
 **Rationale**:
 
@@ -346,6 +364,11 @@ the design-system layout primitives.
 
 - *Per-screen `isRTL` flags without `forceRTL`*: Rejected — produces
   half-flipped layouts (text mirrors but native scrollbars don't).
+- *Manual `isRTL` conditional styles alongside `forceRTL`*: Rejected —
+  causes double-mirroring on Android. The native layer already mirrors
+  when `forceRTL` is true; adding manual `textAlign: 'right'` or
+  `flexDirection: 'row-reverse'` flips the layout a second time,
+  breaking Arabic text alignment.
 - *Server-side localisation*: Rejected for Phase 1 — error messages
   shown to the customer are localised on the client by mapping
   server-returned error *codes* to bilingual strings; this keeps the

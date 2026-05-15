@@ -38,7 +38,7 @@ export class SettingsController {
     return { key, value };
   }
 
-  @Roles('ADMIN')
+  @Roles('admin')
   @UseGuards(RolesGuard)
   @Patch(':key')
   @ApiOperation({ summary: 'Update or create a setting (admin only).' })
