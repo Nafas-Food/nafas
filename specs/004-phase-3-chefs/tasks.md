@@ -2081,7 +2081,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Verification + missing-key check
 
-- [ ] T065 [P] [US6] Add an automated missing-i18n-key check. Create `<repo>\mobile\scripts\check-i18n-keys.ts`:
+- [X] T065 [P] [US6] Add an automated missing-i18n-key check. Create `<repo>\mobile\scripts\check-i18n-keys.ts`:
   ```ts
   /**
    * Asserts mobile/constants/i18n/en.ts and mobile/constants/i18n/ar.ts
