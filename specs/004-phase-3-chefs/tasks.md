@@ -712,7 +712,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### DTOs (US1 backend)
 
-- [ ] T020 [P] [US1] Create `ApplyChefDto`. Create `<repo>\backend\src\modules\chefs\dto\apply-chef.dto.ts`:
+- [X] T020 [P] [US1] Create `ApplyChefDto`. Create `<repo>\backend\src\modules\chefs\dto\apply-chef.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsLatitude, IsLongitude, IsNumber, IsPositive, IsString, Length } from 'class-validator';
@@ -748,7 +748,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Trim transform for `chefName` / `bio` is applied via the existing global `ValidationPipe`'s `transform: true` plus the inherited Phase 1 trim convention. Do NOT add additional `@Transform` decorators here — match the Phase 2 `CreateAddressDto` shape.
 
-- [ ] T021 [P] [US1] Create `ChefPrivateProfileResponseDto`. Create `<repo>\backend\src\modules\chefs\dto\chef.response.dto.ts` — the shape matches `ChefPrivateProfile` in `<repo>\specs\004-phase-3-chefs\contracts\chefs.openapi.yaml`. It carries lat/lng (the chef's own view) and `categoryIds` (always `[]` in Phase 3, populated via `menus.service.categoriesForChef` once menus exist). Field list and types:
+- [X] T021 [P] [US1] Create `ChefPrivateProfileResponseDto`. Create `<repo>\backend\src\modules\chefs\dto\chef.response.dto.ts` — the shape matches `ChefPrivateProfile` in `<repo>\specs\004-phase-3-chefs\contracts\chefs.openapi.yaml`. It carries lat/lng (the chef's own view) and `categoryIds` (always `[]` in Phase 3, populated via `menus.service.categoriesForChef` once menus exist). Field list and types:
   - `id: string` (UUID)
   - `chefName: string`
   - `bio: string`
@@ -765,7 +765,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Chef-application service + controller (US1 backend)
 
-- [ ] T022 [US1] Create the `ChefApplicationService` (cooldown gate + state-machine helper, research R4). Create `<repo>\backend\src\modules\chefs\chef-application.service.ts`:
+- [X] T022 [US1] Create the `ChefApplicationService` (cooldown gate + state-machine helper, research R4). Create `<repo>\backend\src\modules\chefs\chef-application.service.ts`:
   ```ts
   import { ConflictException, Injectable } from '@nestjs/common';
   import { PrismaService } from '../../common/prisma/prisma.service';
@@ -816,7 +816,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T023 [US1] Create the `ChefsService` apply method (the only Phase 3 ChefsService method this user story needs). Create `<repo>\backend\src\modules\chefs\chefs.service.ts`. Start with this skeleton — later tasks (T037, T046 etc.) add more methods to the same file:
+- [X] T023 [US1] Create the `ChefsService` apply method (the only Phase 3 ChefsService method this user story needs). Create `<repo>\backend\src\modules\chefs\chefs.service.ts`. Start with this skeleton — later tasks (T037, T046 etc.) add more methods to the same file:
   ```ts
   import { Injectable } from '@nestjs/common';
   import { Prisma } from '@prisma/client';
@@ -879,7 +879,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T024 [US1] Create the `ChefsController` with the apply endpoint. Create `<repo>\backend\src\modules\chefs\chefs.controller.ts`. Start with this skeleton — later tasks (T038, T047) extend the same controller:
+- [X] T024 [US1] Create the `ChefsController` with the apply endpoint. Create `<repo>\backend\src\modules\chefs\chefs.controller.ts`. Start with this skeleton — later tasks (T038, T047) extend the same controller:
   ```ts
   import { Body, Controller, HttpCode, Ip, Post, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -913,7 +913,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T025 [US1] Create the `ChefsModule`. Create `<repo>\backend\src\modules\chefs\chefs.module.ts`:
+- [X] T025 [US1] Create the `ChefsModule`. Create `<repo>\backend\src\modules\chefs\chefs.module.ts`:
   ```ts
   import { Module } from '@nestjs/common';
   import { PrismaModule } from '../../common/prisma/prisma.module';
@@ -938,7 +938,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Mobile US1: apply screen, pending screen, route guard
 
-- [ ] T026 [P] [US1] Create the mobile service module for chef-apply. Create `<repo>\mobile\services\chefApply.ts`:
+- [X] T026 [P] [US1] Create the mobile service module for chef-apply. Create `<repo>\mobile\services\chefApply.ts`:
   ```ts
   import { api } from './api';
 
@@ -970,16 +970,16 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   The `api` axios instance already handles 401 refresh from Phase 1. Components downstream catch the `409` and read `error.response.data.code` for the discriminator.
 
-- [ ] T027 [P] [US1] Create the chef-apply screen. Create `<repo>\mobile\app\(auth)\chef-apply.tsx`. The screen has two steps; use a `useState<'location' | 'details'>('location')` to switch. **Use the `KitchenLocationPicker` component (T017) on the location step.** Use `t(key)` for every string. Use `useColors()` for every color. Validate locally (chef name 1–80, bio 1–1000, minOrderPrice > 0); show inline errors via the `t('chefApply.validation.*')` keys. On submit, call `applyToBeAChef` (T026) inside a `try { } catch (err) { ... }` and:
+- [X] T027 [P] [US1] Create the chef-apply screen. Create `<repo>\mobile\app\(auth)\chef-apply.tsx`. The screen has two steps; use a `useState<'location' | 'details'>('location')` to switch. **Use the `KitchenLocationPicker` component (T017) on the location step.** Use `t(key)` for every string. Use `useColors()` for every color. Validate locally (chef name 1–80, bio 1–1000, minOrderPrice > 0); show inline errors via the `t('chefApply.validation.*')` keys. On submit, call `applyToBeAChef` (T026) inside a `try { } catch (err) { ... }` and:
   - On 201: navigate to `/(auth)/pending-verification`.
   - On 409 with code `ALREADY_CHEF`: render an alert using `t('chefApply.error.alreadyChef')` and offer "Sign out" CTA.
   - On 409 with code `APPLICATION_PENDING`: navigate to `/(auth)/pending-verification`.
   - On 409 with code `APPLICATION_COOLDOWN_IN_EFFECT`: render an alert using `t('chefApply.error.cooldown', { date: <formatted earliestResubmitAt> })`.
   Reference the `nafas-design-system` skill chef-onboarding mockup for spacing / fonts / button style.
 
-- [ ] T028 [P] [US1] Create the pending-verification holding screen. Create `<repo>\mobile\app\(auth)\pending-verification.tsx`. Render the `t('pending.title')` / `t('pending.body')` copy and a Sign-out CTA (`t('pending.signOutCta')`) that calls `signOut()` from `AuthContext`. Reference the design-system "holding state" mockup. No navigation actions other than sign-out.
+- [X] T028 [P] [US1] Create the pending-verification holding screen. Create `<repo>\mobile\app\(auth)\pending-verification.tsx`. Render the `t('pending.title')` / `t('pending.body')` copy and a Sign-out CTA (`t('pending.signOutCta')`) that calls `signOut()` from `AuthContext`. Reference the design-system "holding state" mockup. No navigation actions other than sign-out.
 
-- [ ] T029 [US1] Wire the role-driven `RouteGuard` in `_layout.tsx`. Open `<repo>\mobile\app\_layout.tsx`. The Phase 1 implementation routes signed-out → `/(auth)/welcome`. **Add** (do not remove) routing rules for these cases, IN THIS ORDER:
+- [X] T029 [US1] Wire the role-driven `RouteGuard` in `_layout.tsx`. Open `<repo>\mobile\app\_layout.tsx`. The Phase 1 implementation routes signed-out → `/(auth)/welcome`. **Add** (do not remove) routing rules for these cases, IN THIS ORDER:
   1. If `user === null` → `/(auth)/welcome` (existing Phase 1 behaviour).
   2. If `user.role === 'admin'` → render a "Use the web dashboard" placeholder + Sign-out CTA (admins do not have a mobile app surface in v1). Implementation note: just route to `/(auth)/welcome` with a brief alert; do NOT add an admin tab bar.
   3. If `pendingApplication` (from `AuthContext` T016) is non-null AND `user.role === 'customer'` → `/(auth)/pending-verification` (FR-031).

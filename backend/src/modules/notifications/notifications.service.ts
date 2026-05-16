@@ -24,16 +24,21 @@ export class NotificationsService {
     await client.notification.create({
       data: {
         userId: args.userId,
-        type:   args.type,
-        title:  args.title  as unknown as Prisma.InputJsonValue,
-        body:   args.body   as unknown as Prisma.InputJsonValue,
-        data:   args.data ? (args.data as unknown as Prisma.InputJsonValue) : undefined,
+        type: args.type,
+        title: args.title as unknown as Prisma.InputJsonValue,
+        body: args.body as unknown as Prisma.InputJsonValue,
+        data: args.data
+          ? (args.data as unknown as Prisma.InputJsonValue)
+          : undefined,
       },
     });
   }
 
   /** Fire-and-forget — caller awaits but failure logs only (best-effort per FR-009). */
-  async dispatchPush(userId: string, payload: { title: string; body: string; data?: Record<string, string> }): Promise<void> {
+  async dispatchPush(
+    userId: string,
+    payload: { title: string; body: string; data?: Record<string, string> },
+  ): Promise<void> {
     const user = await this.prismaService.extended.user.findUnique({
       where: { id: userId },
       select: { fcmToken: true },

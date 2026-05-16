@@ -44,43 +44,198 @@ export class CategoryEventLogger {
     this.log.log(JSON.stringify(payload));
   }
 
-  createSuccess({ actorAdminId, categoryId, sourceIp }: { actorAdminId: string; categoryId: string; sourceIp: string }) {
-    this.emit({ event: 'category.create', outcome: 'success', actorId: actorAdminId, categoryId, sourceIp });
+  createSuccess({
+    actorAdminId,
+    categoryId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    categoryId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.create',
+      outcome: 'success',
+      actorId: actorAdminId,
+      categoryId,
+      sourceIp,
+    });
   }
-  createValidationRejected({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
-    this.emit({ event: 'category.create', outcome: 'validation_rejected', actorId: actorAdminId, sourceIp });
+  createValidationRejected({
+    actorAdminId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.create',
+      outcome: 'validation_rejected',
+      actorId: actorAdminId,
+      sourceIp,
+    });
   }
-  updateSuccess({ actorAdminId, categoryId, sourceIp }: { actorAdminId: string; categoryId: string; sourceIp: string }) {
-    this.emit({ event: 'category.update', outcome: 'success', actorId: actorAdminId, categoryId, sourceIp });
+  updateSuccess({
+    actorAdminId,
+    categoryId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    categoryId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.update',
+      outcome: 'success',
+      actorId: actorAdminId,
+      categoryId,
+      sourceIp,
+    });
   }
-  updateValidationRejected({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
-    this.emit({ event: 'category.update', outcome: 'validation_rejected', actorId: actorAdminId, sourceIp });
+  updateValidationRejected({
+    actorAdminId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.update',
+      outcome: 'validation_rejected',
+      actorId: actorAdminId,
+      sourceIp,
+    });
   }
-  updateNotFound({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
-    this.emit({ event: 'category.update', outcome: 'not_found', actorId: actorAdminId, sourceIp });
+  updateNotFound({
+    actorAdminId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.update',
+      outcome: 'not_found',
+      actorId: actorAdminId,
+      sourceIp,
+    });
   }
-  deleteSuccess({ actorAdminId, categoryId, sourceIp }: { actorAdminId: string; categoryId: string; sourceIp: string }) {
-    this.emit({ event: 'category.delete', outcome: 'success', actorId: actorAdminId, categoryId, sourceIp });
+  deleteSuccess({
+    actorAdminId,
+    categoryId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    categoryId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.delete',
+      outcome: 'success',
+      actorId: actorAdminId,
+      categoryId,
+      sourceIp,
+    });
   }
-  deleteNotFound({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
-    this.emit({ event: 'category.delete', outcome: 'not_found', actorId: actorAdminId, sourceIp });
+  deleteNotFound({
+    actorAdminId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.delete',
+      outcome: 'not_found',
+      actorId: actorAdminId,
+      sourceIp,
+    });
   }
-  reorderSuccess({ actorAdminId, itemsCount, sourceIp }: { actorAdminId: string; itemsCount: number; sourceIp: string }) {
-    this.emit({ event: 'category.reorder', outcome: 'success', actorId: actorAdminId, itemsCount, sourceIp });
+  reorderSuccess({
+    actorAdminId,
+    itemsCount,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    itemsCount: number;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.reorder',
+      outcome: 'success',
+      actorId: actorAdminId,
+      itemsCount,
+      sourceIp,
+    });
   }
-  reorderValidationRejected({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
-    this.emit({ event: 'category.reorder', outcome: 'validation_rejected', actorId: actorAdminId, sourceIp });
+  reorderValidationRejected({
+    actorAdminId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.reorder',
+      outcome: 'validation_rejected',
+      actorId: actorAdminId,
+      sourceIp,
+    });
   }
-  createRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
-    this.emit({ event: 'category.create', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  createRoleRefused({
+    actorUserId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.create',
+      outcome: 'role_refused',
+      actorId: actorUserId,
+      sourceIp,
+    });
   }
-  updateRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
-    this.emit({ event: 'category.update', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  updateRoleRefused({
+    actorUserId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.update',
+      outcome: 'role_refused',
+      actorId: actorUserId,
+      sourceIp,
+    });
   }
-  deleteRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
-    this.emit({ event: 'category.delete', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  deleteRoleRefused({
+    actorUserId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.delete',
+      outcome: 'role_refused',
+      actorId: actorUserId,
+      sourceIp,
+    });
   }
-  reorderRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
-    this.emit({ event: 'category.reorder', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  reorderRoleRefused({
+    actorUserId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'category.reorder',
+      outcome: 'role_refused',
+      actorId: actorUserId,
+      sourceIp,
+    });
   }
 }

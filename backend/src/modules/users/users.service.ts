@@ -186,10 +186,12 @@ export class UsersService {
     if (current === nextRole) {
       return; // no-op
     }
-    if (!(
-      (current === 'customer' && nextRole === 'chef') ||
-      (current === 'chef' && nextRole === 'customer')
-    )) {
+    if (
+      !(
+        (current === 'customer' && nextRole === 'chef') ||
+        (current === 'chef' && nextRole === 'customer')
+      )
+    ) {
       throw new BadRequestException({
         code: 'INVALID_ROLE_TRANSITION',
         message: `Cannot transition from ${current} to ${nextRole}.`,
@@ -198,7 +200,7 @@ export class UsersService {
 
     await client.user.update({
       where: { id: userId, deletedAt: null },
-      data:  { role: nextRole },
+      data: { role: nextRole },
     });
   }
 }

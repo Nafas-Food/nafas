@@ -4,6 +4,7 @@ export const ar: I18nDict = {
   common: {
     retry: 'حاول مرة أخرى',
     cancel: 'إلغاء',
+    back: 'رجوع',
     submit: 'إرسال',
     loading: 'جارٍ التحميل...',
     networkError: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مجددًا.',

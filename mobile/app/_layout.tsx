@@ -11,28 +11,73 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 
+// /(auth) screens a signed-in customer is allowed to reach directly
+// (e.g. via in-app navigation from /(tabs)). Without this whitelist the
+// "customer in auth segment" rule would bounce them back to /(tabs)
+// before they could see the screen.
+const CUSTOMER_AUTH_SCREEN_WHITELIST: ReadonlySet<string> = new Set([
+  'chef-apply',
+  'pending-verification',
+]);
+
 function RouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, clearSession } = useAuth();
-  const segments = useSegments();
+  const { user, isLoading, pendingApplication, clearSession } = useAuth();
+  const segments = useSegments() as string[];
   const router = useRouter();
 
   React.useEffect(() => {
     if (isLoading) return;
 
-    // The mobile app is customer/chef only. Admin and driver accounts must
-    // not be allowed past sign-in — they have separate surfaces.
-    if (user && user.role !== 'customer' && user.role !== 'chef') {
+    const inAuth = segments[0] === '(auth)';
+    const authScreen = inAuth ? segments[1] : undefined;
+    const inChef = segments[0] === '(chef)';
+    const inTabs = segments[0] === '(tabs)';
+
+    // 1. Signed-out → welcome
+    if (!user) {
+      if (!inAuth) {
+        router.replace('/(auth)/welcome');
+      }
+      return;
+    }
+
+    // 2. Admin → clear session and route to welcome (no mobile surface)
+    if (user.role === 'admin') {
       clearSession().catch(() => {});
       return;
     }
 
-    const inAuth = segments[0] === '(auth)';
-    if (!user && !inAuth) {
-      router.replace('/(auth)/welcome');
-    } else if (user && inAuth) {
-      router.replace(user.role === 'chef' ? '/(chef)' : '/(tabs)');
+    // 3. Pending application + customer → pending-verification
+    if (pendingApplication && user.role === 'customer') {
+      if (authScreen === 'pending-verification') {
+        // already on the right screen
+        return;
+      }
+      router.replace('/(auth)/pending-verification');
+      return;
     }
-  }, [isLoading, user, segments, router, clearSession]);
+
+    // 4. Chef → chef route group (redirect even when already in /(tabs)
+    //    so a role change from customer→chef is picked up on re-render).
+    if (user.role === 'chef') {
+      if (!inChef) {
+        router.replace('/(chef)');
+      }
+      return;
+    }
+
+    // 5. Customer with no pending application → tabs (redirect even when
+    //    already in /(chef) so a role change from chef→customer is picked
+    //    up, but allow whitelisted /(auth) screens).
+    if (user.role === 'customer') {
+      const onWhitelistedAuthScreen =
+        inAuth && authScreen && CUSTOMER_AUTH_SCREEN_WHITELIST.has(authScreen);
+      if (!inTabs && !onWhitelistedAuthScreen) {
+        router.replace('/(tabs)');
+      }
+      return;
+    }
+  }, [isLoading, user, pendingApplication, segments, router, clearSession]);
 
   if (isLoading) {
     return (
@@ -43,9 +88,8 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Synchronous guard: never flash protected UI for unsupported roles.
-  // Session clearing for this case is handled by the effect above —
-  // calling clearSession() here would be a side effect during render.
-  if (user && user.role !== 'customer' && user.role !== 'chef') {
+  // Session clearing for admin is handled by the effect above.
+  if (user && user.role === 'admin') {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />

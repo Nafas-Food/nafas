@@ -20,6 +20,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MenusModule } from './modules/menus/menus.module';
+import { ChefsModule } from './modules/chefs/chefs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -48,6 +49,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     StorageModule,
     NotificationsModule,
     MenusModule,
+    ChefsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

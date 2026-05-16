@@ -20,21 +20,28 @@ export class FcmService implements OnModuleInit {
           ? admin.credential.cert(keyPath)
           : null;
       if (!credential) {
-        this.logger.warn('FCM credentials not configured — push delivery disabled.');
+        this.logger.warn(
+          'FCM credentials not configured — push delivery disabled.',
+        );
         return;
       }
       admin.initializeApp({ credential });
       this.initialized = true;
     } catch (err) {
-      this.logger.error(`Failed to initialise firebase-admin: ${(err as Error).message}`);
+      this.logger.error(
+        `Failed to initialise firebase-admin: ${(err as Error).message}`,
+      );
     }
   }
 
-  async send(fcmToken: string | null, payload: {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-  }): Promise<void> {
+  async send(
+    fcmToken: string | null,
+    payload: {
+      title: string;
+      body: string;
+      data?: Record<string, string>;
+    },
+  ): Promise<void> {
     if (!this.initialized || !fcmToken) return;
     try {
       await admin.messaging().send({
