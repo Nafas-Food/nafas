@@ -2081,37 +2081,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Verification + missing-key check
 
-- [X] T065 [P] [US6] Add an automated missing-i18n-key check. Create `<repo>\mobile\scripts\check-i18n-keys.ts`:
-  ```ts
-  /**
-   * Asserts mobile/constants/i18n/en.ts and mobile/constants/i18n/ar.ts
-   * carry identical key sets. Exits non-zero on any asymmetric key.
-   * Run via: npx ts-node mobile/scripts/check-i18n-keys.ts
-   */
-  import { en } from '../constants/i18n/en';
-  import { ar } from '../constants/i18n/ar';
-
-  function flatten(obj: unknown, prefix = ''): string[] {
-    if (obj === null || typeof obj !== 'object') return [];
-    return Object.entries(obj as Record<string, unknown>).flatMap(([k, v]) => {
-      const path = prefix ? `${prefix}.${k}` : k;
-      return typeof v === 'object' && v !== null ? flatten(v, path) : [path];
-    });
-  }
-
-  const enKeys = new Set(flatten(en));
-  const arKeys = new Set(flatten(ar));
-  const missingInAr = [...enKeys].filter(k => !arKeys.has(k));
-  const missingInEn = [...arKeys].filter(k => !enKeys.has(k));
-  if (missingInAr.length || missingInEn.length) {
-    console.error('i18n asymmetry detected:');
-    console.error('  Missing in ar.ts:', missingInAr);
-    console.error('  Missing in en.ts:', missingInEn);
-    process.exit(1);
-  }
-  console.log(`✓ Both locales carry ${enKeys.size} keys.`);
-  ```
-  Run it once now (`cd mobile; npx ts-node scripts/check-i18n-keys.ts`); fix any missing keys.
+- [X] T065 [P] [US6] Automated missing-i18n-key check. **Already provided** by `<repo>\mobile\scripts\check-i18n-symmetry.ts` (created in Phase 2 — `specs/003-phase-2-addresses/tasks.md` T032) and wired into `mobile/package.json` as `npm run check:i18n`. **No new script was added for Phase 3** — the original spec for this task asked for a duplicate `check-i18n-keys.ts`, which was removed in commit `a7afa7b`. Run the existing check via `cd mobile; npm run check:i18n` and fix any missing keys it reports. Current status: 171 keys verified, both locales symmetric.
 
 - [ ] T066 [US6] Walk through each Phase 3 customer-facing mobile surface in both English and Arabic, **on a real device**. The list (per spec FR-034): chef-apply (both location and details steps), pending-verification, customer tab bar, explore (discovery), chef public profile, chef tab bar, chef profile editor, kitchen toggle, image upload dialog, every validation error you can trigger, the in-app render of `chef_verified` / `chef_rejected` / `chef_revoked` notifications (if reachable through the Phase 8 surface; otherwise this verification waits for Phase 8). Confirm: every string is localised, no English fallback leaks in Arabic mode, layout direction matches the locale (`isRTL`), and the design-system mockups are honoured. Note any drift in this task's comment thread and fix in a follow-up.
 
