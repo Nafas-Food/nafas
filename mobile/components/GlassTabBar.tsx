@@ -74,18 +74,18 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
 
   const iconMap: Record<string, keyof typeof Feather.glyphMap> = {
     index: 'home',
-    explore: 'search',
+    explore: 'compass',
     favorites: 'heart',
     orders: 'shopping-bag',
     profile: 'user',
   };
 
   const labelMap: Record<string, string> = {
-    index: t('tabs.home'),
-    explore: t('tabs.explore'),
-    favorites: t('tabs.favorites'),
-    orders: t('tabs.orders'),
-    profile: t('tabs.profile'),
+    index: t('customerTabs.home'),
+    explore: t('customerTabs.explore'),
+    favorites: t('customerTabs.favorites'),
+    orders: t('customerTabs.orders'),
+    profile: t('customerTabs.profile'),
   };
 
   return (

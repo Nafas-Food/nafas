@@ -6,6 +6,7 @@ import { StorageModule } from '../storage/storage.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
 import { ChefsController } from './chefs.controller';
+import { ChefsDiscoveryController } from './chefs-discovery.controller';
 import { ChefsService } from './chefs.service';
 import { ChefApplicationService } from './chef-application.service';
 
@@ -18,7 +19,7 @@ import { ChefApplicationService } from './chef-application.service';
     NotificationsModule,
     UsersModule,
   ],
-  controllers: [ChefsController],
+  controllers: [ChefsController, ChefsDiscoveryController],
   providers: [ChefsService, ChefApplicationService],
   exports: [ChefsService, ChefApplicationService],
 })
