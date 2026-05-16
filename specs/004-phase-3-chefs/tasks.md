@@ -999,7 +999,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Admin DTOs + service
 
-- [ ] T030 [P] [US2] Create the admin DTOs. Create `<repo>\backend\src\modules\admin\dto\reject-application.dto.ts`:
+- [X] T030 [P] [US2] Create the admin DTOs. Create `<repo>\backend\src\modules\admin\dto\reject-application.dto.ts`:
   ```ts
   import { IsString, Length } from 'class-validator';
   import { ApiProperty } from '@nestjs/swagger';
@@ -1012,7 +1012,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   And `<repo>\backend\src\modules\admin\dto\revoke-chef.dto.ts` with the same shape and class name `RevokeChefDto`.
 
-- [ ] T031 [US2] Create the `AdminService` (verify / reject / revoke transactions, research R3). Create `<repo>\backend\src\modules\admin\admin.service.ts`:
+- [X] T031 [US2] Create the `AdminService` (verify / reject / revoke transactions, research R3). Create `<repo>\backend\src\modules\admin\admin.service.ts`:
   ```ts
   import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
   import { Role } from '@prisma/client';
@@ -1167,7 +1167,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   **Note**: `tx.chef.update({ data: { deletedAt: new Date(), isVerified: false } })` is the soft-delete inside the transaction. The Phase 0 `softDelete` extension method is also valid here, but inside a transaction the bare `update` is simpler and equivalent — the CI grep gate (`ci-no-hard-delete.sh`) only blocks `.delete(` calls.
 
-- [ ] T032 [US2] Create the `AdminChefsController`. Create `<repo>\backend\src\modules\admin\admin-chefs.controller.ts`:
+- [X] T032 [US2] Create the `AdminChefsController`. Create `<repo>\backend\src\modules\admin\admin-chefs.controller.ts`:
   ```ts
   import { Body, Controller, Delete, Get, HttpCode, Ip, Param, ParseIntPipe, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -1241,7 +1241,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T033 [US2] Create the `AdminModule`. Create `<repo>\backend\src\modules\admin\admin.module.ts`:
+- [X] T033 [US2] Create the `AdminModule`. Create `<repo>\backend\src\modules\admin\admin.module.ts`:
   ```ts
   import { Module } from '@nestjs/common';
   import { PrismaModule } from '../../common/prisma/prisma.module';
@@ -1262,17 +1262,17 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Backend `GET /auth/me` extension to include pending application
 
-- [ ] T034 [US2] Extend `GET /auth/me` to surface the user's pending Chef application. Open `<repo>\backend\src\modules\auth\auth.service.ts` and find the `getMe` (or equivalent) method. In its return shape, **add** a `pendingApplication: { applicationId: string } | null` field, populated by reading `prismaService.extended.chef.findFirst({ where: { userId, isVerified: false, rejectedAt: null } })` (only matches the genuinely pending state — rejected and revoked rows are excluded). Return `null` when no pending row exists.
+- [X] T034 [US2] Extend `GET /auth/me` to surface the user's pending Chef application. Open `<repo>\backend\src\modules\auth\auth.service.ts` and find the `getMe` (or equivalent) method. In its return shape, **add** a `pendingApplication: { applicationId: string } | null` field, populated by reading `prismaService.extended.chef.findFirst({ where: { userId, isVerified: false, rejectedAt: null } })` (only matches the genuinely pending state — rejected and revoked rows are excluded). Return `null` when no pending row exists.
 
   Also extend the `MeResponseDto` shape (in the relevant DTO file under `<repo>\backend\src\modules\auth\dto\` or `<repo>\backend\src\modules\users\dto\`) to declare the new optional field. Do not remove or rename any existing field.
 
 ### Admin web pages (US2)
 
-- [ ] T035 [P] [US2] Create the admin sign-in page. Create `<repo>\admin\app\(auth)\sign-in\page.tsx` — a simple form with `phone` + `password` inputs that calls `signIn('credentials', { phone, password, callbackUrl: '/dashboard' })` from `next-auth/react`. On failure, render an inline error. Style it against the `nafas-design-system` skill admin layout. Plain Tailwind, no fancy dnd here.
+- [X] T035 [P] [US2] Create the admin sign-in page. Create `<repo>\admin\app\(auth)\sign-in\page.tsx` — a simple form with `phone` + `password` inputs that calls `signIn('credentials', { phone, password, callbackUrl: '/dashboard' })` from `next-auth/react`. On failure, render an inline error. Style it against the `nafas-design-system` skill admin layout. Plain Tailwind, no fancy dnd here.
 
-- [ ] T036 [P] [US2] Create the admin layout shell + sidebar. Create `<repo>\admin\components\Sidebar.tsx` listing three sidebar links — **Chef Applications** (`/dashboard/chef-applications`), **Categories** (`/dashboard/categories`), **Chefs** (`/dashboard/chefs`). Use Tailwind tokens that bind to the design-system palette (the admin Tailwind config Phase 0 set up already maps to the design system). Create `<repo>\admin\app\(dashboard)\layout.tsx` that wraps children in a flex layout with `<Sidebar />` on the left and a top header showing the signed-in admin's name and a Sign-out button (calling `signOut({ callbackUrl: '/sign-in' })`). Gate the layout: if the session role is not `admin`, `redirect('/sign-in')` server-side (use Next.js `getServerSession(authOptions)` + `redirect` from `next/navigation`).
+- [X] T036 [P] [US2] Create the admin layout shell + sidebar. Create `<repo>\admin\components\Sidebar.tsx` listing three sidebar links — **Chef Applications** (`/dashboard/chef-applications`), **Categories** (`/dashboard/categories`), **Chefs** (`/dashboard/chefs`). Use Tailwind tokens that bind to the design-system palette (the admin Tailwind config Phase 0 set up already maps to the design system). Create `<repo>\admin\app\(dashboard)\layout.tsx` that wraps children in a flex layout with `<Sidebar />` on the left and a top header showing the signed-in admin's name and a Sign-out button (calling `signOut({ callbackUrl: '/sign-in' })`). Gate the layout: if the session role is not `admin`, `redirect('/sign-in')` server-side (use Next.js `getServerSession(authOptions)` + `redirect` from `next/navigation`).
 
-- [ ] T037 [US2] Create the admin chef-applications page. Create `<repo>\admin\app\(dashboard)\chef-applications\page.tsx`. The page is a "use client" component that:
+- [X] T037 [US2] Create the admin chef-applications page. Create `<repo>\admin\app\(dashboard)\chef-applications\page.tsx`. The page is a "use client" component that:
   1. Fetches `GET /api/v1/admin/chefs/pending` via `adminApi` (T019) on mount and on refresh.
   2. Renders a table with columns: Applicant Name, Phone, Chef Name, Bio (truncated), Min Order Price, Submitted At, Actions.
   3. Each row has two buttons: **Verify** (opens `ConfirmDialog` — see T038 — with "Are you sure?" copy) and **Reject** (opens a `ConfirmDialog` with a reason textarea, required, 1–1000 chars).
@@ -1280,9 +1280,9 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   5. On Reject confirm: `adminApi.patch('/admin/chefs/{id}/reject', { reason })`. Refresh the queue. Toast success.
   6. Handle `409 APPLICATION_NOT_PENDING` by toasting "This application was already acted on by another admin" and refreshing the queue.
 
-- [ ] T038 [P] [US2] Create the reusable `ConfirmDialog` component. Create `<repo>\admin\components\ConfirmDialog.tsx`. Props: `{ open: boolean; title: string; description: string; confirmLabel: string; onConfirm: () => Promise<void>; onClose: () => void; reasonRequired?: boolean }`. When `reasonRequired` is true, render a textarea (1–1000 chars, required) and pass its value to `onConfirm` via a closure. Use Tailwind for styling; no animation library needed.
+- [X] T038 [P] [US2] Create the reusable `ConfirmDialog` component. Create `<repo>\admin\components\ConfirmDialog.tsx`. Props: `{ open: boolean; title: string; description: string; confirmLabel: string; onConfirm: () => Promise<void>; onClose: () => void; reasonRequired?: boolean }`. When `reasonRequired` is true, render a textarea (1–1000 chars, required) and pass its value to `onConfirm` via a closure. Use Tailwind for styling; no animation library needed.
 
-- [ ] T039 [US2] Create the admin verified-chefs page (with the Revoke action). Create `<repo>\admin\app\(dashboard)\chefs\page.tsx`. The page mirrors T037 but:
+- [X] T039 [US2] Create the admin verified-chefs page (with the Revoke action). Create `<repo>\admin\app\(dashboard)\chefs\page.tsx`. The page mirrors T037 but:
   1. Fetches `GET /api/v1/admin/chefs` (the verified-only list).
   2. Each row has a single **Revoke** action that opens `ConfirmDialog` with a reason textarea, required.
   3. On confirm: `adminApi.delete('/admin/chefs/{id}', { data: { reason } })`. Refresh the list. Toast success.
@@ -1290,9 +1290,9 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Mobile US2: chef tab bar placeholders + role-driven nav switch
 
-- [ ] T040 [P] [US2] Create the chef tab bar layout. Create `<repo>\mobile\app\(chef)\_layout.tsx` with an Expo Router `Tabs` component. Six tabs: dashboard, orders, menu, stats, schedule, profile. Use `t('chefTabs.*')` for tab labels. Use `useColors()` for tint colors. Tab icons via `@expo/vector-icons` Feather set — pick from `bar-chart-2`, `clipboard`, `menu`, `pie-chart`, `calendar`, `user`. Match the design-system "floating pill" chef tab-bar treatment (see the `nafas-design-system` skill mockup).
+- [X] T040 [P] [US2] Create the chef tab bar layout. Create `<repo>\mobile\app\(chef)\_layout.tsx` with an Expo Router `Tabs` component. Six tabs: dashboard, orders, menu, stats, schedule, profile. Use `t('chefTabs.*')` for tab labels. Use `useColors()` for tint colors. Tab icons via `@expo/vector-icons` Feather set — pick from `bar-chart-2`, `clipboard`, `menu`, `pie-chart`, `calendar`, `user`. Match the design-system "floating pill" chef tab-bar treatment (see the `nafas-design-system` skill mockup).
 
-- [ ] T041 [P] [US2] Create the chef tab placeholders. Create six files, each a minimal screen rendering its own `t(key)` title and a "Coming soon" body. Phase 3 ships only the profile tab as a real screen (T046–T047); the others are placeholders for Phases 4–9:
+- [X] T041 [P] [US2] Create the chef tab placeholders. Create six files, each a minimal screen rendering its own `t(key)` title and a "Coming soon" body. Phase 3 ships only the profile tab as a real screen (T046–T047); the others are placeholders for Phases 4–9:
   - `<repo>\mobile\app\(chef)\dashboard.tsx`
   - `<repo>\mobile\app\(chef)\orders.tsx`
   - `<repo>\mobile\app\(chef)\menu.tsx`

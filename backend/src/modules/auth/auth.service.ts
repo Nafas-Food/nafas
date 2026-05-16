@@ -315,7 +315,18 @@ export class AuthService {
         message: 'User not found.',
       });
     }
-    return { user: serializeUser(user) };
+
+    const pendingApplication = await this.prisma.extended.chef.findFirst({
+      where: { userId, isVerified: false, rejectedAt: null },
+      select: { id: true },
+    });
+
+    return {
+      user: serializeUser(user),
+      pendingApplication: pendingApplication
+        ? { applicationId: pendingApplication.id }
+        : null,
+    };
   }
 
   async signOut(payload: { sub: string; jti: string; exp: number }) {
