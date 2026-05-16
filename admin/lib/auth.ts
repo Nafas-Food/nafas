@@ -2,9 +2,12 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.BACKEND_URL;
-if (!BACKEND_URL) {
-  throw new Error('BACKEND_URL is required but not set. Add it to your .env.local file.');
+function getBackendUrl(): string {
+  const url = process.env.BACKEND_URL;
+  if (!url) {
+    throw new Error('BACKEND_URL is required but not set. Add it to your .env.local file.');
+  }
+  return url;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -20,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.phone || !credentials.password) return null;
         try {
           const res = await axios.post(
-            `${BACKEND_URL}/api/v1/auth/sign-in`,
+            `${getBackendUrl()}/api/v1/auth/sign-in`,
             { phone: credentials.phone, password: credentials.password },
             { timeout: 10_000 },
           );
