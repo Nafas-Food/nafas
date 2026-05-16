@@ -69,6 +69,7 @@ enum NotificationType {
   order_review
   chef_verified
   chef_rejected
+  chef_revoked
   system
 }
 
@@ -142,6 +143,8 @@ model Chef {
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
   deletedAt       DateTime?    @map("deleted_at")
+  rejectedAt      DateTime?    @map("rejected_at")
+  verifiedAt      DateTime?    @map("verified_at")
 
   user            User         @relation(fields: [userId], references: [id])
   menus           Menu[]
@@ -149,6 +152,7 @@ model Chef {
   reviews         UserReview[]
   favorites       Favorite[]
 
+  @@index([isVerified, latitude, longitude])
   @@map("chefs")
 }
 

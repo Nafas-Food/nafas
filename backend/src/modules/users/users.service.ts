@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 import { TWILIO_VERIFY_CLIENT } from '../twilio/twilio-verify.client.interface';
@@ -146,6 +147,58 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { fcmToken },
+    });
+  }
+
+  /**
+   * Phase 3 R6 chokepoint — the ONLY method that mutates User.role.
+   * Callable only from inside the modular monolith (admin.service uses it
+   * inside the verify / revoke prisma.$transaction; pass `tx` to participate).
+   */
+  async setRole(
+    userId: string,
+    nextRole: Role,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+
+    // Prevent role changes on soft-deleted users
+    const user = await client.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      select: { role: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'AUTH_UNAUTHENTICATED',
+        message: 'Account not found.',
+      });
+    }
+
+    // Phase 3 only allows customer ↔ chef transitions
+    const allowed = new Set<Role>(['customer', 'chef']);
+    if (!allowed.has(nextRole)) {
+      throw new BadRequestException({
+        code: 'INVALID_ROLE_TRANSITION',
+        message: `Role transition to ${nextRole} is not permitted.`,
+      });
+    }
+    const current = user.role;
+    if (current === nextRole) {
+      return; // no-op
+    }
+    if (!(
+      (current === 'customer' && nextRole === 'chef') ||
+      (current === 'chef' && nextRole === 'customer')
+    )) {
+      throw new BadRequestException({
+        code: 'INVALID_ROLE_TRANSITION',
+        message: `Cannot transition from ${current} to ${nextRole}.`,
+      });
+    }
+
+    await client.user.update({
+      where: { id: userId, deletedAt: null },
+      data:  { role: nextRole },
     });
   }
 }
