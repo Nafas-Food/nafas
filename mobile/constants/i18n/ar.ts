@@ -222,6 +222,7 @@ export const ar: I18nDict = {
     schedule: 'الجدول',
     profile: 'الحساب',
   },
+  comingSoon: 'قريباً',
   errors: {
     AUTH_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',
     AUTH_INVALID_CREDENTIALS: 'رقم الهاتف أو كلمة المرور غير صحيحة.',

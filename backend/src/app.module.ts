@@ -21,6 +21,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MenusModule } from './modules/menus/menus.module';
 import { ChefsModule } from './modules/chefs/chefs.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -50,6 +51,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     NotificationsModule,
     MenusModule,
     ChefsModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

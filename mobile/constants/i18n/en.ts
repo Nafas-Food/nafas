@@ -225,6 +225,7 @@ export const en = {
     schedule: 'Schedule',
     profile: 'Profile',
   },
+  comingSoon: 'Coming soon',
   errors: {
     AUTH_OTP_INVALID: 'The code is incorrect or has expired. Try again.',
     AUTH_INVALID_CREDENTIALS: 'Phone or password is incorrect.',
