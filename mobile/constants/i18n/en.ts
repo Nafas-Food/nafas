@@ -7,6 +7,7 @@ export const en = {
   common: {
     retry: 'Try again',
     cancel: 'Cancel',
+    back: 'Back',
     submit: 'Submit',
     loading: 'Loading...',
     networkError: 'Network error. Check your connection and try again.',

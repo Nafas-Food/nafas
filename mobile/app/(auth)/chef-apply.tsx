@@ -129,7 +129,7 @@ export default function ChefApplyScreen() {
           hitSlop={12}
           style={styles.backBtn}
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t('common.back')}
         >
           <Feather
             name={isRTL ? 'chevron-right' : 'chevron-left'}
