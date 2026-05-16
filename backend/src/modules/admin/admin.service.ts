@@ -84,7 +84,9 @@ export class AdminService {
           data: { chefId },
         });
       } catch (err) {
-        this.logger.error(`FCM dispatch failed for verify: ${(err as Error).message}`);
+        this.logger.error(
+          `FCM dispatch failed for verify: ${(err as Error).message}`,
+        );
       }
       return result.chef;
     } catch (err) {
@@ -141,7 +143,9 @@ export class AdminService {
           data: { chefId, reason },
         });
       } catch (err) {
-        this.logger.error(`FCM dispatch failed for reject: ${(err as Error).message}`);
+        this.logger.error(
+          `FCM dispatch failed for reject: ${(err as Error).message}`,
+        );
       }
       return result.chef;
     } catch (err) {
@@ -199,7 +203,9 @@ export class AdminService {
           data: { chefId, reason },
         });
       } catch (err) {
-        this.logger.error(`FCM dispatch failed for revoke: ${(err as Error).message}`);
+        this.logger.error(
+          `FCM dispatch failed for revoke: ${(err as Error).message}`,
+        );
       }
     } catch (err) {
       if (err instanceof ConflictException) {

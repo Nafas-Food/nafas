@@ -44,6 +44,11 @@ export default function ProfileScreen() {
       onPress: () => router.push('/(tabs)/profile/addresses'),
     },
     {
+      icon: 'briefcase' as const,
+      label: t('chefApply.screenTitle'),
+      onPress: () => router.push('/(auth)/chef-apply'),
+    },
+    {
       icon: 'log-out' as const,
       label: t('profile.signOut'),
       onPress: confirmSignOut,

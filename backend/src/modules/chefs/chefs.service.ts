@@ -1,10 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  PayloadTooLargeException,
+  UnsupportedMediaTypeException,
+} from '@nestjs/common';
+import { Prisma, Chef } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ChefApplicationService } from './chef-application.service';
 import { ChefEventLogger } from '../../common/logging/chef-event.logger';
 import { ApplyChefDto } from './dto/apply-chef.dto';
-import { ChefPrivateProfileResponseDto } from './dto/chef.response.dto';
+import {
+  ChefCardResponseDto,
+  ChefPrivateProfileResponseDto,
+  ChefPublicProfileResponseDto,
+} from './dto/chef.response.dto';
+import { DiscoveryQueryDto } from './dto/discovery-query.dto';
+import {
+  UpdateChefProfileDto,
+  UpdateAvailabilityDto,
+} from './dto/update-chef-profile.dto';
+import { MenusService } from '../menus/menus.service';
+import { StorageService } from '../storage/storage.service';
+import { haversineKm } from './haversine';
 import {
   DEFAULT_CHEF_LOGO_URL,
   DEFAULT_CHEF_BANNER_URL,
@@ -16,7 +33,146 @@ export class ChefsService {
     private readonly prismaService: PrismaService,
     private readonly chefApplicationService: ChefApplicationService,
     private readonly chefEventLogger: ChefEventLogger,
+    private readonly menusService: MenusService,
+    private readonly storageService: StorageService,
   ) {}
+
+  private readonly ACCEPTED_IMAGE_MIMES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]);
+  private readonly MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  /** Single-find ownership shape per Phase 2 R4 — returns 404 NotFoundException when the chef is not owned by `userId`. */
+  async findOwnedOrThrow(userId: string): Promise<Chef> {
+    const chef = await this.prismaService.extended.chef.findFirst({
+      where: { userId, isVerified: true },
+    });
+    if (!chef) throw new NotFoundException({ code: 'CHEF_NOT_FOUND' });
+    return chef;
+  }
+
+  async updateProfile(
+    userId: string,
+    sourceIp: string,
+    dto: UpdateChefProfileDto,
+  ): Promise<ChefPrivateProfileResponseDto> {
+    const chef = await this.findOwnedOrThrow(userId);
+    const updated = await this.prismaService.chef.update({
+      where: { id: chef.id },
+      data: {
+        ...(dto.chefName !== undefined ? { chefName: dto.chefName } : {}),
+        ...(dto.bio !== undefined ? { bio: dto.bio } : {}),
+        ...(dto.latitude !== undefined
+          ? { latitude: new Prisma.Decimal(dto.latitude) }
+          : {}),
+        ...(dto.longitude !== undefined
+          ? { longitude: new Prisma.Decimal(dto.longitude) }
+          : {}),
+        ...(dto.minOrderPrice !== undefined
+          ? { minOrderPrice: new Prisma.Decimal(dto.minOrderPrice) }
+          : {}),
+      },
+    });
+    this.chefEventLogger.profileUpdateSuccess({
+      actorChefId: userId,
+      chefId: updated.id,
+      sourceIp,
+    });
+    const categoryIds = await this.menusService.categoriesForChef(updated.id);
+    return ChefPrivateProfileResponseDto.fromEntity(updated, categoryIds);
+  }
+
+  async toggleOpen(
+    userId: string,
+    sourceIp: string,
+    dto: UpdateAvailabilityDto,
+  ): Promise<ChefPrivateProfileResponseDto> {
+    const chef = await this.findOwnedOrThrow(userId);
+    const updated = await this.prismaService.chef.update({
+      where: { id: chef.id },
+      data: { isOpen: dto.isOpen },
+    });
+    this.chefEventLogger.availabilityToggleSuccess({
+      actorChefId: userId,
+      chefId: updated.id,
+      isOpen: dto.isOpen,
+      sourceIp,
+    });
+    const categoryIds = await this.menusService.categoriesForChef(updated.id);
+    return ChefPrivateProfileResponseDto.fromEntity(updated, categoryIds);
+  }
+
+  async replaceLogo(
+    userId: string,
+    sourceIp: string,
+    file: { mimetype: string; size: number; buffer: Buffer },
+  ): Promise<ChefPrivateProfileResponseDto> {
+    return this.replaceChefImage(userId, sourceIp, file, 'logo');
+  }
+
+  async replaceBanner(
+    userId: string,
+    sourceIp: string,
+    file: { mimetype: string; size: number; buffer: Buffer },
+  ): Promise<ChefPrivateProfileResponseDto> {
+    return this.replaceChefImage(userId, sourceIp, file, 'banner');
+  }
+
+  private async replaceChefImage(
+    userId: string,
+    sourceIp: string,
+    file: { mimetype: string; size: number; buffer: Buffer },
+    kind: 'logo' | 'banner',
+  ): Promise<ChefPrivateProfileResponseDto> {
+    const event = kind === 'logo' ? 'logoUpload' : 'bannerUpload';
+    if (!this.ACCEPTED_IMAGE_MIMES.has(file.mimetype)) {
+      this.chefEventLogger[`${event}UnsupportedMediaType`]({
+        actorChefId: userId,
+        mimeType: file.mimetype,
+        sourceIp,
+      });
+      throw new UnsupportedMediaTypeException({
+        code: 'UNSUPPORTED_MEDIA_TYPE',
+      });
+    }
+    if (file.size > this.MAX_IMAGE_BYTES) {
+      this.chefEventLogger[`${event}PayloadTooLarge`]({
+        actorChefId: userId,
+        byteSize: file.size,
+        sourceIp,
+      });
+      throw new PayloadTooLargeException({ code: 'PAYLOAD_TOO_LARGE' });
+    }
+    const chef = await this.findOwnedOrThrow(userId);
+    const bucket = kind === 'logo' ? 'chef-logos' : 'chef-banners';
+    const ext =
+      file.mimetype === 'image/jpeg'
+        ? 'jpg'
+        : file.mimetype === 'image/png'
+          ? 'png'
+          : 'webp';
+    const path = `${chef.id}/${Date.now()}.${ext}`;
+    const publicUrl = await this.storageService.upload(
+      bucket,
+      path,
+      file.buffer,
+      file.mimetype,
+    );
+
+    const updated = await this.prismaService.chef.update({
+      where: { id: chef.id },
+      data: kind === 'logo' ? { logo: publicUrl } : { banner: publicUrl },
+    });
+    this.chefEventLogger[`${event}Success`]({
+      actorChefId: userId,
+      chefId: updated.id,
+      sourceIp,
+    });
+    const categoryIds = await this.menusService.categoriesForChef(updated.id);
+    return ChefPrivateProfileResponseDto.fromEntity(updated, categoryIds);
+  }
 
   async apply(
     userId: string,
@@ -59,5 +215,123 @@ export class ChefsService {
     });
 
     return ChefPrivateProfileResponseDto.fromEntity(chef, []);
+  }
+
+  async findManyForDiscovery(
+    query: DiscoveryQueryDto,
+  ): Promise<ChefCardResponseDto[]> {
+    const pageSize = query.pageSize ?? 30;
+    const cursor = query.cursor ?? 0;
+
+    const where: Prisma.ChefWhereInput = { isVerified: true };
+
+    if (query.categoryId) {
+      const chefIds = await this.menusService.chefIdsInCategory(
+        query.categoryId,
+      );
+      if (chefIds.length === 0) return [];
+      where.id = { in: chefIds };
+    }
+    if (query.q && query.q.trim().length > 0) {
+      const term = query.q.trim();
+      where.OR = [
+        { chefName: { contains: term, mode: 'insensitive' } },
+        { bio: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    let radiusKm: number | null = null;
+    if (query.lat !== undefined && query.lng !== undefined) {
+      radiusKm = Math.min(query.radiusKm ?? 15, 50);
+      const latOffset = radiusKm / 111;
+      const lngOffset =
+        radiusKm / (111 * Math.cos((query.lat * Math.PI) / 180));
+      where.latitude = {
+        gte: query.lat - latOffset,
+        lte: query.lat + latOffset,
+      } as unknown as Prisma.DecimalFilter;
+      where.longitude = {
+        gte: query.lng - lngOffset,
+        lte: query.lng + lngOffset,
+      } as unknown as Prisma.DecimalFilter;
+    }
+
+    const candidates = await this.prismaService.extended.chef.findMany({
+      where,
+      orderBy:
+        radiusKm === null
+          ? [{ isOpen: 'desc' }, { verifiedAt: 'desc' }]
+          : undefined,
+      skip: cursor,
+      take: pageSize,
+    });
+
+    if (radiusKm === null) {
+      return candidates.map((c) => ChefCardResponseDto.fromEntity(c));
+    }
+
+    const withDistance = candidates
+      .map((c) => ({
+        chef: c,
+        distanceKm: haversineKm(
+          query.lat!,
+          query.lng!,
+          Number(c.latitude),
+          Number(c.longitude),
+        ),
+      }))
+      .filter((x) => x.distanceKm <= radiusKm!)
+      .sort((a, b) => {
+        if (a.chef.isOpen !== b.chef.isOpen) return a.chef.isOpen ? -1 : 1;
+        return a.distanceKm - b.distanceKm;
+      });
+
+    return withDistance.map((x) =>
+      ChefCardResponseDto.fromEntity(x.chef, undefined, x.distanceKm),
+    );
+  }
+
+  async findPublicProfile(
+    chefId: string,
+  ): Promise<ChefPublicProfileResponseDto> {
+    const chef = await this.prismaService.extended.chef.findFirst({
+      where: { id: chefId, isVerified: true },
+    });
+    if (!chef) throw new NotFoundException({ code: 'CHEF_NOT_FOUND' });
+    const categoryIds = await this.menusService.categoriesForChef(chefId);
+    return ChefPublicProfileResponseDto.fromEntity(chef, categoryIds);
+  }
+
+  async findReviewsForChef(chefId: string, _cursor = 0, _pageSize = 20) {
+    // Phase 7 will replace this stub and consume _cursor / _pageSize.
+    // For Phase 3, just confirm the chef exists then return [].
+    const chef = await this.prismaService.extended.chef.findFirst({
+      where: { id: chefId, isVerified: true },
+      select: { id: true },
+    });
+    if (!chef) throw new NotFoundException({ code: 'CHEF_NOT_FOUND' });
+    return [] as Array<{
+      id: string;
+      userFullName: string;
+      rating: number;
+      body: string;
+      images: string[];
+      createdAt: string;
+    }>;
+  }
+
+  /**
+   * Chef-self read used by the mobile editor to populate the form on
+   * mount. Returns the private profile shape (lat/lng + categoryIds).
+   * Spec T056/T059 implicitly requires this read but the task list
+   * never names the endpoint — without it, the editor screen has no
+   * way to display the chef's existing data on cold start.
+   */
+  async findOwnPrivateProfile(
+    userId: string,
+  ): Promise<ChefPrivateProfileResponseDto> {
+    const chef = await this.findOwnedOrThrow(userId);
+    const categoryIds = await this.menusService.categoriesForChef(chef.id);
+    return ChefPrivateProfileResponseDto.fromEntity(chef, categoryIds);
   }
 }

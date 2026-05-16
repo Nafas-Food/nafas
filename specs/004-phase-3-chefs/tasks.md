@@ -1312,7 +1312,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Discovery DTOs + Haversine + service
 
-- [ ] T042 [P] [US3] Create `DiscoveryQueryDto`. Create `<repo>\backend\src\modules\chefs\dto\discovery-query.dto.ts`:
+- [X] T042 [P] [US3] Create `DiscoveryQueryDto`. Create `<repo>\backend\src\modules\chefs\dto\discovery-query.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsInt, IsLatitude, IsLongitude, IsNumber, IsOptional, IsString, IsUUID, Length, Max, Min } from 'class-validator';
@@ -1330,7 +1330,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T043 [P] [US3] Create the pure-JS Haversine helper. Create `<repo>\backend\src\modules\chefs\haversine.ts`:
+- [X] T043 [P] [US3] Create the pure-JS Haversine helper. Create `<repo>\backend\src\modules\chefs\haversine.ts`:
   ```ts
   /**
    * Haversine great-circle distance in kilometres between two lat/lng pairs.
@@ -1353,12 +1353,12 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T044 [P] [US3] Create `ChefCardResponseDto` + `ChefPublicProfileResponseDto`. Add to `<repo>\backend\src\modules\chefs\dto\chef.response.dto.ts` (same file as T021):
+- [X] T044 [P] [US3] Create `ChefCardResponseDto` + `ChefPublicProfileResponseDto`. Add to `<repo>\backend\src\modules\chefs\dto\chef.response.dto.ts` (same file as T021):
   - `ChefCardResponseDto` — Discovery list shape. Carries everything in `ChefPrivateProfileResponseDto` EXCEPT `latitude` / `longitude`, plus `distanceKm?: number`. **Per FR-039 the public surface NEVER returns lat/lng**; the optional `distanceKm` is the only location-derived value clients receive.
   - `ChefPublicProfileResponseDto` — Identical to `ChefCardResponseDto` plus `categoryIds: string[]`. (The chef's lat/lng remains private even on the public profile detail page.)
   Each has a `static fromEntity(chef, categoryIds?, distanceKm?)` helper that excludes lat/lng from the returned object.
 
-- [ ] T045 [US3] Add discovery + public-profile + reviews methods to `ChefsService`. Open `<repo>\backend\src\modules\chefs\chefs.service.ts` (created at T023). Add these methods (preserve the existing `apply()` method):
+- [X] T045 [US3] Add discovery + public-profile + reviews methods to `ChefsService`. Open `<repo>\backend\src\modules\chefs\chefs.service.ts` (created at T023). Add these methods (preserve the existing `apply()` method):
   ```ts
   // import additions:
   // import { NotFoundException } from '@nestjs/common';
@@ -1442,7 +1442,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   **`Number(c.latitude)` is acceptable here** even though the Phase 0 convention says "never `Number(decimal)`". The latitude / longitude columns are not monetary — they are geographic decimals whose precision needs are well within JS Number range, and the Haversine formula needs `number` not `Decimal`. This is explicitly carved out as the only allowed `Number(decimal)` in Phase 3.
 
-- [ ] T046 [US3] Add discovery + profile endpoints to `ChefsController`. Open `<repo>\backend\src\modules\chefs\chefs.controller.ts` (created at T024). Add a second controller block targeting the public-discovery base path. Because the chef-self endpoints live at `/chef/*` and public discovery lives at `/chefs/*`, the simplest approach is to add a **second controller class** in the same file (or a sibling file `chefs-discovery.controller.ts`). Recommended: create `<repo>\backend\src\modules\chefs\chefs-discovery.controller.ts`:
+- [X] T046 [US3] Add discovery + profile endpoints to `ChefsController`. Open `<repo>\backend\src\modules\chefs\chefs.controller.ts` (created at T024). Add a second controller block targeting the public-discovery base path. Because the chef-self endpoints live at `/chef/*` and public discovery lives at `/chefs/*`, the simplest approach is to add a **second controller class** in the same file (or a sibling file `chefs-discovery.controller.ts`). Recommended: create `<repo>\backend\src\modules\chefs\chefs-discovery.controller.ts`:
   ```ts
   import { Controller, Get, Param, ParseIntPipe, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -1484,7 +1484,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Categories public-read endpoint (US3 needs the chip data)
 
-- [ ] T047 [P] [US3] Create the `CategoriesService` with the cached `listActive` method (research R7). Create `<repo>\backend\src\modules\categories\categories.service.ts`:
+- [X] T047 [P] [US3] Create the `CategoriesService` with the cached `listActive` method (research R7). Create `<repo>\backend\src\modules\categories\categories.service.ts`:
   ```ts
   import { Injectable } from '@nestjs/common';
   import { PrismaService } from '../../common/prisma/prisma.service';
@@ -1516,7 +1516,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   (T060 / T061 / T062 etc. will add `create`, `update`, `softDelete`, `reorder` to this same file and each will call `this.invalidateCache()` at the end.)
 
-- [ ] T048 [P] [US3] Create the `CategoriesController` with the public-read endpoint. Create `<repo>\backend\src\modules\categories\categories.controller.ts`:
+- [X] T048 [P] [US3] Create the `CategoriesController` with the public-read endpoint. Create `<repo>\backend\src\modules\categories\categories.controller.ts`:
   ```ts
   import { Controller, Get, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -1539,7 +1539,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   (Later, T063 adds the admin-categories controller for mutations. Keep public reads and admin writes in separate controllers — same module though.)
 
-- [ ] T049 [US3] Create the `CategoriesModule`. Create `<repo>\backend\src\modules\categories\categories.module.ts`:
+- [X] T049 [US3] Create the `CategoriesModule`. Create `<repo>\backend\src\modules\categories\categories.module.ts`:
   ```ts
   import { Module } from '@nestjs/common';
   import { PrismaModule } from '../../common/prisma/prisma.module';
@@ -1559,7 +1559,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Mobile US3: discovery list, chef public profile, customer tab bar
 
-- [ ] T050 [P] [US3] Create the mobile chef-discovery service. Create `<repo>\mobile\services\chefs.ts`:
+- [X] T050 [P] [US3] Create the mobile chef-discovery service. Create `<repo>\mobile\services\chefs.ts`:
   ```ts
   import { api } from './api';
 
@@ -1599,7 +1599,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T051 [P] [US3] Create the mobile categories service. Create `<repo>\mobile\services\categories.ts`:
+- [X] T051 [P] [US3] Create the mobile categories service. Create `<repo>\mobile\services\categories.ts`:
   ```ts
   import { api } from './api';
 
@@ -1619,14 +1619,14 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T052 [P] [US3] Create the customer tab bar layout + placeholder tabs. Create `<repo>\mobile\app\(tabs)\_layout.tsx` with five tabs: home, explore, favorites, orders, profile. Tab labels via `t('customerTabs.*')`. Tab icons via Feather: `home`, `compass`, `heart`, `shopping-bag`, `user`. Then create the placeholder tab screens:
+- [X] T052 [P] [US3] Create the customer tab bar layout + placeholder tabs. Create `<repo>\mobile\app\(tabs)\_layout.tsx` with five tabs: home, explore, favorites, orders, profile. Tab labels via `t('customerTabs.*')`. Tab icons via Feather: `home`, `compass`, `heart`, `shopping-bag`, `user`. Then create the placeholder tab screens:
   - `<repo>\mobile\app\(tabs)\index.tsx` (Home placeholder — Phase 4 fills in)
   - `<repo>\mobile\app\(tabs)\favorites.tsx` (Phase 7 placeholder)
   - `<repo>\mobile\app\(tabs)\orders.tsx` (Phase 6 placeholder)
   - `<repo>\mobile\app\(tabs)\profile\index.tsx` — Phase 10 placeholder, BUT include a "Become a chef" CTA that navigates to `/(auth)/chef-apply`. This is the entry point US1 needs.
   Each placeholder uses `useColors()` + `t(key)` + `<SafeAreaView>`.
 
-- [ ] T053 [US3] Create the chef discovery screen (the first **real** customer-facing screen). Create `<repo>\mobile\app\(tabs)\explore.tsx`. Behaviour:
+- [X] T053 [US3] Create the chef discovery screen (the first **real** customer-facing screen). Create `<repo>\mobile\app\(tabs)\explore.tsx`. Behaviour:
   1. On mount, fetch `listCategories()` (T051) and render category chips horizontally at the top. Selecting one sets `categoryId` filter state; selecting the active one again clears the filter.
   2. Render a search input bound to a `q` state, debounced 400 ms.
   3. Fetch `discoverChefs({ categoryId, q })` and render the result as a vertical list of `<ChefCard>` rows. Each card shows banner (with logo overlapped in the corner), chef name, bio (truncated 2 lines), `t('discovery.openBadge')` or `t('discovery.closedBadge')` pill, `t('discovery.minOrder', { amount: card.minOrderPrice })`, and (when present) `t('discovery.distanceFormat', { km: card.distanceKm.toFixed(1) })`.
@@ -1635,7 +1635,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   6. Empty state: `t('discovery.emptyState')`.
   Reference the design-system "chef card" preview for layout proportions. Use `useColors()` for every color.
 
-- [ ] T054 [P] [US3] Create the public chef profile screen. Create `<repo>\mobile\app\chef\[id].tsx`. Reads `id` from `useLocalSearchParams()`. Fetches `getChefPublicProfile(id)` (T050) on mount. Layout (top to bottom):
+- [X] T054 [P] [US3] Create the public chef profile screen. Create `<repo>\mobile\app\chef\[id].tsx`. Reads `id` from `useLocalSearchParams()`. Fetches `getChefPublicProfile(id)` (T050) on mount. Layout (top to bottom):
   - Banner image (full-width, tappable to enlarge).
   - Logo (overlapping the banner's bottom edge — match the design-system mockup).
   - Chef name (heading) + Open/Closed pill.
@@ -1658,7 +1658,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Chef-profile DTOs + service methods
 
-- [ ] T055 [P] [US4] Create `UpdateChefProfileDto` and `UpdateAvailabilityDto`. Create `<repo>\backend\src\modules\chefs\dto\update-chef-profile.dto.ts`:
+- [X] T055 [P] [US4] Create `UpdateChefProfileDto` and `UpdateAvailabilityDto`. Create `<repo>\backend\src\modules\chefs\dto\update-chef-profile.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsBoolean, IsLatitude, IsLongitude, IsNumber, IsOptional, IsPositive, IsString, Length } from 'class-validator';
@@ -1677,7 +1677,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T056 [US4] Add `findOwnedOrThrow`, `updateProfile`, `toggleOpen`, `replaceLogo`, `replaceBanner` to `ChefsService`. Open `<repo>\backend\src\modules\chefs\chefs.service.ts`. Add:
+- [X] T056 [US4] Add `findOwnedOrThrow`, `updateProfile`, `toggleOpen`, `replaceLogo`, `replaceBanner` to `ChefsService`. Open `<repo>\backend\src\modules\chefs\chefs.service.ts`. Add:
   ```ts
   // import additions (merge with existing imports — do not duplicate lines):
   // import { BadRequestException, PayloadTooLargeException, UnsupportedMediaTypeException } from '@nestjs/common';
@@ -1766,7 +1766,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T057 [US4] Add the chef-self endpoints to `ChefsController` (T024). Open `<repo>\backend\src\modules\chefs\chefs.controller.ts`. Add these handlers to the existing controller class:
+- [X] T057 [US4] Add the chef-self endpoints to `ChefsController` (T024). Open `<repo>\backend\src\modules\chefs\chefs.controller.ts`. Add these handlers to the existing controller class:
   ```ts
   // import additions:
   // import { Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
@@ -1826,7 +1826,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Mobile US4: chef profile editor
 
-- [ ] T058 [P] [US4] Create the mobile chef-profile service. Create `<repo>\mobile\services\chefProfile.ts`:
+- [X] T058 [P] [US4] Create the mobile chef-profile service. Create `<repo>\mobile\services\chefProfile.ts`:
   ```ts
   import { api } from './api';
   import type { ChefPublicProfile } from './chefs';
@@ -1865,7 +1865,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T059 [US4] Create the chef profile editor screen. Create `<repo>\mobile\app\(chef)\profile.tsx`. This is the **only real chef-side screen** Phase 3 ships (others are placeholders). Layout (top to bottom):
+- [X] T059 [US4] Create the chef profile editor screen. Create `<repo>\mobile\app\(chef)\profile.tsx`. This is the **only real chef-side screen** Phase 3 ships (others are placeholders). Layout (top to bottom):
   1. Header: banner (tappable to replace) + logo overlapping (tappable to replace).
   2. Kitchen-open chip: a segmented control with `t('chefProfile.editor.openToggle')` / `t('chefProfile.editor.closeToggle')`. On change, optimistically toggle then call `toggleChefAvailability` (T058).
   3. Editable fields: chef name, bio (multiline), min order price (numeric keyboard).
@@ -1887,7 +1887,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Categories DTOs + admin endpoints
 
-- [ ] T060 [P] [US5] Create the category mutation DTOs. Create `<repo>\backend\src\modules\categories\dto\create-category.dto.ts`:
+- [X] T060 [P] [US5] Create the category mutation DTOs. Create `<repo>\backend\src\modules\categories\dto\create-category.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsInt, IsOptional, IsString, Length, Min, ValidateNested } from 'class-validator';
@@ -1926,7 +1926,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Note: `class-validator` ships `@ArrayUnique(identifier?)` as a built-in decorator. For an array of objects, pass a key-extractor: `@ArrayUnique((item: ReorderItemDto) => item.id)`. Apply it on `items` to enforce that each category ID appears at most once in the reorder payload. No custom decorator is needed.
 
-- [ ] T061 [US5] Add mutation methods to `CategoriesService`. Open `<repo>\backend\src\modules\categories\categories.service.ts` (T047). Add:
+- [X] T061 [US5] Add mutation methods to `CategoriesService`. Open `<repo>\backend\src\modules\categories\categories.service.ts` (T047). Add:
   ```ts
   // import additions:
   // import { NotFoundException } from '@nestjs/common';
@@ -1982,7 +1982,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T062 [US5] Create the admin-categories controller. Create `<repo>\backend\src\modules\categories\admin-categories.controller.ts`:
+- [X] T062 [US5] Create the admin-categories controller. Create `<repo>\backend\src\modules\categories\admin-categories.controller.ts`:
   ```ts
   import { Body, Controller, Delete, HttpCode, Ip, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -2061,13 +2061,13 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Admin web US5: categories page
 
-- [ ] T063 [US5] Create the admin categories page with drag-reorder. Create `<repo>\admin\app\(dashboard)\categories\page.tsx`. The page is a "use client" component. On mount, `adminApi.get('/categories')` for the active list. Layout:
+- [X] T063 [US5] Create the admin categories page with drag-reorder. Create `<repo>\admin\app\(dashboard)\categories\page.tsx`. The page is a "use client" component. On mount, `adminApi.get('/categories')` for the active list. Layout:
   1. Header with a **+ Add Category** button that opens a modal form (name.en, name.ar, icon, displayOrder).
   2. A list rendered via the `SortableCategoryList` component (T064). Each row has the category's `name.en` / `name.ar`, icon glyph, Edit button (opens modal), Delete button (opens `ConfirmDialog`).
   3. On row drop after a drag: collect the new ordering and call `adminApi.patch('/admin/categories/reorder', { items: [{ id, displayOrder }] })`. On success, toast "Reorder saved" and refetch.
   4. On create / update / delete: call the matching admin endpoint, refetch.
 
-- [ ] T064 [P] [US5] Create the `SortableCategoryList` dnd component. Create `<repo>\admin\components\SortableCategoryList.tsx`. Use `@dnd-kit/core` + `@dnd-kit/sortable` (already installed in Phase 0). Props: `{ items: Array<{ id: string; nameEn: string; nameAr: string; icon: string | null }>; onReorder: (items: Array<{ id: string; displayOrder: number }>) => Promise<void>; onEdit: (id: string) => void; onDelete: (id: string) => void }`. Standard dnd-kit sortable pattern — refer to the dnd-kit docs (`useSortable`, `SortableContext`, `DndContext`). After drop, compute the new ordering as `[...items].map((it, idx) => ({ id: it.id, displayOrder: idx }))` and pass to `onReorder`.
+- [X] T064 [P] [US5] Create the `SortableCategoryList` dnd component. Create `<repo>\admin\components\SortableCategoryList.tsx`. Use `@dnd-kit/core` + `@dnd-kit/sortable` (already installed in Phase 0). Props: `{ items: Array<{ id: string; nameEn: string; nameAr: string; icon: string | null }>; onReorder: (items: Array<{ id: string; displayOrder: number }>) => Promise<void>; onEdit: (id: string) => void; onDelete: (id: string) => void }`. Standard dnd-kit sortable pattern — refer to the dnd-kit docs (`useSortable`, `SortableContext`, `DndContext`). After drop, compute the new ordering as `[...items].map((it, idx) => ({ id: it.id, displayOrder: idx }))` and pass to `onReorder`.
 
 **Checkpoint US5**: Admin creates, edits, soft-deletes, and reorders categories via the dashboard. The customer's discovery surface reflects each change on the next read. The reorder is atomic — a forced mid-reorder failure leaves the customer-facing list fully-old or fully-new.
 
