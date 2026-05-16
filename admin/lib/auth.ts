@@ -46,15 +46,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.accessToken = user.accessToken;
-        token.refreshToken = user.refreshToken;
+        const u = user as unknown as { role: string; fullName: string; accessToken: string; refreshToken: string };
+        token.role = u.role;
+        token.name = u.fullName;
+        token.accessToken = u.accessToken;
+        token.refreshToken = u.refreshToken;
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.role = token.role;
+      session.user = { ...(session.user ?? {}), name: token.name } as typeof session.user;
       return session;
     },
   },

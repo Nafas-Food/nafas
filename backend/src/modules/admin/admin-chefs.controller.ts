@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -39,8 +40,8 @@ export class AdminChefsController {
     @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize = 30,
   ) {
     return this.adminService.listPendingApplications(
-      cursor,
-      Math.min(pageSize, 50),
+      Math.max(0, cursor),
+      Math.max(1, Math.min(pageSize, 50)),
     );
   }
 
@@ -52,13 +53,14 @@ export class AdminChefsController {
     @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize = 30,
   ) {
     return this.adminService.listVerifiedChefs(
-      cursor,
-      Math.min(pageSize, 50),
+      Math.max(0, cursor),
+      Math.max(1, Math.min(pageSize, 50)),
       q,
     );
   }
 
   @Patch(':id/verify')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @ApiOperation({ operationId: 'verifyChef' })
   verify(
     @CurrentUser() admin: CurrentUserPayload,
@@ -69,6 +71,7 @@ export class AdminChefsController {
   }
 
   @Patch(':id/reject')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @ApiOperation({ operationId: 'rejectChefApplication' })
   reject(
     @CurrentUser() admin: CurrentUserPayload,
@@ -86,6 +89,7 @@ export class AdminChefsController {
 
   @Delete(':id')
   @HttpCode(204)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @ApiOperation({ operationId: 'revokeChef' })
   revoke(
     @CurrentUser() admin: CurrentUserPayload,

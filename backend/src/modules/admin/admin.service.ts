@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { NotificationType, Role } from '@prisma/client';
@@ -11,6 +12,8 @@ import { ChefEventLogger } from '../../common/logging/chef-event.logger';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly usersService: UsersService,
@@ -74,11 +77,15 @@ export class AdminService {
         chefId,
         sourceIp,
       });
-      await this.notificationsService.dispatchPush(result.userId, {
-        title: 'You are now a Nafas chef',
-        body: 'Welcome — your kitchen is live on Nafas.',
-        data: { chefId },
-      });
+      try {
+        await this.notificationsService.dispatchPush(result.userId, {
+          title: 'You are now a Nafas chef',
+          body: 'Welcome — your kitchen is live on Nafas.',
+          data: { chefId },
+        });
+      } catch (err) {
+        this.logger.error(`FCM dispatch failed for verify: ${(err as Error).message}`);
+      }
       return result.chef;
     } catch (err) {
       if (err instanceof ConflictException) {
@@ -127,11 +134,15 @@ export class AdminService {
         chefId,
         sourceIp,
       });
-      await this.notificationsService.dispatchPush(result.userId, {
-        title: 'Your chef application was not approved',
-        body: reason,
-        data: { chefId, reason },
-      });
+      try {
+        await this.notificationsService.dispatchPush(result.userId, {
+          title: 'Your chef application was not approved',
+          body: reason,
+          data: { chefId, reason },
+        });
+      } catch (err) {
+        this.logger.error(`FCM dispatch failed for reject: ${(err as Error).message}`);
+      }
       return result.chef;
     } catch (err) {
       if (err instanceof ConflictException) {
@@ -181,11 +192,15 @@ export class AdminService {
         chefId,
         sourceIp,
       });
-      await this.notificationsService.dispatchPush(result.userId, {
-        title: 'Your chef status has been revoked',
-        body: reason,
-        data: { chefId, reason },
-      });
+      try {
+        await this.notificationsService.dispatchPush(result.userId, {
+          title: 'Your chef status has been revoked',
+          body: reason,
+          data: { chefId, reason },
+        });
+      } catch (err) {
+        this.logger.error(`FCM dispatch failed for revoke: ${(err as Error).message}`);
+      }
     } catch (err) {
       if (err instanceof ConflictException) {
         this.chefEventLogger.revokeChefNotVerified({

@@ -11,7 +11,7 @@ export default function ProfilePlaceholder() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>{t('chefTabs.profile')}</Text>
-      <Text style={styles.body}>Coming soon</Text>
+      <Text style={styles.body}>{t('comingSoon')}</Text>
     </SafeAreaView>
   );
 }

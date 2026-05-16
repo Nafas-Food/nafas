@@ -16,20 +16,24 @@ export default function SignInPage() {
     setError('');
     setLoading(true);
 
-    const result = await signIn('credentials', {
-      phone,
-      password,
-      callbackUrl: '/',
-      redirect: false,
-    });
+    try {
+      const result = await signIn('credentials', {
+        phone,
+        password,
+        callbackUrl: '/',
+        redirect: false,
+      });
 
-    setLoading(false);
-
-    if (result?.ok) {
-      router.push('/');
-      router.refresh();
-    } else {
-      setError('Invalid phone or password.');
+      if (result?.ok) {
+        router.push('/');
+        router.refresh();
+      } else {
+        setError('Invalid phone or password.');
+      }
+    } catch (err) {
+      setError((err as Error)?.message ?? 'Sign-in failed.');
+    } finally {
+      setLoading(false);
     }
   };
 

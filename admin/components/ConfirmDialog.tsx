@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -26,6 +26,8 @@ export function ConfirmDialog({
   onReasonChange,
 }: ConfirmDialogProps) {
   const [loading, setLoading] = useState(false);
+  const titleId = useId();
+  const descId = useId();
 
   if (!open) return null;
 
@@ -33,6 +35,9 @@ export function ConfirmDialog({
     setLoading(true);
     try {
       await onConfirm();
+    } catch (err) {
+      // Best-effort: caller is responsible for UI feedback; we just stop the spinner.
+      console.error('ConfirmDialog onConfirm failed:', (err as Error)?.message);
     } finally {
       setLoading(false);
     }
@@ -41,10 +46,16 @@ export function ConfirmDialog({
   const canConfirm = !reasonRequired || reason.trim().length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
       <div className="w-full max-w-md rounded-card bg-white p-6 shadow-card-md">
-        <h2 className="text-lg font-semibold text-umber">{title}</h2>
-        <p className="mt-2 text-sm text-mocha">{description}</p>
+        <h2 id={titleId} className="text-lg font-semibold text-umber">{title}</h2>
+        <p id={descId} className="mt-2 text-sm text-mocha">{description}</p>
 
         {reasonRequired && (
           <div className="mt-4">
