@@ -1887,7 +1887,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Categories DTOs + admin endpoints
 
-- [ ] T060 [P] [US5] Create the category mutation DTOs. Create `<repo>\backend\src\modules\categories\dto\create-category.dto.ts`:
+- [X] T060 [P] [US5] Create the category mutation DTOs. Create `<repo>\backend\src\modules\categories\dto\create-category.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsInt, IsOptional, IsString, Length, Min, ValidateNested } from 'class-validator';
@@ -1926,7 +1926,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Note: `class-validator` ships `@ArrayUnique(identifier?)` as a built-in decorator. For an array of objects, pass a key-extractor: `@ArrayUnique((item: ReorderItemDto) => item.id)`. Apply it on `items` to enforce that each category ID appears at most once in the reorder payload. No custom decorator is needed.
 
-- [ ] T061 [US5] Add mutation methods to `CategoriesService`. Open `<repo>\backend\src\modules\categories\categories.service.ts` (T047). Add:
+- [X] T061 [US5] Add mutation methods to `CategoriesService`. Open `<repo>\backend\src\modules\categories\categories.service.ts` (T047). Add:
   ```ts
   // import additions:
   // import { NotFoundException } from '@nestjs/common';
@@ -1982,7 +1982,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   }
   ```
 
-- [ ] T062 [US5] Create the admin-categories controller. Create `<repo>\backend\src\modules\categories\admin-categories.controller.ts`:
+- [X] T062 [US5] Create the admin-categories controller. Create `<repo>\backend\src\modules\categories\admin-categories.controller.ts`:
   ```ts
   import { Body, Controller, Delete, HttpCode, Ip, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
   import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -2061,13 +2061,13 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Admin web US5: categories page
 
-- [ ] T063 [US5] Create the admin categories page with drag-reorder. Create `<repo>\admin\app\(dashboard)\categories\page.tsx`. The page is a "use client" component. On mount, `adminApi.get('/categories')` for the active list. Layout:
+- [X] T063 [US5] Create the admin categories page with drag-reorder. Create `<repo>\admin\app\(dashboard)\categories\page.tsx`. The page is a "use client" component. On mount, `adminApi.get('/categories')` for the active list. Layout:
   1. Header with a **+ Add Category** button that opens a modal form (name.en, name.ar, icon, displayOrder).
   2. A list rendered via the `SortableCategoryList` component (T064). Each row has the category's `name.en` / `name.ar`, icon glyph, Edit button (opens modal), Delete button (opens `ConfirmDialog`).
   3. On row drop after a drag: collect the new ordering and call `adminApi.patch('/admin/categories/reorder', { items: [{ id, displayOrder }] })`. On success, toast "Reorder saved" and refetch.
   4. On create / update / delete: call the matching admin endpoint, refetch.
 
-- [ ] T064 [P] [US5] Create the `SortableCategoryList` dnd component. Create `<repo>\admin\components\SortableCategoryList.tsx`. Use `@dnd-kit/core` + `@dnd-kit/sortable` (already installed in Phase 0). Props: `{ items: Array<{ id: string; nameEn: string; nameAr: string; icon: string | null }>; onReorder: (items: Array<{ id: string; displayOrder: number }>) => Promise<void>; onEdit: (id: string) => void; onDelete: (id: string) => void }`. Standard dnd-kit sortable pattern — refer to the dnd-kit docs (`useSortable`, `SortableContext`, `DndContext`). After drop, compute the new ordering as `[...items].map((it, idx) => ({ id: it.id, displayOrder: idx }))` and pass to `onReorder`.
+- [X] T064 [P] [US5] Create the `SortableCategoryList` dnd component. Create `<repo>\admin\components\SortableCategoryList.tsx`. Use `@dnd-kit/core` + `@dnd-kit/sortable` (already installed in Phase 0). Props: `{ items: Array<{ id: string; nameEn: string; nameAr: string; icon: string | null }>; onReorder: (items: Array<{ id: string; displayOrder: number }>) => Promise<void>; onEdit: (id: string) => void; onDelete: (id: string) => void }`. Standard dnd-kit sortable pattern — refer to the dnd-kit docs (`useSortable`, `SortableContext`, `DndContext`). After drop, compute the new ordering as `[...items].map((it, idx) => ({ id: it.id, displayOrder: idx }))` and pass to `onReorder`.
 
 **Checkpoint US5**: Admin creates, edits, soft-deletes, and reorders categories via the dashboard. The customer's discovery surface reflects each change on the next read. The reorder is atomic — a forced mid-reorder failure leaves the customer-facing list fully-old or fully-new.
 
