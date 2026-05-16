@@ -15,7 +15,10 @@ export class MenusService {
   constructor(private readonly prismaService: PrismaService) {}
 
   /** FR-014 category-filter membership check. */
-  async hasMenuInCategory(chefId: string, categoryId: string): Promise<boolean> {
+  async hasMenuInCategory(
+    chefId: string,
+    categoryId: string,
+  ): Promise<boolean> {
     const found = await this.prismaService.extended.menu.findFirst({
       where: { chefId, categoryId },
       select: { id: true },

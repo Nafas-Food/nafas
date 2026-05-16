@@ -12,8 +12,10 @@
  * `||` (not `??`) so an empty-string env value also falls back —
  * `.env.example` declares the vars as `""`.
  */
-const DEV_LOGO_FALLBACK = 'https://placehold.co/400x400/D4944A/FFFFFF.png?text=Chef';
-const DEV_BANNER_FALLBACK = 'https://placehold.co/1200x400/D4944A/FFFFFF.png?text=Nafas';
+const DEV_LOGO_FALLBACK =
+  'https://placehold.co/400x400/D4944A/FFFFFF.png?text=Chef';
+const DEV_BANNER_FALLBACK =
+  'https://placehold.co/1200x400/D4944A/FFFFFF.png?text=Nafas';
 
 export const DEFAULT_CHEF_LOGO_URL =
   process.env.DEFAULT_CHEF_LOGO_URL || DEV_LOGO_FALLBACK;

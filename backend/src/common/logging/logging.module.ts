@@ -6,7 +6,17 @@ import { CategoryEventLogger } from './category-event.logger';
 
 @Global()
 @Module({
-  providers: [AuthEventLogger, AddressEventLogger, ChefEventLogger, CategoryEventLogger],
-  exports: [AuthEventLogger, AddressEventLogger, ChefEventLogger, CategoryEventLogger],
+  providers: [
+    AuthEventLogger,
+    AddressEventLogger,
+    ChefEventLogger,
+    CategoryEventLogger,
+  ],
+  exports: [
+    AuthEventLogger,
+    AddressEventLogger,
+    ChefEventLogger,
+    CategoryEventLogger,
+  ],
 })
 export class LoggingModule {}

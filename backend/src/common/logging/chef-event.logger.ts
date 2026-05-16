@@ -64,73 +64,383 @@ export class ChefEventLogger {
     this.log.log(JSON.stringify(payload));
   }
 
-  applySuccess({ actorUserId, applicationId, sourceIp }: { actorUserId: string; applicationId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.apply', outcome: 'success', actorId: actorUserId, applicationId, sourceIp });
+  applySuccess({
+    actorUserId,
+    applicationId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    applicationId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.apply',
+      outcome: 'success',
+      actorId: actorUserId,
+      applicationId,
+      sourceIp,
+    });
   }
-  applyValidationRejected({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.apply', outcome: 'validation_rejected', actorId: actorUserId, sourceIp });
+  applyValidationRejected({
+    actorUserId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.apply',
+      outcome: 'validation_rejected',
+      actorId: actorUserId,
+      sourceIp,
+    });
   }
-  applyApplicationPending({ actorUserId, applicationId, sourceIp }: { actorUserId: string; applicationId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.apply', outcome: 'application_pending', actorId: actorUserId, applicationId, sourceIp });
+  applyApplicationPending({
+    actorUserId,
+    applicationId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    applicationId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.apply',
+      outcome: 'application_pending',
+      actorId: actorUserId,
+      applicationId,
+      sourceIp,
+    });
   }
-  applyAlreadyChef({ actorUserId, chefId, sourceIp }: { actorUserId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.apply', outcome: 'already_chef', actorId: actorUserId, chefId, sourceIp });
+  applyAlreadyChef({
+    actorUserId,
+    chefId,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.apply',
+      outcome: 'already_chef',
+      actorId: actorUserId,
+      chefId,
+      sourceIp,
+    });
   }
-  applyRejectedCooldownInEffect({ actorUserId, earliestResubmitAt, sourceIp }: { actorUserId: string; earliestResubmitAt: string; sourceIp: string }) {
-    this.emit({ event: 'chef.apply', outcome: 'rejected_cooldown_in_effect', actorId: actorUserId, earliestResubmitAt, sourceIp });
+  applyRejectedCooldownInEffect({
+    actorUserId,
+    earliestResubmitAt,
+    sourceIp,
+  }: {
+    actorUserId: string;
+    earliestResubmitAt: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.apply',
+      outcome: 'rejected_cooldown_in_effect',
+      actorId: actorUserId,
+      earliestResubmitAt,
+      sourceIp,
+    });
   }
-  verifySuccess({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.verify', outcome: 'success', actorId: actorAdminId, chefId, sourceIp });
+  verifySuccess({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.verify',
+      outcome: 'success',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  verifyApplicationNotPending({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.verify', outcome: 'application_not_pending', actorId: actorAdminId, chefId, sourceIp });
+  verifyApplicationNotPending({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.verify',
+      outcome: 'application_not_pending',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  rejectSuccess({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.reject', outcome: 'success', actorId: actorAdminId, chefId, sourceIp });
+  rejectSuccess({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.reject',
+      outcome: 'success',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  rejectApplicationNotPending({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.reject', outcome: 'application_not_pending', actorId: actorAdminId, chefId, sourceIp });
+  rejectApplicationNotPending({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.reject',
+      outcome: 'application_not_pending',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  revokeSuccess({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.revoke', outcome: 'success', actorId: actorAdminId, chefId, sourceIp });
+  revokeSuccess({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.revoke',
+      outcome: 'success',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  revokeChefNotVerified({ actorAdminId, chefId, sourceIp }: { actorAdminId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.revoke', outcome: 'chef_not_verified', actorId: actorAdminId, chefId, sourceIp });
+  revokeChefNotVerified({
+    actorAdminId,
+    chefId,
+    sourceIp,
+  }: {
+    actorAdminId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.revoke',
+      outcome: 'chef_not_verified',
+      actorId: actorAdminId,
+      chefId,
+      sourceIp,
+    });
   }
-  profileUpdateSuccess({ actorChefId, chefId, sourceIp }: { actorChefId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.profile_update', outcome: 'success', actorId: actorChefId, chefId, sourceIp });
+  profileUpdateSuccess({
+    actorChefId,
+    chefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.profile_update',
+      outcome: 'success',
+      actorId: actorChefId,
+      chefId,
+      sourceIp,
+    });
   }
-  profileUpdateValidationRejected({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.profile_update', outcome: 'validation_rejected', actorId: actorChefId, sourceIp });
+  profileUpdateValidationRejected({
+    actorChefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.profile_update',
+      outcome: 'validation_rejected',
+      actorId: actorChefId,
+      sourceIp,
+    });
   }
-  profileUpdateNotFound({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.profile_update', outcome: 'not_found', actorId: actorChefId, sourceIp });
+  profileUpdateNotFound({
+    actorChefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.profile_update',
+      outcome: 'not_found',
+      actorId: actorChefId,
+      sourceIp,
+    });
   }
-  availabilityToggleSuccess({ actorChefId, chefId, isOpen, sourceIp }: { actorChefId: string; chefId: string; isOpen: boolean; sourceIp: string }) {
-    this.emit({ event: 'chef.availability_toggle', outcome: 'success', actorId: actorChefId, chefId, isOpen, sourceIp });
+  availabilityToggleSuccess({
+    actorChefId,
+    chefId,
+    isOpen,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    chefId: string;
+    isOpen: boolean;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.availability_toggle',
+      outcome: 'success',
+      actorId: actorChefId,
+      chefId,
+      isOpen,
+      sourceIp,
+    });
   }
-  availabilityToggleNotFound({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.availability_toggle', outcome: 'not_found', actorId: actorChefId, sourceIp });
+  availabilityToggleNotFound({
+    actorChefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.availability_toggle',
+      outcome: 'not_found',
+      actorId: actorChefId,
+      sourceIp,
+    });
   }
-  availabilityValidationRejected({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.availability_toggle', outcome: 'validation_rejected', actorId: actorChefId, sourceIp });
+  availabilityValidationRejected({
+    actorChefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.availability_toggle',
+      outcome: 'validation_rejected',
+      actorId: actorChefId,
+      sourceIp,
+    });
   }
-  logoUploadSuccess({ actorChefId, chefId, sourceIp }: { actorChefId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.logo_upload', outcome: 'success', actorId: actorChefId, chefId, sourceIp });
+  logoUploadSuccess({
+    actorChefId,
+    chefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.logo_upload',
+      outcome: 'success',
+      actorId: actorChefId,
+      chefId,
+      sourceIp,
+    });
   }
-  logoUploadUnsupportedMediaType({ actorChefId, mimeType, sourceIp }: { actorChefId: string; mimeType: string; sourceIp: string }) {
-    this.emit({ event: 'chef.logo_upload', outcome: 'unsupported_media_type', actorId: actorChefId, mimeType, sourceIp });
+  logoUploadUnsupportedMediaType({
+    actorChefId,
+    mimeType,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    mimeType: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.logo_upload',
+      outcome: 'unsupported_media_type',
+      actorId: actorChefId,
+      mimeType,
+      sourceIp,
+    });
   }
-  logoUploadPayloadTooLarge({ actorChefId, byteSize, sourceIp }: { actorChefId: string; byteSize: number; sourceIp: string }) {
-    this.emit({ event: 'chef.logo_upload', outcome: 'payload_too_large', actorId: actorChefId, byteSize, sourceIp });
+  logoUploadPayloadTooLarge({
+    actorChefId,
+    byteSize,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    byteSize: number;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.logo_upload',
+      outcome: 'payload_too_large',
+      actorId: actorChefId,
+      byteSize,
+      sourceIp,
+    });
   }
-  bannerUploadSuccess({ actorChefId, chefId, sourceIp }: { actorChefId: string; chefId: string; sourceIp: string }) {
-    this.emit({ event: 'chef.banner_upload', outcome: 'success', actorId: actorChefId, chefId, sourceIp });
+  bannerUploadSuccess({
+    actorChefId,
+    chefId,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    chefId: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.banner_upload',
+      outcome: 'success',
+      actorId: actorChefId,
+      chefId,
+      sourceIp,
+    });
   }
-  bannerUploadUnsupportedMediaType({ actorChefId, mimeType, sourceIp }: { actorChefId: string; mimeType: string; sourceIp: string }) {
-    this.emit({ event: 'chef.banner_upload', outcome: 'unsupported_media_type', actorId: actorChefId, mimeType, sourceIp });
+  bannerUploadUnsupportedMediaType({
+    actorChefId,
+    mimeType,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    mimeType: string;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.banner_upload',
+      outcome: 'unsupported_media_type',
+      actorId: actorChefId,
+      mimeType,
+      sourceIp,
+    });
   }
-  bannerUploadPayloadTooLarge({ actorChefId, byteSize, sourceIp }: { actorChefId: string; byteSize: number; sourceIp: string }) {
-    this.emit({ event: 'chef.banner_upload', outcome: 'payload_too_large', actorId: actorChefId, byteSize, sourceIp });
+  bannerUploadPayloadTooLarge({
+    actorChefId,
+    byteSize,
+    sourceIp,
+  }: {
+    actorChefId: string;
+    byteSize: number;
+    sourceIp: string;
+  }) {
+    this.emit({
+      event: 'chef.banner_upload',
+      outcome: 'payload_too_large',
+      actorId: actorChefId,
+      byteSize,
+      sourceIp,
+    });
   }
 }

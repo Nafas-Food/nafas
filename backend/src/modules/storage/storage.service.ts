@@ -25,7 +25,9 @@ export class StorageService {
       .from(bucket)
       .upload(path, buffer, { contentType: mimeType, upsert: true });
     if (error) {
-      this.logger.error(`Supabase upload failed for ${bucket}/${path}: ${error.message}`);
+      this.logger.error(
+        `Supabase upload failed for ${bucket}/${path}: ${error.message}`,
+      );
       throw error;
     }
     const { data } = this.client.storage.from(bucket).getPublicUrl(path);
@@ -35,7 +37,9 @@ export class StorageService {
   async delete(bucket: string, path: string): Promise<void> {
     const { error } = await this.client.storage.from(bucket).remove([path]);
     if (error) {
-      this.logger.error(`Supabase delete failed for ${bucket}/${path}: ${error.message}`);
+      this.logger.error(
+        `Supabase delete failed for ${bucket}/${path}: ${error.message}`,
+      );
       throw error;
     }
   }
