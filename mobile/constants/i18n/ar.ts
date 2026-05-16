@@ -57,7 +57,6 @@ export const ar: I18nDict = {
   },
   home: {
     greeting: 'أهلاً، {name}',
-    chefPlaceholder: 'الصفحة الرئيسية للشيف (مؤقتة)',
     deliverTo: 'التوصيل إلى',
     addAddress: 'إضافة عنوان',
   },
