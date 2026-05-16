@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getSession } from 'next-auth/react';
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -13,15 +12,25 @@ export const adminApi = axios.create({
   timeout: 10_000,
 });
 
-adminApi.interceptors.request.use(async (config) => {
+adminApi.interceptors.request.use((config) => {
   // Lazy baseURL resolution so the build (SSG) doesn't fail when the env
   // var isn't set yet; runtime requests will throw with a clear message.
   config.baseURL = `${getBaseUrl()}/api/v1`;
-  const session = await getSession();
-  const token = (session as { accessToken?: string } | null)?.accessToken;
-  if (token) {
-    config.headers = config.headers ?? {};
-    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
   return config;
 });
+
+/**
+ * Set or clear the bearer token used by every adminApi request.
+ * Call once after sign-in (e.g. from a useEffect that watches the
+ * NextAuth session) and call with `null` on sign-out.
+ *
+ * Prefer this over `getSession()` inside the interceptor — the latter
+ * triggers a network round-trip to `/api/auth/session` on *every* request.
+ */
+export function setAuthToken(token: string | null): void {
+  if (token) {
+    adminApi.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete adminApi.defaults.headers.common.Authorization;
+  }
+}
