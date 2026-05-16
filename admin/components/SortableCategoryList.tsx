@@ -115,10 +115,15 @@ export function SortableCategoryList({
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over || active.id == null || active.id === over.id) return;
 
     const oldIndex = items.findIndex((i) => i.id === active.id);
     const newIndex = items.findIndex((i) => i.id === over.id);
+    // Guard against a stale drag firing after `items` has been replaced
+    // by a refetch — findIndex would return -1 and arrayMove(items, -1, x)
+    // would corrupt the array.
+    if (oldIndex < 0 || newIndex < 0) return;
+
     const newItems = arrayMove(items, oldIndex, newIndex);
 
     const reorderPayload = newItems.map((it, idx) => ({

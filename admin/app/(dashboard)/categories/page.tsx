@@ -90,10 +90,16 @@ export default function CategoriesPage() {
   };
 
   const handleSave = async () => {
+    // Stricter than parseInt, which silently accepts "5abc" as 5.
+    const displayOrder = Number(form.displayOrder);
+    if (!Number.isInteger(displayOrder) || displayOrder < 0) {
+      showToast('Display order must be a non-negative integer');
+      return;
+    }
     const payload = {
       name: { en: form.nameEn.trim(), ar: form.nameAr.trim() },
       icon: form.icon.trim() || undefined,
-      displayOrder: parseInt(form.displayOrder, 10),
+      displayOrder,
     };
 
     try {
@@ -143,10 +149,12 @@ export default function CategoriesPage() {
     }
   };
 
+  const displayOrderValue = Number(form.displayOrder);
   const canSave =
     form.nameEn.trim().length > 0 &&
     form.nameAr.trim().length > 0 &&
-    !isNaN(parseInt(form.displayOrder, 10));
+    Number.isInteger(displayOrderValue) &&
+    displayOrderValue >= 0;
 
   return (
     <div className="space-y-6">
