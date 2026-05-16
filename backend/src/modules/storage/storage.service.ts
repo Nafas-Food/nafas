@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 @Injectable()
 export class StorageService {
@@ -12,7 +13,15 @@ export class StorageService {
     if (!url || !key) {
       throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
     }
-    this.client = createClient(url, key);
+    // Node.js 20 lacks a native WebSocket global; @supabase/realtime-js
+    // (initialized eagerly inside createClient) needs one even though we
+    // only use Storage here. Provide `ws` as the transport so the client
+    // can be constructed. Drop this when the runtime moves to Node 22+.
+    this.client = createClient(url, key, {
+      realtime: {
+        transport: WebSocket as unknown as typeof globalThis.WebSocket,
+      },
+    });
   }
 
   async upload(

@@ -93,6 +93,9 @@ export default function ChefApplyScreen() {
             Alert.alert(t('chefApply.error.cooldown', { date }));
             break;
           }
+          default:
+            Alert.alert(t('errors.UNKNOWN'));
+            break;
         }
       } else {
         Alert.alert(t('common.networkError'));

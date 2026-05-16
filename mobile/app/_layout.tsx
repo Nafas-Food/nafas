@@ -30,6 +30,8 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
     const inAuth = segments[0] === '(auth)';
     const authScreen = inAuth ? segments[1] : undefined;
+    const inChef = segments[0] === '(chef)';
+    const inTabs = segments[0] === '(tabs)';
 
     // 1. Signed-out → welcome
     if (!user) {
@@ -55,19 +57,22 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 4. Chef → chef route group
+    // 4. Chef → chef route group (redirect even when already in /(tabs)
+    //    so a role change from customer→chef is picked up on re-render).
     if (user.role === 'chef') {
-      if (inAuth) {
+      if (!inChef) {
         router.replace('/(chef)');
       }
       return;
     }
 
-    // 5. Customer with no pending application → tabs (unless they are
-    //    intentionally on a whitelisted /(auth) screen such as the
-    //    apply-to-be-a-chef flow or the post-apply holding screen).
+    // 5. Customer with no pending application → tabs (redirect even when
+    //    already in /(chef) so a role change from chef→customer is picked
+    //    up, but allow whitelisted /(auth) screens).
     if (user.role === 'customer') {
-      if (inAuth && (!authScreen || !CUSTOMER_AUTH_SCREEN_WHITELIST.has(authScreen))) {
+      const onWhitelistedAuthScreen =
+        inAuth && authScreen && CUSTOMER_AUTH_SCREEN_WHITELIST.has(authScreen);
+      if (!inTabs && !onWhitelistedAuthScreen) {
         router.replace('/(tabs)');
       }
       return;
