@@ -161,8 +161,43 @@ export class UsersService {
     tx?: Prisma.TransactionClient,
   ): Promise<void> {
     const client = tx ?? this.prisma;
+
+    // Prevent role changes on soft-deleted users
+    const user = await client.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      select: { role: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'AUTH_UNAUTHENTICATED',
+        message: 'Account not found.',
+      });
+    }
+
+    // Phase 3 only allows customer ↔ chef transitions
+    const allowed = new Set<Role>(['customer', 'chef']);
+    if (!allowed.has(nextRole)) {
+      throw new BadRequestException({
+        code: 'INVALID_ROLE_TRANSITION',
+        message: `Role transition to ${nextRole} is not permitted.`,
+      });
+    }
+    const current = user.role;
+    if (current === nextRole) {
+      return; // no-op
+    }
+    if (!(
+      (current === 'customer' && nextRole === 'chef') ||
+      (current === 'chef' && nextRole === 'customer')
+    )) {
+      throw new BadRequestException({
+        code: 'INVALID_ROLE_TRANSITION',
+        message: `Cannot transition from ${current} to ${nextRole}.`,
+      });
+    }
+
     await client.user.update({
-      where: { id: userId },
+      where: { id: userId, deletedAt: null },
       data:  { role: nextRole },
     });
   }

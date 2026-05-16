@@ -2,6 +2,11 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 
+const BACKEND_URL = process.env.BACKEND_URL;
+if (!BACKEND_URL) {
+  throw new Error('BACKEND_URL is required but not set. Add it to your .env.local file.');
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   providers: [
@@ -15,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.phone || !credentials.password) return null;
         try {
           const res = await axios.post(
-            `${process.env.BACKEND_URL}/api/v1/auth/sign-in`,
+            `${BACKEND_URL}/api/v1/auth/sign-in`,
             { phone: credentials.phone, password: credentials.password },
             { timeout: 10_000 },
           );
@@ -28,7 +33,8 @@ export const authOptions: NextAuthOptions = {
             accessToken,
             refreshToken,
           };
-        } catch {
+        } catch (err) {
+          console.error('Admin sign-in verification failed:', (err as Error).message);
           return null;
         }
       },

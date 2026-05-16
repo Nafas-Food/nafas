@@ -30,7 +30,7 @@ interface AuthContextValue {
   pendingApplication: { applicationId: string } | null;
   role: Role;
   /** Stores the new session pair and updates `user`. Used by sign-in/register/refresh outcomes. */
-  setSession: (next: { user: AuthUser; accessToken: string; refreshToken: string }) => Promise<void>;
+  setSession: (next: { user: AuthUser; accessToken: string; refreshToken: string; pendingApplication?: { applicationId: string } | null }) => Promise<void>;
   /** Clears local state and SecureStore. Server-side revocation lives in a separate task (T101). */
   clearSession: () => Promise<void>;
   getRefreshToken: () => Promise<string | null>;
@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accessRef.current = null;
         SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => {});
         setUser(null);
+        setPendingApplication(null);
       },
     );
 
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accessRef.current = null;
         await SecureStore.deleteItemAsync(REFRESH_KEY);
         setUser(null);
+        setPendingApplication(null);
       } finally {
         setIsLoading(false);
       }

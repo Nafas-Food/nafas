@@ -112,6 +112,9 @@ export class ChefEventLogger {
   availabilityToggleNotFound({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
     this.emit({ event: 'chef.availability_toggle', outcome: 'not_found', actorId: actorChefId, sourceIp });
   }
+  availabilityValidationRejected({ actorChefId, sourceIp }: { actorChefId: string; sourceIp: string }) {
+    this.emit({ event: 'chef.availability_toggle', outcome: 'validation_rejected', actorId: actorChefId, sourceIp });
+  }
   logoUploadSuccess({ actorChefId, chefId, sourceIp }: { actorChefId: string; chefId: string; sourceIp: string }) {
     this.emit({ event: 'chef.logo_upload', outcome: 'success', actorId: actorChefId, chefId, sourceIp });
   }

@@ -71,7 +71,16 @@ export class CategoryEventLogger {
   reorderValidationRejected({ actorAdminId, sourceIp }: { actorAdminId: string; sourceIp: string }) {
     this.emit({ event: 'category.reorder', outcome: 'validation_rejected', actorId: actorAdminId, sourceIp });
   }
-  roleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
+  createRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
     this.emit({ event: 'category.create', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  }
+  updateRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
+    this.emit({ event: 'category.update', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  }
+  deleteRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
+    this.emit({ event: 'category.delete', outcome: 'role_refused', actorId: actorUserId, sourceIp });
+  }
+  reorderRoleRefused({ actorUserId, sourceIp }: { actorUserId: string; sourceIp: string }) {
+    this.emit({ event: 'category.reorder', outcome: 'role_refused', actorId: actorUserId, sourceIp });
   }
 }

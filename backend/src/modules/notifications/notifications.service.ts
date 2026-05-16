@@ -34,7 +34,7 @@ export class NotificationsService {
 
   /** Fire-and-forget — caller awaits but failure logs only (best-effort per FR-009). */
   async dispatchPush(userId: string, payload: { title: string; body: string; data?: Record<string, string> }): Promise<void> {
-    const user = await this.prismaService.user.findUnique({
+    const user = await this.prismaService.extended.user.findUnique({
       where: { id: userId },
       select: { fcmToken: true },
     });

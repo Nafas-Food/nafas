@@ -99,42 +99,45 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
       this.scrubCoordinates(normalized as unknown as Record<string, unknown>);
     }
 
-    // Chef validation rejections
+    // Chef validation rejections — use pathname so query strings don't break matching
     if (normalized.code === 'VALIDATION_ERROR') {
-      const url = req.url ?? '';
+      const path = (req as Request & { path?: string }).path ?? req.url?.split('?')[0] ?? '';
       const userSub = (req as Request & { user?: { sub?: string } }).user?.sub;
-      if (url === '/api/v1/chef/apply') {
+      if (path === '/api/v1/chef/apply') {
         this.chefEvents.applyValidationRejected({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
       }
-      if (url === '/api/v1/chef/profile' || url === '/api/v1/chef/availability') {
+      if (path === '/api/v1/chef/profile') {
         this.chefEvents.profileUpdateValidationRejected({ actorChefId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+      }
+      if (path === '/api/v1/chef/availability') {
+        this.chefEvents.availabilityValidationRejected({ actorChefId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
       }
     }
 
-    // Chef not-found (findOwnedOrThrow)
+    // Chef not-found (findOwnedOrThrow) — use pathname
     if (status === HttpStatus.NOT_FOUND) {
-      const url = req.url ?? '';
+      const path = (req as Request & { path?: string }).path ?? req.url?.split('?')[0] ?? '';
       const userSub = (req as Request & { user?: { sub?: string } }).user?.sub;
-      if (url === '/api/v1/chef/profile') {
+      if (path === '/api/v1/chef/profile') {
         this.chefEvents.profileUpdateNotFound({ actorChefId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
       }
-      if (url === '/api/v1/chef/availability') {
+      if (path === '/api/v1/chef/availability') {
         this.chefEvents.availabilityToggleNotFound({ actorChefId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
       }
     }
 
-    // Category validation rejections + not-found + role refused
+    // Category validation rejections + not-found + role refused — use pathname
     if (req.url?.startsWith('/api/v1/admin/categories')) {
-      const url = req.url ?? '';
+      const path = (req as Request & { path?: string }).path ?? req.url?.split('?')[0] ?? '';
       const userSub = (req as Request & { user?: { sub?: string } }).user?.sub;
       const method = req.method;
       if (normalized.code === 'VALIDATION_ERROR') {
         const event =
           method === 'POST'
             ? 'category.create'
-            : method === 'PATCH' && !url.endsWith('/reorder')
+            : method === 'PATCH' && !path.endsWith('/reorder')
               ? 'category.update'
-              : method === 'PATCH' && url.endsWith('/reorder')
+              : method === 'PATCH' && path.endsWith('/reorder')
                 ? 'category.reorder'
                 : null;
         if (event === 'category.create') {
@@ -157,7 +160,25 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         }
       }
       if (status === HttpStatus.FORBIDDEN) {
-        this.categoryEvents.roleRefused({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+        const event =
+          method === 'POST'
+            ? 'create'
+            : method === 'PATCH' && path.endsWith('/reorder')
+              ? 'reorder'
+              : method === 'PATCH'
+                ? 'update'
+                : method === 'DELETE'
+                  ? 'delete'
+                  : 'create';
+        if (event === 'create') {
+          this.categoryEvents.createRoleRefused({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+        } else if (event === 'update') {
+          this.categoryEvents.updateRoleRefused({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+        } else if (event === 'delete') {
+          this.categoryEvents.deleteRoleRefused({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+        } else if (event === 'reorder') {
+          this.categoryEvents.reorderRoleRefused({ actorUserId: userSub ?? 'unknown', sourceIp: req.ip ?? 'unknown' });
+        }
       }
     }
 
