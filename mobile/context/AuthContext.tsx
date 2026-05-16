@@ -27,6 +27,8 @@ export interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
+  pendingApplication: { applicationId: string } | null;
+  role: Role;
   /** Stores the new session pair and updates `user`. Used by sign-in/register/refresh outcomes. */
   setSession: (next: { user: AuthUser; accessToken: string; refreshToken: string }) => Promise<void>;
   /** Clears local state and SecureStore. Server-side revocation lives in a separate task (T101). */
@@ -39,6 +41,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingApplication, setPendingApplication] = useState<{ applicationId: string } | null>(null);
   const accessRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -46,10 +49,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setSession = useCallback(
-    async (next: { user: AuthUser; accessToken: string; refreshToken: string }) => {
+    async (next: { user: AuthUser; accessToken: string; refreshToken: string; pendingApplication?: { applicationId: string } | null }) => {
       accessRef.current = next.accessToken;
       await SecureStore.setItemAsync(REFRESH_KEY, next.refreshToken);
       setUser(next.user);
+      setPendingApplication(next.pendingApplication ?? null);
     },
     [],
   );
@@ -58,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     accessRef.current = null;
     await SecureStore.deleteItemAsync(REFRESH_KEY);
     setUser(null);
+    setPendingApplication(null);
   }, []);
 
   const getRefreshToken = useCallback(() => SecureStore.getItemAsync(REFRESH_KEY), []);
@@ -93,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await SecureStore.setItemAsync(REFRESH_KEY, session.refreshToken);
         const me = await getMe();
         setUser(me.user);
+        setPendingApplication(me.pendingApplication ?? null);
       } catch {
         accessRef.current = null;
         await SecureStore.deleteItemAsync(REFRESH_KEY);
@@ -137,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, setSession, clearSession, getRefreshToken }}>
+    <AuthContext.Provider value={{ user, isLoading, pendingApplication, role: user?.role ?? 'customer', setSession, clearSession, getRefreshToken }}>
       {children}
     </AuthContext.Provider>
   );

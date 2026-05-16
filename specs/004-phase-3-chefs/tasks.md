@@ -159,7 +159,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Schema migration + seed
 
-- [ ] T005 Add the `Chef.rejectedAt` and `Chef.verifiedAt` columns to the schema. Open `<repo>\backend\prisma\schema.prisma`. Find the `model Chef { ... }` block. Add these two fields **immediately after** the existing `deletedAt` line, preserving the snake_case `@map(...)` convention:
+- [X] T005 Add the `Chef.rejectedAt` and `Chef.verifiedAt` columns to the schema. Open `<repo>\backend\prisma\schema.prisma`. Find the `model Chef { ... }` block. Add these two fields **immediately after** the existing `deletedAt` line, preserving the snake_case `@map(...)` convention:
   ```prisma
     rejectedAt      DateTime?    @map("rejected_at")
     verifiedAt      DateTime?    @map("verified_at")
@@ -176,7 +176,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Save the file. Do NOT change any other line.
 
-- [ ] T006 Generate the Prisma migration. From `<repo>\backend` run:
+- [X] T006 Generate the Prisma migration. From `<repo>\backend` run:
   ```powershell
   npx prisma migrate dev --name 0003_chef_rejection_state
   ```
@@ -189,7 +189,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Prisma also regenerates the client. Verify with `npx prisma migrate status` — must report "No pending migrations."
 
-- [ ] T007 Seed the eight food categories. Open (or create if absent) `<repo>\backend\prisma\seed.ts`. Add or merge in the following block. The UUIDs are pre-generated constants so the seed is idempotent (re-runs are no-ops). The seed runs `prisma.category.upsert` on each row, keyed on `id`:
+- [X] T007 Seed the eight food categories. Open (or create if absent) `<repo>\backend\prisma\seed.ts`. Add or merge in the following block. The UUIDs are pre-generated constants so the seed is idempotent (re-runs are no-ops). The seed runs `prisma.category.upsert` on each row, keyed on `id`:
   ```ts
   // Phase 3 categories seed (FR-025). Each id is pre-generated so re-runs are no-ops.
   const PHASE3_CATEGORIES: Array<{
@@ -228,7 +228,11 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Shared backend modules
 
-- [ ] T008 [P] Create the `StorageModule` wrapping `@supabase/supabase-js`. Create directory `<repo>\backend\src\modules\storage\`. Create `<repo>\backend\src\modules\storage\storage.module.ts`:
+- [X] T008 [P] Create the `StorageModule` wrapping `@supabase/supabase-js`. **First install the dep** — Phase 0 did NOT install this; from `<repo>\backend` run:
+  ```powershell
+  npm install @supabase/supabase-js
+  ```
+  Then create directory `<repo>\backend\src\modules\storage\` and write `<repo>\backend\src\modules\storage\storage.module.ts`:
   ```ts
   import { Module } from '@nestjs/common';
   import { StorageService } from './storage.service';
@@ -283,7 +287,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   Register `StorageModule` in `<repo>\backend\src\app.module.ts` under the `imports: []` array.
 
-- [ ] T009 [P] Create the `NotificationsModule` + `FcmService`. Create directory `<repo>\backend\src\modules\notifications\`. Create three files:
+- [X] T009 [P] Create the `NotificationsModule` + `FcmService`. Create directory `<repo>\backend\src\modules\notifications\`. Create three files:
   - `<repo>\backend\src\modules\notifications\notifications.module.ts`:
     ```ts
     import { Module } from '@nestjs/common';
@@ -399,7 +403,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
     ```
   Register `NotificationsModule` in `<repo>\backend\src\app.module.ts` under `imports: []`.
 
-- [ ] T010 [P] Create the `MenusModule` shell. Create directory `<repo>\backend\src\modules\menus\`. Create two files:
+- [X] T010 [P] Create the `MenusModule` shell. Create directory `<repo>\backend\src\modules\menus\`. Create two files:
   - `<repo>\backend\src\modules\menus\menus.module.ts`:
     ```ts
     import { Module } from '@nestjs/common';
@@ -427,29 +431,36 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
     export class MenusService {
       constructor(private readonly prismaService: PrismaService) {}
 
+      /**
+       * Note: the Phase 0 `Menu` schema has NO `isActive` flag. "Active"
+       * in spec FR-014 means "not soft-deleted", which the extended
+       * client already filters automatically. Do not invent an `isActive`
+       * predicate here — it will cause a Prisma type error.
+       */
+
       /** FR-014 category-filter membership check. */
       async hasMenuInCategory(chefId: string, categoryId: string): Promise<boolean> {
         const found = await this.prismaService.extended.menu.findFirst({
-          where: { chefId, categoryId, isActive: true },
+          where: { chefId, categoryId },
           select: { id: true },
         });
         return found !== null;
       }
 
-      /** Returns the unique active category IDs the chef currently has menus in. */
+      /** Returns the unique non-soft-deleted category IDs the chef currently has menus in. */
       async categoriesForChef(chefId: string): Promise<string[]> {
         const rows = await this.prismaService.extended.menu.findMany({
-          where: { chefId, isActive: true },
+          where: { chefId },
           select: { categoryId: true },
           distinct: ['categoryId'],
         });
         return rows.map((r) => r.categoryId);
       }
 
-      /** Returns chef IDs that have at least one active menu in `categoryId`. */
+      /** Returns chef IDs that have at least one non-soft-deleted menu in `categoryId`. */
       async chefIdsInCategory(categoryId: string): Promise<string[]> {
         const rows = await this.prismaService.extended.menu.findMany({
-          where: { categoryId, isActive: true },
+          where: { categoryId },
           select: { chefId: true },
           distinct: ['chefId'],
         });
@@ -459,7 +470,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
     ```
   Register `MenusModule` in `<repo>\backend\src\app.module.ts` under `imports: []`.
 
-- [ ] T011 Extend `users.service` with the role-flip chokepoint (research R6). Open `<repo>\backend\src\modules\users\users.service.ts`. Add this method (do NOT modify the constructor or other methods):
+- [X] T011 Extend `users.service` with the role-flip chokepoint (research R6). Open `<repo>\backend\src\modules\users\users.service.ts`. Add this method (do NOT modify the constructor or other methods):
   ```ts
   /**
    * Phase 3 R6 chokepoint — the ONLY method that mutates User.role.
@@ -488,7 +499,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Structured logging + exception filter
 
-- [ ] T012 [P] Create the chef-event logger as a sibling of the Phase 1 / Phase 2 loggers. Create `<repo>\backend\src\common\logging\chef-event.logger.ts` with content **identical in shape** to `<repo>\backend\src\common\logging\address-event.logger.ts` (read that file first to mirror the line shape exactly). The new logger MUST expose a class `ChefEventLogger` with one method per outcome the data-model `Observability shape` section names:
+- [X] T012 [P] Create the chef-event logger as a sibling of the Phase 1 / Phase 2 loggers. Create `<repo>\backend\src\common\logging\chef-event.logger.ts` with content **identical in shape** to `<repo>\backend\src\common\logging\address-event.logger.ts` (read that file first to mirror the line shape exactly). The new logger MUST expose a class `ChefEventLogger` with one method per outcome the data-model `Observability shape` section names:
   - `applySuccess({ actorUserId, applicationId, sourceIp })`
   - `applyValidationRejected({ actorUserId, sourceIp })`
   - `applyApplicationPending({ actorUserId, applicationId, sourceIp })`
@@ -512,7 +523,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
   Each method internally calls `this.logger.log(JSON.stringify({ event, outcome, timestamp: new Date().toISOString(), correlationId: correlationIdContext.get(), actorId: <fromArgs>, sourceIp, ...targetIds }))`. **Per FR-039, NEVER include `latitude`, `longitude`, `coordinates`, or any coordinate-derived value in any line.** Test by grep after a quickstart run.
 
-- [ ] T013 [P] Create the category-event logger sibling. Create `<repo>\backend\src\common\logging\category-event.logger.ts` with the same shape as T012 but smaller surface. Methods:
+- [X] T013 [P] Create the category-event logger sibling. Create `<repo>\backend\src\common\logging\category-event.logger.ts` with the same shape as T012 but smaller surface. Methods:
   - `createSuccess({ actorAdminId, categoryId, sourceIp })`
   - `createValidationRejected({ actorAdminId, sourceIp })`
   - `updateSuccess({ actorAdminId, categoryId, sourceIp })`
@@ -524,9 +535,9 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   - `reorderValidationRejected({ actorAdminId, sourceIp })`
   - `roleRefused({ actorUserId, sourceIp })` — emitted when a non-admin attempts a mutation.
 
-- [ ] T014 Register both new loggers in the logging module. Open `<repo>\backend\src\common\logging\logging.module.ts`. Add `ChefEventLogger` and `CategoryEventLogger` to both `providers: []` and `exports: []`. Add the imports at the top.
+- [X] T014 Register both new loggers in the logging module. Open `<repo>\backend\src\common\logging\logging.module.ts`. Add `ChefEventLogger` and `CategoryEventLogger` to both `providers: []` and `exports: []`. Add the imports at the top.
 
-- [ ] T015 Broaden the global `HttpExceptionNormalizerFilter` to cover Phase 3 paths and events. Open `<repo>\backend\src\common\errors\http-exception.filter.ts`. The Phase 2 version already strips `latitude` / `longitude` / `coordinates` from every error response payload (FR-021) and emits structured logs for `/api/v1/addresses/*` paths. **Extend (do not replace) the path-matching block** so that:
+- [X] T015 Broaden the global `HttpExceptionNormalizerFilter` to cover Phase 3 paths and events. Open `<repo>\backend\src\common\errors\http-exception.filter.ts`. The Phase 2 version already strips `latitude` / `longitude` / `coordinates` from every error response payload (FR-021) and emits structured logs for `/api/v1/addresses/*` paths. **Extend (do not replace) the path-matching block** so that:
   - The same coordinate-redaction walk also applies to `/api/v1/chefs/*`, `/api/v1/chef/*`, and `/api/v1/admin/chefs/*` request paths.
   - Validation rejections (400 from `ValidationPipe`) emit:
     - `ChefEventLogger.applyValidationRejected(...)` when the URL matches `/api/v1/chef/apply`.
@@ -538,12 +549,12 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Mobile + admin scaffolding (non-blocking; can run in parallel with backend foundational)
 
-- [ ] T016 [P] Extend `AuthContext` to surface the user's chef-application state. Open `<repo>\mobile\context\AuthContext.tsx`. The current shape from Phase 1 returns `user, isLoading, signIn, signOut, register` from `useAuth()`. **Add** these to the context value and the `getMe()` post-processing:
+- [X] T016 [P] Extend `AuthContext` to surface the user's chef-application state. Open `<repo>\mobile\context\AuthContext.tsx`. The current shape from Phase 1 returns `user, isLoading, signIn, signOut, register` from `useAuth()`. **Add** these to the context value and the `getMe()` post-processing:
   - `pendingApplication: { applicationId: string } | null` — populated from a new field the server-side `GET /auth/me` returns once the user has a pending Chef row. (For now, mock this field as `null` on the response side; the server-side change is T040.)
   - `role: 'admin' | 'customer' | 'chef'` — already on `user.role` from Phase 1; just re-expose for convenience.
   Update the `AuthContextValue` interface and the default value accordingly. Do NOT break existing Phase 1 / Phase 2 consumers — preserve the existing fields.
 
-- [ ] T017 [P] Create the `KitchenLocationPicker` mobile component (research R5). Create `<repo>\mobile\components\KitchenLocationPicker.tsx` with this content — it is a thin wrapper that delegates to the Phase 2 `AddressPickerMap`:
+- [X] T017 [P] Create the `KitchenLocationPicker` mobile component (research R5). Create `<repo>\mobile\components\KitchenLocationPicker.tsx` with this content — it is a thin wrapper that delegates to the Phase 2 `AddressPickerMap`:
   ```tsx
   import React from 'react';
   import { AddressPickerMap } from './AddressPickerMap';
@@ -568,7 +579,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   ```
   No new dependencies needed. No new env vars needed.
 
-- [ ] T018 [P] Add the Phase 3 i18n key skeletons in both locales. Open `<repo>\mobile\constants\i18n\en.ts` and `<repo>\mobile\constants\i18n\ar.ts`. Add (or merge into existing nested namespaces) the following key groups. Use the exact keys; Arabic translations may be filled in alongside their English counterparts in the same PR. **Both files MUST carry identical key sets — a missing-key check across locales must report zero asymmetries (quickstart Step 12 done-criteria)**:
+- [X] T018 [P] Add the Phase 3 i18n key skeletons in both locales. Open `<repo>\mobile\constants\i18n\en.ts` and `<repo>\mobile\constants\i18n\ar.ts`. Add (or merge into existing nested namespaces) the following key groups. Use the exact keys; Arabic translations may be filled in alongside their English counterparts in the same PR. **Both files MUST carry identical key sets — a missing-key check across locales must report zero asymmetries (quickstart Step 12 done-criteria)**:
 
   Namespace `chefApply.*`:
   - `chefApply.screenTitle`, `chefApply.locationStep.title`, `chefApply.locationStep.confirmCta`, `chefApply.detailsStep.title`, `chefApply.detailsStep.chefNameLabel`, `chefApply.detailsStep.bioLabel`, `chefApply.detailsStep.minOrderPriceLabel`, `chefApply.detailsStep.submitCta`, `chefApply.validation.chefNameRequired`, `chefApply.validation.bioRequired`, `chefApply.validation.minOrderPricePositive`, `chefApply.validation.coordinatesRequired`.
@@ -598,7 +609,11 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
   When in doubt about wording, default to clear, concise marketplace copy; the strings are not load-bearing and can be polished pre-launch.
 
-- [ ] T019 [P] Scaffold the admin NextAuth Credentials sign-in. Open `<repo>\admin\lib\` (create the directory if absent). Create `<repo>\admin\lib\auth.ts`:
+- [X] T019 [P] Scaffold the admin NextAuth Credentials sign-in. **First install the deps** — Phase 0 scaffolded an empty Next app and did NOT install NextAuth or axios. From `<repo>\admin` run:
+  ```powershell
+  npm install next-auth axios
+  ```
+  Then create the directory `<repo>\admin\lib\` (if absent) and write `<repo>\admin\lib\auth.ts`:
   ```ts
   import type { NextAuthOptions } from 'next-auth';
   import CredentialsProvider from 'next-auth/providers/credentials';
@@ -639,9 +654,12 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
     callbacks: {
       async jwt({ token, user }) {
         if (user) {
-          token.role = (user as { role: string }).role;
-          token.accessToken  = (user as { accessToken: string }).accessToken;
-          token.refreshToken = (user as { refreshToken: string }).refreshToken;
+          // NextAuth's `User | AdapterUser` doesn't carry our custom fields,
+          // so cast through `unknown` (TypeScript's escape hatch) to extract them.
+          const u = user as unknown as { role: string; accessToken: string; refreshToken: string };
+          token.role = u.role;
+          token.accessToken  = u.accessToken;
+          token.refreshToken = u.refreshToken;
         }
         return token;
       },
@@ -2163,7 +2181,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   - `rejectedApplication(user, overrides?)` — same but admin rejects with a synthetic reason "test rejection".
   - `revokedChef(user, overrides?)` — same but admin revokes with reason "test revocation".
   - `seedCategories()` — re-runs the seed against the test database in a clean state.
-  - `seedMenu(chef, category)` — inserts a Menu row directly with `chefId, categoryId, isActive: true`.
+  - `seedMenu(chef, category)` — inserts a Menu row directly with `chefId, categoryId, name: { en: 'Test Menu', ar: 'قائمة اختبار' }`. (The Phase 0 `Menu` schema has no `isActive` flag — "active" means "not soft-deleted" automatically via the extended client.)
   - `seedManyChefs(N, centre, categoryDistribution?)` — bulk seeds N verified chefs at points distributed around the centre coordinate.
   All fixtures live under `test/` only; no production code path inserts a Menu or seeds an admin without going through the intended Phase 4 / Phase 13 paths.
 

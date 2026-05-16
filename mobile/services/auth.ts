@@ -33,8 +33,18 @@ export async function refresh(refreshToken: string): Promise<SessionResponse> {
   return data;
 }
 
-export async function getMe(): Promise<{ user: AuthUser }> {
-  const { data } = await api.get<{ user: AuthUser }>('/auth/me');
+/**
+ * Phase 3 (T034) extended the response with `pendingApplication` for
+ * customers who have a pending chef row; the field is `null` for users
+ * with no pending application, and absent on backends older than T034.
+ */
+export interface MeResponse {
+  user: AuthUser;
+  pendingApplication?: { applicationId: string } | null;
+}
+
+export async function getMe(): Promise<MeResponse> {
+  const { data } = await api.get<MeResponse>('/auth/me');
   return data;
 }
 

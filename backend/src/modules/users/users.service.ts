@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuthEventLogger } from '../../common/logging/auth-event.logger';
 import { TWILIO_VERIFY_CLIENT } from '../twilio/twilio-verify.client.interface';
@@ -146,6 +147,23 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { fcmToken },
+    });
+  }
+
+  /**
+   * Phase 3 R6 chokepoint — the ONLY method that mutates User.role.
+   * Callable only from inside the modular monolith (admin.service uses it
+   * inside the verify / revoke prisma.$transaction; pass `tx` to participate).
+   */
+  async setRole(
+    userId: string,
+    nextRole: Role,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.user.update({
+      where: { id: userId },
+      data:  { role: nextRole },
     });
   }
 }
