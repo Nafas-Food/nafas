@@ -60,7 +60,6 @@ export const en = {
   },
   home: {
     greeting: 'Hello, {name}',
-    chefPlaceholder: 'Chef home (placeholder)',
     deliverTo: 'Delivering to',
     addAddress: 'Add address',
   },

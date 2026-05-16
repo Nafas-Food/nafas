@@ -59,9 +59,12 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
     // 4. Chef → chef route group (redirect even when already in /(tabs)
     //    so a role change from customer→chef is picked up on re-render).
+    //    Land on the dashboard tab explicitly — navigating to bare /(chef)
+    //    would resolve to a screen not in the ChefGlassTabBar whitelist,
+    //    showing the floating bar with no tab active.
     if (user.role === 'chef') {
       if (!inChef) {
-        router.replace('/(chef)');
+        router.replace('/(chef)/dashboard');
       }
       return;
     }
