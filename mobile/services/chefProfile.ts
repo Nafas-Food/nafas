@@ -50,8 +50,6 @@ async function uploadImage(
   const form = new FormData();
   // React Native FormData is fine with the { uri, type, name } shape:
   form.append('file', { uri, type: mimeType, name: 'upload' } as unknown as Blob);
-  const { data } = await api.post(path, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await api.post(path, form);
   return data;
 }

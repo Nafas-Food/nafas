@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsInt,
   IsLatitude,
@@ -10,6 +10,7 @@ import {
   Length,
   Max,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class DiscoveryQueryDto {
@@ -22,17 +23,20 @@ export class DiscoveryQueryDto {
   @Length(1, 200)
   q?: string;
 
-  @IsOptional()
+  @ValidateIf((o: DiscoveryQueryDto) => o.lng !== undefined)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsLatitude()
   lat?: number;
 
-  @IsOptional()
+  @ValidateIf((o: DiscoveryQueryDto) => o.lat !== undefined)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsLongitude()
   lng?: number;
 
-  @IsOptional()
+  @ValidateIf((o: DiscoveryQueryDto) => o.lat !== undefined && o.lng !== undefined)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -40,12 +44,14 @@ export class DiscoveryQueryDto {
   radiusKm?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsInt()
   @Min(0)
   cursor?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsInt()
   @Min(1)

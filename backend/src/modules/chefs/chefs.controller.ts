@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  FileTypeValidator,
   Get,
   HttpCode,
   Ip,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Patch,
   Post,
   UploadedFile,
@@ -93,7 +96,15 @@ export class ChefsController {
   replaceLogo(
     @CurrentUser() user: CurrentUserPayload,
     @Ip() sourceIp: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'image/(jpeg|png|webp)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
     return this.chefsService.replaceLogo(user.sub, sourceIp, file);
   }
@@ -108,7 +119,15 @@ export class ChefsController {
   replaceBanner(
     @CurrentUser() user: CurrentUserPayload,
     @Ip() sourceIp: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'image/(jpeg|png|webp)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
     return this.chefsService.replaceBanner(user.sub, sourceIp, file);
   }

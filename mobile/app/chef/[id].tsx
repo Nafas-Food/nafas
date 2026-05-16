@@ -35,6 +35,11 @@ export default function ChefPublicProfileScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id || typeof id !== 'string') {
+      setError(t('errors.NOT_FOUND'));
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {

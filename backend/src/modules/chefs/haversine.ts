@@ -16,5 +16,6 @@ export function haversineKm(
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
+  const clampedA = Math.min(1, Math.max(0, a));
+  return 2 * R * Math.asin(Math.sqrt(clampedA));
 }

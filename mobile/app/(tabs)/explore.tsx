@@ -48,6 +48,7 @@ export default function ExploreScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef(false);
 
   // Debounce search input
   useEffect(() => {
@@ -110,10 +111,13 @@ export default function ExploreScreen() {
   }, [selectedCategoryId, debouncedQ]);
 
   const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore) return;
+    if (inFlightRef.current || loadingMore || !hasMore) return;
+    inFlightRef.current = true;
     const nextCursor = cursor + PAGE_SIZE;
     setCursor(nextCursor);
-    fetchChefs(nextCursor, true);
+    fetchChefs(nextCursor, true).finally(() => {
+      inFlightRef.current = false;
+    });
   }, [cursor, fetchChefs, hasMore, loadingMore]);
 
   const toggleCategory = (id: string) => {

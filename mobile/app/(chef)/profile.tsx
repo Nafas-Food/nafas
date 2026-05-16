@@ -92,16 +92,17 @@ export default function ChefProfileEditorScreen() {
 
   const onToggleAvailability = useCallback(
     async (next: boolean) => {
+      const prev = isOpen;
       setIsOpen(next);
       try {
         const updated = await toggleChefAvailability(next);
         setProfile(updated);
       } catch (err) {
-        setIsOpen((prev) => !prev);
+        setIsOpen(prev);
         setError(t('errors.NETWORK'));
       }
     },
-    [t],
+    [t, isOpen],
   );
 
   const onSave = useCallback(async () => {
