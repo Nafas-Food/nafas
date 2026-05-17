@@ -1,14 +1,17 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
   PayloadTooLargeException,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
-import { Prisma, Chef } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+import { Prisma, Chef, Role } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ChefApplicationService } from './chef-application.service';
 import { ChefEventLogger } from '../../common/logging/chef-event.logger';
 import { ApplyChefDto } from './dto/apply-chef.dto';
+import { WebApplyChefDto } from './dto/web-apply-chef.dto';
 import {
   ChefCardResponseDto,
   ChefPrivateProfileResponseDto,
@@ -182,11 +185,16 @@ export class ChefsService {
     const { existing } =
       await this.chefApplicationService.assertEligibleToApply(userId);
 
+    // Location is deferred to the post-verification "set kitchen
+    // location" mobile flow — apply substitutes (0, 0) as the "unset"
+    // sentinel when the client doesn't supply coordinates. The chef
+    // (chef)/_layout.tsx route guard treats lat=0 AND lng=0 as a signal
+    // to force the set-location screen on first sign-in after verify.
     const data: Prisma.ChefUpdateInput | Prisma.ChefCreateInput = {
       chefName: dto.chefName,
       bio: dto.bio,
-      latitude: new Prisma.Decimal(dto.latitude),
-      longitude: new Prisma.Decimal(dto.longitude),
+      latitude: new Prisma.Decimal(dto.latitude ?? 0),
+      longitude: new Prisma.Decimal(dto.longitude ?? 0),
       minOrderPrice: new Prisma.Decimal(dto.minOrderPrice),
       isVerified: false,
       verifiedAt: null,
@@ -215,6 +223,83 @@ export class ChefsService {
     });
 
     return ChefPrivateProfileResponseDto.fromEntity(chef, []);
+  }
+
+  /**
+   * Public web chef-apply flow (admin panel) — creates a customer user
+   * AND a pending chef application in a single transaction. Skips OTP;
+   * the admin verifies the chef from the dashboard afterwards.
+   */
+  async webApply(
+    sourceIp: string,
+    dto: WebApplyChefDto,
+  ): Promise<{ applicationId: string }> {
+    if (dto.email) {
+      const existingEmail = await this.prismaService.extended.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existingEmail) {
+        throw new ConflictException({
+          code: 'EMAIL_IN_USE',
+          message: 'Email is already in use.',
+        });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    try {
+      const chef = await this.prismaService.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            fullName: dto.fullName,
+            phone: dto.phone,
+            email: dto.email ?? null,
+            passwordHash,
+            phoneVerified: false,
+            role: Role.customer,
+          },
+        });
+        return tx.chef.create({
+          data: {
+            chefName: dto.chefName,
+            bio: dto.bio,
+            latitude: new Prisma.Decimal(dto.latitude),
+            longitude: new Prisma.Decimal(dto.longitude),
+            minOrderPrice: new Prisma.Decimal(dto.minOrderPrice),
+            isVerified: false,
+            logo: DEFAULT_CHEF_LOGO_URL,
+            banner: DEFAULT_CHEF_BANNER_URL,
+            user: { connect: { id: user.id } },
+          },
+        });
+      });
+
+      this.chefEventLogger.applySuccess({
+        actorUserId: chef.userId,
+        applicationId: chef.id,
+        sourceIp,
+      });
+
+      return { applicationId: chef.id };
+    } catch (err) {
+      const e = err as { code?: string; meta?: { target?: string[] } };
+      if (e.code === 'P2002') {
+        if (e.meta?.target?.includes('phone')) {
+          throw new ConflictException({
+            code: 'PHONE_IN_USE',
+            message: 'Phone is already in use.',
+          });
+        }
+        if (e.meta?.target?.includes('email')) {
+          throw new ConflictException({
+            code: 'EMAIL_IN_USE',
+            message: 'Email is already in use.',
+          });
+        }
+      }
+      throw err;
+    }
   }
 
   async findManyForDiscovery(

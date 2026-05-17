@@ -3,8 +3,6 @@ import { api } from './api';
 export interface ChefApplyPayload {
   chefName: string;
   bio: string;
-  latitude: number;
-  longitude: number;
   minOrderPrice: number;
 }
 

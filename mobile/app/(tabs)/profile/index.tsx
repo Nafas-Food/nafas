@@ -44,11 +44,6 @@ export default function ProfileScreen() {
       onPress: () => router.push('/(tabs)/profile/addresses'),
     },
     {
-      icon: 'briefcase' as const,
-      label: t('chefApply.screenTitle'),
-      onPress: () => router.push('/(auth)/chef-apply'),
-    },
-    {
       icon: 'log-out' as const,
       label: t('profile.signOut'),
       onPress: confirmSignOut,
@@ -97,6 +92,17 @@ export default function ProfileScreen() {
             )}
           </Pressable>
         ))}
+      </View>
+
+      {/* Small info row — not a button. Chefs onboard via direct contact. */}
+      <View style={[styles.becomeChefRow, { flexDirection: rowDirection }]}>
+        <Feather name="phone" size={14} color={colors.muted} />
+        <Text style={[styles.becomeChefText, { textAlign }]}>
+          {t('profile.becomeChef.body')}{' '}
+          <Text style={styles.becomeChefPhone}>
+            {t('profile.becomeChef.phone')}
+          </Text>
+        </Text>
       </View>
     </View>
   );
@@ -159,6 +165,23 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     },
     menuLabelDanger: {
       color: colors.danger,
+    },
+    becomeChefRow: {
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 12,
+    },
+    becomeChefText: {
+      flex: 1,
+      fontSize: 12,
+      lineHeight: 16,
+      color: colors.muted,
+    },
+    becomeChefPhone: {
+      color: colors.text,
+      fontWeight: '600',
     },
   });
 }

@@ -3,11 +3,12 @@ import {
   IsLatitude,
   IsLongitude,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
   Length,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ApplyChefDto {
   @ApiProperty({ minLength: 1, maxLength: 80 })
@@ -20,15 +21,20 @@ export class ApplyChefDto {
   @Length(1, 1000)
   bio!: string;
 
-  @ApiProperty({ minimum: -90, maximum: 90 })
+  // Latitude/longitude are deferred to the post-verification "set kitchen
+  // location" flow on mobile. Apply accepts them if supplied but doesn't
+  // require them — the service substitutes (0, 0) as the "unset" sentinel.
+  @ApiPropertyOptional({ minimum: -90, maximum: 90 })
+  @IsOptional()
   @Type(() => Number)
   @IsLatitude()
-  latitude!: number;
+  latitude?: number;
 
-  @ApiProperty({ minimum: -180, maximum: 180 })
+  @ApiPropertyOptional({ minimum: -180, maximum: 180 })
+  @IsOptional()
   @Type(() => Number)
   @IsLongitude()
-  longitude!: number;
+  longitude?: number;
 
   @ApiProperty({
     minimum: 0,

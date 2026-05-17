@@ -7,6 +7,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
 import { ChefsController } from './chefs.controller';
 import { ChefsDiscoveryController } from './chefs-discovery.controller';
+import { ChefWebApplyController } from './chef-web-apply.controller';
 import { ChefsService } from './chefs.service';
 import { ChefApplicationService } from './chef-application.service';
 
@@ -19,7 +20,11 @@ import { ChefApplicationService } from './chef-application.service';
     NotificationsModule,
     UsersModule,
   ],
-  controllers: [ChefsController, ChefsDiscoveryController],
+  controllers: [
+    ChefsController,
+    ChefsDiscoveryController,
+    ChefWebApplyController,
+  ],
   providers: [ChefsService, ChefApplicationService],
   exports: [ChefsService, ChefApplicationService],
 })

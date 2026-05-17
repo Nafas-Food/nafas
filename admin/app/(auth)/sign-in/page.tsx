@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
+  const { data: session, status } = useSession();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.role === 'admin') {
+      router.replace('/');
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +103,13 @@ export default function SignInPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-mocha">
+          Want to cook with Nafas?{' '}
+          <Link href="/chef-apply" className="font-medium text-primary hover:underline">
+            Apply to be a chef
+          </Link>
+        </p>
       </div>
     </div>
   );

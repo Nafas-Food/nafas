@@ -54,6 +54,18 @@ export const ar: I18nDict = {
   },
   profile: {
     signOut: 'تسجيل الخروج',
+    becomeChef: {
+      body: 'لتصبح طاهيًا، تواصل معنا على',
+      phone: '+20 XXX XXX XXXX',
+    },
+  },
+  setLocation: {
+    title: 'حدد موقع مطبخك',
+    subtitle: 'اسحب الدبوس على الخريطة لتحديد مكان طهيك. سيرى العملاء المسافة من هذه النقطة.',
+    saveCta: 'حفظ ومتابعة',
+    validation: {
+      coordinatesRequired: 'يرجى تحديد دبوس على الخريطة أولاً.',
+    },
   },
   home: {
     greeting: 'أهلاً، {name}',
@@ -146,6 +158,7 @@ export const ar: I18nDict = {
       bioLabel: 'نبذة',
       minOrderPriceLabel: 'الحد الأدنى للطلب (جنيه)',
       submitCta: 'إرسال الطلب',
+      locationLater: 'ستحدد موقع مطبخك على الخريطة بعد موافقة المسؤول على طلبك.',
     },
     validation: {
       chefNameRequired: 'اسم المطبخ مطلوب.',
@@ -182,6 +195,7 @@ export const ar: I18nDict = {
   },
   discovery: {
     tabTitle: 'استكشاف',
+    allChip: 'الكل',
     searchPlaceholder: 'ابحث عن الطهاة...',
     emptyState: 'لم يُعثر على طهاة.',
     openBadge: 'مفتوح',

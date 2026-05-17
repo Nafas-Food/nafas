@@ -213,37 +213,59 @@ export default function ExploreScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsScroll}
-      >
-        {categories.map((cat) => {
-          const active = selectedCategoryId === cat.id;
-          return (
-            <Pressable
-              key={cat.id}
-              onPress={() => toggleCategory(cat.id)}
-              style={[
-                styles.chip,
-                active && {
-                  backgroundColor: colors.primary,
-                  borderColor: colors.primary,
-                },
-              ]}
-            >
-              <Text
+      <View style={styles.chipsBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScroll}
+        >
+          {/* "All" — selected when no category filter is active */}
+          {(() => {
+            const allActive = selectedCategoryId === null;
+            return (
+              <Pressable
+                key="__all__"
+                onPress={() => setSelectedCategoryId(null)}
                 style={[
-                  styles.chipText,
-                  active && { color: colors.surface },
+                  styles.chip,
+                  allActive && styles.chipActive,
                 ]}
               >
-                {cat.name[locale]}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.chipText,
+                    allActive && styles.chipTextActive,
+                  ]}
+                >
+                  {t('discovery.allChip')}
+                </Text>
+              </Pressable>
+            );
+          })()}
+          {categories.map((cat) => {
+            const active = selectedCategoryId === cat.id;
+            return (
+              <Pressable
+                key={cat.id}
+                onPress={() => toggleCategory(cat.id)}
+                style={[
+                  styles.chip,
+                  active && styles.chipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    active && styles.chipTextActive,
+                  ]}
+                >
+                  {cat.name[locale]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {loading && chefs.length === 0 && (
         <View style={styles.center}>
@@ -331,24 +353,41 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     clearBtn: {
       padding: 2,
     },
+    // The outer bar fixes the row's height so the horizontal ScrollView
+    // can't cross-axis-stretch its children into tall capsules.
+    chipsBar: {
+      height: 52,
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
     chipsScroll: {
+      alignItems: 'center',
       paddingHorizontal: 16,
-      paddingVertical: 10,
       gap: 8,
     },
     chip: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
+      height: 32,
+      paddingHorizontal: 16,
       borderRadius: 100,
       borderWidth: 1,
       borderColor: colors.border,
       backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
       marginRight: 8,
     },
+    chipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
     chipText: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontSize: 14,
+      fontWeight: '500',
       color: colors.text,
+    },
+    chipTextActive: {
+      color: colors.surface,
+      fontWeight: '600',
     },
     center: {
       flex: 1,
