@@ -199,10 +199,7 @@ appear in the saved list across app restarts.
 | 3.11 | `GET /chefs/:id/reviews` — paginated. |
 | 3.12 | `AdminModule`: `GET /admin/chefs/pending`, `PATCH /admin/chefs/:id/verify` (sets `is_verified=true`, sets `user.role=CHEF`, creates SYSTEM Notification, sends FCM), `PATCH /admin/chefs/:id/reject` (records reason, optional FCM), `GET /admin/users` (paginated, role filter). |
 
-> **Constitution exception note** (Task 3.9): Haversine distance ranking inside
-> Postgres requires raw SQL. We accept a narrow `$queryRaw` exception scoped to
-> the chef-discovery query, isolated to one repository method, with a unit test
-> proving the contract. Recorded in Complexity Tracking.
+> **Constitution exception note** (Task 3.9): **Retracted by Phase 3.** The chef-discovery query uses a pure-Prisma bounding-box pre-filter + in-JS Haversine sort (Phase 3 research R2). No `$queryRaw` exception is needed; the only `$queryRaw` in the codebase remains the Phase 0 health probe.
 
 ### Mobile
 
@@ -627,8 +624,6 @@ notifications, storage, twilio, admin, health).
 - **A3. Shared API types.** Backend Swagger could generate mobile + admin clients
   (e.g., `openapi-typescript`). Adds CI step. Deferred — manual `services/` files
   per the constitution coding standards are enough for v1.
-- **A4. Prisma `$queryRaw` exception register.** The Haversine query in 3.9 will be
-  the first justified exception. If a second exception is requested, escalate to a
-  constitution amendment.
+- **A4. Prisma `$queryRaw` exception register.** Phase 3 closed the planned Haversine carve-out without adding one — the chef-discovery query uses pure-Prisma bounding-box + JS Haversine (research R2). The only `$queryRaw` in the codebase is the Phase 0 health probe. If any future exception is requested, escalate to a constitution amendment.
 - **A5. Default chef logo + banner art.** Need designer-approved placeholder images
   (or a generic Nafas-branded image from the design system) before Phase 0.6.

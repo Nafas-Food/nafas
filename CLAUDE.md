@@ -148,4 +148,49 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
   `prismaService.extended.userAddress.softDelete({ id })`. The CI
   grep gate (`backend/scripts/ci-no-hard-delete.sh`) continues to
   enforce this.
+## Phase 3 conventions (do not regress)
+
+- The Phase 3 cooldown gate in `ChefApplicationService.assertEligibleToApply`
+  is the ONLY Phase 3 code path that reads the bare `prismaService.chef.*`
+  client. The deviation is named in research R4 and commented at the call
+  site; every other Phase 3 read on a soft-delete entity goes through
+  `prismaService.extended.<model>.*`.
+- Role transitions (customer → chef on verify, chef → customer on revoke)
+  happen exclusively in `users.service.setRole(userId, nextRole, tx?)` and
+  are called from `admin.service` inside the same `prisma.$transaction`
+  that writes the Chef state change and the Notification row. NO other
+  Phase 3 code writes `User.role` (research R6).
+- `notifications.service.create({ userId, type, title, body, data?, tx? })`
+  is the ONLY way Phase 3 code writes a Notification row. The `tx` parameter
+  lets the call participate in a surrounding `prisma.$transaction`.
+  Push delivery is best-effort (`dispatchPush(...)`) after the transaction
+  commits — failure logs but never throws.
+- `storage.service.upload(bucket, path, buffer, mimeType)` is the ONLY way
+  Phase 3 code writes to Supabase Storage. Chef logo / banner uploads
+  accept JPEG / PNG / WebP, ≤ 5 MB (validated by the service AND by the
+  `FileInterceptor({ limits: { fileSize: 5 * 1024 * 1024 } })` on the
+  controller).
+- The chef-discovery query (`chefs.service.findManyForDiscovery`) uses a
+  pure-Prisma bounding-box pre-filter + in-JS Haversine sort (research R2).
+  Phase 3 ships ZERO new `$queryRaw` exceptions. The Haversine-via-raw-SQL
+  exception that `docs/IMPLEMENTATION_PLAN.md` task 3.9 had reserved is
+  retracted by Phase 3.
+- Default radius 15 km, hard cap 50 km on the chef-discovery surface
+  (spec FR-016 clarification Q2). The cap is enforced server-side
+  (`Math.min(query.radiusKm ?? 15, 50)`); the client cannot widen past 50.
+- 24-hour cooldown after a rejection or revocation before a fresh
+  `POST /chef/apply` is accepted. Cooldown source-of-truth is
+  `Chef.rejectedAt` (after rejection) or `Chef.deletedAt` (after
+  revocation). Computing `earliestResubmitAt` server-side is non-negotiable
+  (Constitution Principle II).
+- The `HttpExceptionNormalizerFilter` now scrubs `latitude` / `longitude` /
+  `coordinates` from error responses on `/api/v1/chefs/*`, `/api/v1/chef/*`,
+  `/api/v1/admin/chefs/*` in addition to the Phase 2 address paths.
+  `ChefEventLogger` / `CategoryEventLogger` siblings to the Phase 1 / Phase 2
+  loggers emit the FR-038 events.
+- The admin web dashboard surfaces ship English-only (spec FR-036) — a
+  deliberate v1 scope decision. Free-text admin input that is later shown
+  to a customer (rejection / revocation reasons) is stored verbatim and
+  rendered to the customer as-is; the platform does not translate
+  admin-typed text.
 <!-- MANUAL ADDITIONS END -->
