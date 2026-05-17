@@ -264,8 +264,10 @@ export class ChefsService {
           data: {
             chefName: dto.chefName,
             bio: dto.bio,
-            latitude: new Prisma.Decimal(dto.latitude),
-            longitude: new Prisma.Decimal(dto.longitude),
+            // (0, 0) sentinel — chef sets real coords post-verification
+            // via the mobile (chef)/set-location screen.
+            latitude: new Prisma.Decimal(dto.latitude ?? 0),
+            longitude: new Prisma.Decimal(dto.longitude ?? 0),
             minOrderPrice: new Prisma.Decimal(dto.minOrderPrice),
             isVerified: false,
             logo: DEFAULT_CHEF_LOGO_URL,

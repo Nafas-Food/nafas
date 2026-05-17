@@ -17,8 +17,6 @@ interface FormState {
   password: string;
   chefName: string;
   bio: string;
-  latitude: string;
-  longitude: string;
   minOrderPrice: string;
 }
 
@@ -29,8 +27,6 @@ const INITIAL: FormState = {
   password: '',
   chefName: '',
   bio: '',
-  latitude: '',
-  longitude: '',
   minOrderPrice: '',
 };
 
@@ -49,20 +45,8 @@ export default function ChefApplyPage() {
     setError('');
     setLoading(true);
 
-    const lat = Number(form.latitude);
-    const lng = Number(form.longitude);
     const minOrderPrice = Number(form.minOrderPrice);
 
-    if (Number.isNaN(lat) || lat < -90 || lat > 90) {
-      setError('Latitude must be a number between -90 and 90.');
-      setLoading(false);
-      return;
-    }
-    if (Number.isNaN(lng) || lng < -180 || lng > 180) {
-      setError('Longitude must be a number between -180 and 180.');
-      setLoading(false);
-      return;
-    }
     if (Number.isNaN(minOrderPrice) || minOrderPrice <= 0) {
       setError('Minimum order price must be a positive number.');
       setLoading(false);
@@ -70,6 +54,8 @@ export default function ChefApplyPage() {
     }
 
     try {
+      // Location is intentionally NOT collected here. Verified chefs
+      // set it on the mobile app's first sign-in via (chef)/set-location.
       await axios.post(`${getBackendUrl()}/api/v1/chef/web-apply`, {
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
@@ -77,8 +63,6 @@ export default function ChefApplyPage() {
         email: form.email.trim() || undefined,
         chefName: form.chefName.trim(),
         bio: form.bio.trim(),
-        latitude: lat,
-        longitude: lng,
         minOrderPrice,
       });
       setSuccess(true);
@@ -146,11 +130,12 @@ export default function ChefApplyPage() {
             <div className="space-y-4">
               <Field label="Chef / Kitchen name *" value={form.chefName} onChange={update('chefName')} required maxLength={80} />
               <TextArea label="Bio *" value={form.bio} onChange={update('bio')} required maxLength={1000} rows={4} />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Latitude *" value={form.latitude} onChange={update('latitude')} required placeholder="30.0444" />
-                <Field label="Longitude *" value={form.longitude} onChange={update('longitude')} required placeholder="31.2357" />
-                <Field label="Min order price (EGP) *" value={form.minOrderPrice} onChange={update('minOrderPrice')} required placeholder="50" />
-              </div>
+              <Field label="Min order price (EGP) *" value={form.minOrderPrice} onChange={update('minOrderPrice')} required placeholder="50" />
+              <p className="rounded-lg bg-background px-4 py-3 text-xs text-mocha">
+                You&apos;ll mark your kitchen&apos;s location on the map the first time
+                you sign in to the mobile app after an administrator approves
+                your application.
+              </p>
             </div>
           </section>
 
@@ -189,11 +174,16 @@ function Field({
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-mocha">{label}</label>
+      {/* suppressHydrationWarning silences mismatch errors caused by
+          password-manager extensions (Keeper, LastPass, 1Password) that
+          inject extra attributes / sibling nodes into inputs before
+          React hydrates. Doesn't affect runtime behavior. */}
       <input
         type={type}
         value={value}
         onChange={onChange}
         className="w-full rounded-input border border-border bg-background px-4 py-2.5 text-sm text-umber outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+        suppressHydrationWarning
         {...rest}
       />
     </div>
@@ -217,6 +207,7 @@ function TextArea({
         value={value}
         onChange={onChange}
         className="w-full rounded-input border border-border bg-background px-4 py-2.5 text-sm text-umber outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+        suppressHydrationWarning
         {...rest}
       />
     </div>

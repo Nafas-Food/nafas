@@ -73,6 +73,7 @@ export default function SignInPage() {
               onChange={(e) => setPhone(e.target.value)}
               className="w-full rounded-input border border-border bg-background px-4 py-3 text-sm text-umber outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
               placeholder="Enter phone number"
+              suppressHydrationWarning
               required
             />
           </div>
@@ -91,6 +92,7 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-input border border-border bg-background px-4 py-3 text-sm text-umber outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
               placeholder="Enter password"
+              suppressHydrationWarning
               required
             />
           </div>
