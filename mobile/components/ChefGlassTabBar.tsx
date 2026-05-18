@@ -163,17 +163,17 @@ function makeStyles(colors: NafasColors) {
       borderRadius: 100,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: 'rgba(31, 26, 23, 0.08)',
+      borderColor: colors.glassBorder,
       ...Platform.select({
         ios: {
-          backgroundColor: 'rgba(255, 255, 255, 0.78)',
-          shadowColor: '#1F1A17',
+          backgroundColor: colors.glassBackgroundIOS,
+          shadowColor: colors.glassShadow,
           shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.18,
+          shadowOpacity: colors.glassShadowOpacity,
           shadowRadius: 24,
         },
         android: {
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          backgroundColor: colors.glassBackgroundAndroid,
           elevation: 12,
         },
       }),
@@ -189,7 +189,7 @@ function makeStyles(colors: NafasColors) {
       minHeight: 44,
     },
     tabItemActive: {
-      backgroundColor: 'rgba(196, 98, 45, 0.13)',
+      backgroundColor: colors.tabItemActiveBg,
     },
     tabLabel: {
       fontSize: 9,

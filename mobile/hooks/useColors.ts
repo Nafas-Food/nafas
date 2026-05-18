@@ -15,6 +15,12 @@ export interface NafasColors {
   muted: string;
   border: string;
   inputBorder: string;
+  glassBackgroundIOS: string;
+  glassBackgroundAndroid: string;
+  glassBorder: string;
+  glassShadow: string;
+  glassShadowOpacity: number;
+  tabItemActiveBg: string;
 }
 
 const TOKENS: NafasColors = {
@@ -32,6 +38,12 @@ const TOKENS: NafasColors = {
   muted: '#7A6E66',
   border: '#D7CFC8',
   inputBorder: '#CCCCCC',
+  glassBackgroundIOS: 'rgba(255, 255, 255, 0.78)',
+  glassBackgroundAndroid: 'rgba(255, 255, 255, 0.96)',
+  glassBorder: 'rgba(31, 26, 23, 0.08)',
+  glassShadow: '#1F1A17',
+  glassShadowOpacity: 0.18,
+  tabItemActiveBg: 'rgba(196, 98, 45, 0.13)',
 };
 
 export function useColors(): NafasColors {

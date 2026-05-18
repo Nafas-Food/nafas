@@ -105,6 +105,7 @@ export default function ExploreScreen() {
       } catch {
         if (myEpoch === filterEpochRef.current) setError(t('errors.NETWORK'));
       } finally {
+        if (myEpoch !== filterEpochRef.current) return;
         if (targetCursor === 0) setLoading(false);
         else setLoadingMore(false);
       }

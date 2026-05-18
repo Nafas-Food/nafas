@@ -3,7 +3,6 @@ import {
   IsLatitude,
   IsLongitude,
   IsNumber,
-  IsOptional,
   IsPositive,
   IsString,
   Length,
