@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'async_hooks';
+import { Injectable } from '@nestjs/common';
 
 export interface CorrelationStore {
   correlationId: string;
@@ -14,3 +15,10 @@ export interface CorrelationStore {
  * one AsyncLocalStorage instance per concern, by design.
  */
 export const correlationStorage = new AsyncLocalStorage<CorrelationStore>();
+
+@Injectable()
+export class CorrelationIdContext {
+  get(): string | undefined {
+    return correlationStorage.getStore()?.correlationId;
+  }
+}

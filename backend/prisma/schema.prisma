@@ -37,7 +37,7 @@ enum OrderStatus {
 
 enum PaymentMethod {
   cash
-  visa     // reserved for v2
+  visa // reserved for v2
   instapay // reserved for v2
 }
 
@@ -78,167 +78,168 @@ enum NotificationType {
 // ----------------------------------------------------------------------------
 
 model User {
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phone              String              @unique
-  email              String?             @unique
-  fullName           String              @map("full_name")
-  birthdate          DateTime?           @db.Date
-  passwordHash       String              @map("password_hash")
-  role               Role                @default(customer)
-  phoneVerified      Boolean             @default(false) @map("phone_verified")
-  fcmToken           String?             @map("fcm_token")
-  isTest             Boolean             @default(false) @map("is_test")
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
-  deletedAt          DateTime?           @map("deleted_at")
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone         String    @unique
+  email         String?   @unique
+  fullName      String    @map("full_name")
+  birthdate     DateTime? @db.Date
+  passwordHash  String    @map("password_hash")
+  role          Role      @default(customer)
+  phoneVerified Boolean   @default(false) @map("phone_verified")
+  fcmToken      String?   @map("fcm_token")
+  isTest        Boolean   @default(false) @map("is_test")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
 
-  addresses          UserAddress[]
-  chef               Chef?
-  cart               Cart?
-  orders             Order[]
-  reviews            UserReview[]
-  favorites          Favorite[]
-  notifications      Notification[]
-  invalidatedTokens  InvalidatedToken[]
+  addresses         UserAddress[]
+  chef              Chef?
+  cart              Cart?
+  orders            Order[]
+  reviews           UserReview[]
+  favorites         Favorite[]
+  notifications     Notification[]
+  invalidatedTokens InvalidatedToken[]
 
   @@map("users")
 }
 
 model UserAddress {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  label       String
-  streetName  String    @map("street_name")
-  building    String?
-  floor       String?
-  apartment   String?
-  latitude    Decimal   @db.Decimal(10, 7)
-  longitude   Decimal   @db.Decimal(10, 7)
-  notes       String?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  label      String
+  streetName String    @map("street_name")
+  building   String?
+  floor      String?
+  apartment  String?
+  latitude   Decimal   @db.Decimal(10, 7)
+  longitude  Decimal   @db.Decimal(10, 7)
+  notes      String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
 
-  user        User      @relation(fields: [userId], references: [id])
-  orders      Order[]
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
 
   @@index([userId])
   @@map("user_addresses")
 }
 
 model Chef {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String       @unique @map("user_id") @db.Uuid
-  chefName        String       @map("chef_name")
-  bio             String?
-  latitude        Decimal      @db.Decimal(10, 7)
-  longitude       Decimal      @db.Decimal(10, 7)
-  isVerified      Boolean      @default(false) @map("is_verified")
-  isOpen          Boolean      @default(false) @map("is_open")
-  ratings         Decimal      @default(0) @db.Decimal(3, 2)
-  totalReviews    Int          @default(0) @map("total_reviews")
-  minOrderPrice   Decimal      @db.Decimal(10, 2) @map("min_order_price")
-  logo            String
-  banner          String
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  deletedAt       DateTime?    @map("deleted_at")
-  rejectedAt      DateTime?    @map("rejected_at")
-  verifiedAt      DateTime?    @map("verified_at")
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @unique @map("user_id") @db.Uuid
+  chefName      String    @map("chef_name")
+  bio           String?
+  latitude      Decimal   @db.Decimal(10, 7)
+  longitude     Decimal   @db.Decimal(10, 7)
+  isVerified    Boolean   @default(false) @map("is_verified")
+  isOpen        Boolean   @default(false) @map("is_open")
+  ratings       Decimal   @default(0) @db.Decimal(3, 2)
+  totalReviews  Int       @default(0) @map("total_reviews")
+  minOrderPrice Decimal   @map("min_order_price") @db.Decimal(10, 2)
+  logo          String
+  banner        String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  rejectedAt    DateTime? @map("rejected_at")
+  verifiedAt    DateTime? @map("verified_at")
 
-  user            User         @relation(fields: [userId], references: [id])
-  menus           Menu[]
-  orders          Order[]
-  reviews         UserReview[]
-  favorites       Favorite[]
+  user      User         @relation(fields: [userId], references: [id])
+  menus     Menu[]
+  orders    Order[]
+  reviews   UserReview[]
+  favorites Favorite[]
 
   @@index([isVerified, latitude, longitude])
   @@map("chefs")
 }
 
 model Category {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          Json
-  icon          String?
-  displayOrder  Int       @default(0) @map("display_order")
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deletedAt     DateTime? @map("deleted_at")
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         Json
+  icon         String?
+  displayOrder Int       @default(0) @map("display_order")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-  menus         Menu[]
+  menus Menu[]
 
   @@map("categories")
 }
 
 model Menu {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chefId            String              @map("chef_id") @db.Uuid
-  categoryId        String              @map("category_id") @db.Uuid
-  name              Json
-  displayOrder      Int                 @default(0) @map("display_order")
-  availableAllDays  Boolean             @default(false) @map("available_all_days")
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  deletedAt         DateTime?           @map("deleted_at")
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chefId           String    @map("chef_id") @db.Uuid
+  categoryId       String    @map("category_id") @db.Uuid
+  name             Json
+  displayOrder     Int       @default(0) @map("display_order")
+  availableAllDays Boolean   @default(false) @map("available_all_days")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
 
-  chef              Chef                @relation(fields: [chefId], references: [id])
-  category          Category            @relation(fields: [categoryId], references: [id])
-  items             Item[]
-  availability      MenuAvailability[]
+  chef         Chef               @relation(fields: [chefId], references: [id])
+  category     Category           @relation(fields: [categoryId], references: [id])
+  items        Item[]
+  availability MenuAvailability[]
 
-  @@index([chefId])
+  @@index([chefId, displayOrder])
   @@map("menus")
 }
 
 model Item {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  menuId          String       @map("menu_id") @db.Uuid
-  name            Json
-  description     Json
-  price           Decimal      @db.Decimal(10, 2)
-  discountValue   Decimal      @default(0) @db.Decimal(10, 2) @map("discount_value")
-  discountUnit    DiscountUnit @default(fixed) @map("discount_unit")
-  quantity        Int
-  images          String[]
-  displayOrder    Int          @default(0) @map("display_order")
-  isActive        Boolean      @default(true) @map("is_active")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  deletedAt       DateTime?    @map("deleted_at")
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  menuId        String       @map("menu_id") @db.Uuid
+  name          Json
+  description   Json
+  price         Decimal      @db.Decimal(10, 2)
+  discountValue Decimal      @default(0) @map("discount_value") @db.Decimal(10, 2)
+  discountUnit  DiscountUnit @default(fixed) @map("discount_unit")
+  quantity      Int
+  images        String[]
+  displayOrder  Int          @default(0) @map("display_order")
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  deletedAt     DateTime?    @map("deleted_at")
 
-  menu            Menu         @relation(fields: [menuId], references: [id])
-  cartItems       CartItem[]
-  orderItems      OrderItem[]
+  menu       Menu        @relation(fields: [menuId], references: [id])
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
-  @@index([menuId])
+  @@index([menuId, isActive, deletedAt])
+  @@index([menuId, displayOrder])
   @@map("items")
 }
 
 model Order {
-  id                       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                   String         @map("user_id") @db.Uuid
-  chefId                   String         @map("chef_id") @db.Uuid
-  addressId                String         @map("address_id") @db.Uuid
-  scheduledDate            DateTime?      @db.Date @map("scheduled_date")
-  subtotal                 Decimal        @db.Decimal(10, 2)
-  subtotalAfterDiscount    Decimal        @db.Decimal(10, 2) @map("subtotal_after_discount")
-  deliveryFee              Decimal        @db.Decimal(10, 2) @map("delivery_fee")
-  serviceFee               Decimal        @db.Decimal(10, 2) @map("service_fee")
-  total                    Decimal        @db.Decimal(10, 2)
-  notes                    String?
-  cancelledReason          String?        @map("cancelled_reason")
-  status                   OrderStatus    @default(pending)
-  createdAt                DateTime       @default(now()) @map("created_at")
-  updatedAt                DateTime       @updatedAt @map("updated_at")
-  deletedAt                DateTime?      @map("deleted_at")
+  id                    String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String      @map("user_id") @db.Uuid
+  chefId                String      @map("chef_id") @db.Uuid
+  addressId             String      @map("address_id") @db.Uuid
+  scheduledDate         DateTime?   @map("scheduled_date") @db.Date
+  subtotal              Decimal     @db.Decimal(10, 2)
+  subtotalAfterDiscount Decimal     @map("subtotal_after_discount") @db.Decimal(10, 2)
+  deliveryFee           Decimal     @map("delivery_fee") @db.Decimal(10, 2)
+  serviceFee            Decimal     @map("service_fee") @db.Decimal(10, 2)
+  total                 Decimal     @db.Decimal(10, 2)
+  notes                 String?
+  cancelledReason       String?     @map("cancelled_reason")
+  status                OrderStatus @default(pending)
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+  deletedAt             DateTime?   @map("deleted_at")
 
-  user                     User           @relation(fields: [userId], references: [id])
-  chef                     Chef           @relation(fields: [chefId], references: [id])
-  address                  UserAddress    @relation(fields: [addressId], references: [id])
-  items                    OrderItem[]
-  transaction              Transaction?
-  review                   UserReview?
+  user        User         @relation(fields: [userId], references: [id])
+  chef        Chef         @relation(fields: [chefId], references: [id])
+  address     UserAddress  @relation(fields: [addressId], references: [id])
+  items       OrderItem[]
+  transaction Transaction?
+  review      UserReview?
 
   @@index([userId])
   @@index([chefId])
@@ -247,20 +248,20 @@ model Order {
 }
 
 model UserReview {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  chefId      String    @map("chef_id") @db.Uuid
-  orderId     String    @unique @map("order_id") @db.Uuid
-  rating      Int
-  notes       String?
-  images      String[]
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  chefId    String    @map("chef_id") @db.Uuid
+  orderId   String    @unique @map("order_id") @db.Uuid
+  rating    Int
+  notes     String?
+  images    String[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  user        User      @relation(fields: [userId], references: [id])
-  chef        Chef      @relation(fields: [chefId], references: [id])
-  order       Order     @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  chef  Chef  @relation(fields: [chefId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@index([userId])
   @@index([chefId])
@@ -268,20 +269,20 @@ model UserReview {
 }
 
 model Transaction {
-  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId           String             @unique @map("order_id") @db.Uuid
-  paymentMethod     PaymentMethod      @default(cash) @map("payment_method")
-  amount            Decimal            @db.Decimal(10, 2)
-  cardAmount        Decimal?           @db.Decimal(10, 2) @map("card_amount")
-  status            TransactionStatus  @default(pending)
-  gatewayReference  String?            @map("gateway_reference")
-  paidAt            DateTime?          @map("paid_at")
-  failureReason     String?            @map("failure_reason")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  deletedAt         DateTime?          @map("deleted_at")
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String            @unique @map("order_id") @db.Uuid
+  paymentMethod    PaymentMethod     @default(cash) @map("payment_method")
+  amount           Decimal           @db.Decimal(10, 2)
+  cardAmount       Decimal?          @map("card_amount") @db.Decimal(10, 2)
+  status           TransactionStatus @default(pending)
+  gatewayReference String?           @map("gateway_reference")
+  paidAt           DateTime?         @map("paid_at")
+  failureReason    String?           @map("failure_reason")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  deletedAt        DateTime?         @map("deleted_at")
 
-  order             Order              @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@map("transactions")
 }
@@ -291,95 +292,95 @@ model Transaction {
 // ----------------------------------------------------------------------------
 
 model MenuAvailability {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  menuId     String   @map("menu_id") @db.Uuid
-  dayOfWeek  Int      @map("day_of_week")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  menuId    String   @map("menu_id") @db.Uuid
+  dayOfWeek Int      @map("day_of_week")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  menu       Menu     @relation(fields: [menuId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
 
   @@unique([menuId, dayOfWeek])
   @@map("menu_availabilities")
 }
 
 model Cart {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String     @unique @map("user_id") @db.Uuid
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  user       User       @relation(fields: [userId], references: [id])
-  items      CartItem[]
+  user  User       @relation(fields: [userId], references: [id])
+  items CartItem[]
 
   @@map("carts")
 }
 
 model CartItem {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cartId     String   @map("cart_id") @db.Uuid
-  itemId     String   @map("item_id") @db.Uuid
-  quantity   Int
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cartId    String   @map("cart_id") @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  cart       Cart     @relation(fields: [cartId], references: [id])
-  item       Item     @relation(fields: [itemId], references: [id])
+  cart Cart @relation(fields: [cartId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
 
   @@map("cart_items")
 }
 
 model OrderItem {
-  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId               String   @map("order_id") @db.Uuid
-  itemId                String   @map("item_id") @db.Uuid
-  quantity              Int
-  price                 Decimal  @db.Decimal(10, 2)
-  priceBeforeDiscount   Decimal  @db.Decimal(10, 2) @map("price_before_discount")
-  nameSnapshot          Json     @map("name_snapshot")
-  createdAt             DateTime @default(now()) @map("created_at")
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId             String   @map("order_id") @db.Uuid
+  itemId              String   @map("item_id") @db.Uuid
+  quantity            Int
+  price               Decimal  @db.Decimal(10, 2)
+  priceBeforeDiscount Decimal  @map("price_before_discount") @db.Decimal(10, 2)
+  nameSnapshot        Json     @map("name_snapshot")
+  createdAt           DateTime @default(now()) @map("created_at")
 
-  order                 Order    @relation(fields: [orderId], references: [id])
-  item                  Item     @relation(fields: [itemId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+  item  Item  @relation(fields: [itemId], references: [id])
 
   @@map("order_items")
 }
 
 model Favorite {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  chefId     String   @map("chef_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map("created_at")
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  chefId    String   @map("chef_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user       User     @relation(fields: [userId], references: [id])
-  chef       Chef     @relation(fields: [chefId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  chef Chef @relation(fields: [chefId], references: [id])
 
   @@unique([userId, chefId])
   @@map("favorites")
 }
 
 model Notification {
-  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
-  type       NotificationType
-  title      Json
-  body       Json
-  data       Json?
-  readAt     DateTime?        @map("read_at")
-  createdAt  DateTime         @default(now()) @map("created_at")
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     Json
+  body      Json
+  data      Json?
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
 
-  user       User             @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, readAt])
   @@map("notifications")
 }
 
 model InvalidatedToken {
-  jti        String   @id
-  userId     String   @map("user_id") @db.Uuid
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
+  jti       String   @id
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user       User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([expiresAt])
   @@map("invalidated_tokens")
@@ -399,14 +400,14 @@ model Setting {
 // Twilio Verify (stored on Twilio). No deletedAt — purged by the cleanup
 // job (`OtpCodeCleanupJob`) after consumption or expiry.
 model OtpCode {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  channel      OtpChannel
-  destination  String
-  codeHash     String     @map("code_hash")
-  expiresAt    DateTime   @map("expires_at")
-  attempts     Int        @default(0)
-  consumedAt   DateTime?  @map("consumed_at")
-  createdAt    DateTime   @default(now()) @map("created_at")
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  channel     OtpChannel
+  destination String
+  codeHash    String     @map("code_hash")
+  expiresAt   DateTime   @map("expires_at")
+  attempts    Int        @default(0)
+  consumedAt  DateTime?  @map("consumed_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
 
   @@index([channel, destination, consumedAt, expiresAt])
   @@map("otp_codes")

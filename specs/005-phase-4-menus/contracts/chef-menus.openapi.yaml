@@ -1,0 +1,424 @@
+openapi: 3.1.0
+info:
+  title: Nafas Chef Menus API
+  version: 0.5.0
+  description: |
+    Phase 4 chef-side menu lifecycle: browse own menus, create, edit,
+    bulk-reorder, soft-delete, and per-menu day-of-week availability.
+
+    All endpoints below require the `chef` role. The authenticated
+    caller's chef row is re-derived from the JWT `sub` claim on every
+    request via `chefs.service.findOwnedOrThrow` — no client-supplied
+    chef identifier is trusted (Constitution Principle II).
+
+    Per FR-026 / SC-014, every menu mutation against a target owned by
+    a different chef returns the same `404 MENU_NOT_FOUND` shape as a
+    genuinely missing target. Cross-chef identifier enumeration is
+    therefore not possible through any chef-self endpoint.
+
+    Per FR-033 (mirrors Phase 2 FR-021 / Phase 3 FR-039), no error
+    response body returned by any Phase 4 endpoint MAY include
+    `latitude`, `longitude`, or any nested `coordinates` property —
+    the chef's kitchen coordinates are reachable via the chef
+    relationship but MUST NOT leak through a menu error path. The
+    global `HttpExceptionNormalizerFilter` strips these fields before
+    serialisation.
+
+    Per Constitution Principle I, error bodies return stable
+    string `code` identifiers (e.g., `MENU_NAME_TOO_LONG`,
+    `CATEGORY_NOT_FOUND`); the mobile client maps codes to bilingual
+    messages on the device. The server NEVER returns a user-facing
+    message string in any locale.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: ChefMenus
+    description: Chef-owned menu lifecycle (post-verification).
+  - name: MenuAvailability
+    description: Per-menu day-of-week availability rows.
+
+paths:
+  /api/v1/chef/menus:
+    get:
+      operationId: listOwnMenus
+      summary: List the authenticated chef's own menus (FR-006).
+      description: |
+        Returns every non-soft-deleted menu owned by the calling chef,
+        ordered `(displayOrder ASC, createdAt ASC, id ASC)` for parity
+        with the customer-facing read (FR-006 / FR-018). Each menu
+        includes its items, INCLUDING items the chef has marked
+        inactive (chefs see their full catalogue; FR-015).
+      tags: [ChefMenus]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "200":
+          description: List of menus with items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChefMenuWithItems" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+    post:
+      operationId: createMenu
+      summary: Create a new menu (FR-001).
+      tags: [ChefMenus]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMenuRequest" }
+      responses:
+        "201":
+          description: Menu created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefMenu" }
+        "400":
+          description: |
+            Validation error. Possible `code` values:
+            `MENU_NAME_REQUIRED`, `MENU_NAME_TOO_LONG`,
+            `CATEGORY_NOT_FOUND` (FR-003),
+            `MENU_AVAILABILITY_INVALID_WEEKDAY` (FR-004),
+            `MENU_AVAILABILITY_REQUIRED_WHEN_NOT_ALL_DAYS`,
+            generic `VALIDATION_ERROR` for extra-field refusal (FR-031).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/chef/menus/reorder:
+    patch:
+      operationId: reorderMenus
+      summary: Bulk-reorder the authenticated chef's menus (FR-002a).
+      description: |
+        Atomic dense renumber inside one `prisma.$transaction`.
+        The submitted `menuIds` MUST be an exact cover of the chef's
+        current non-soft-deleted menus — missing IDs, unknown IDs, or
+        duplicates refuse with `MENUS_REORDER_NOT_EXACT_SET` and no
+        rows are written. A partial reorder is never observable.
+      tags: [ChefMenus]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReorderMenusRequest" }
+      responses:
+        "204": { description: Reorder applied. }
+        "400":
+          description: |
+            `MENUS_REORDER_NOT_EXACT_SET` when the submitted set does
+            not exactly cover the chef's current non-soft-deleted
+            menus.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/chef/menus/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: updateMenu
+      summary: Edit menu fields (FR-002).
+      description: |
+        Updates any subset of the menu's mutable fields (bilingual
+        name, category reference, `availableAllDays` flag). The
+        `displayOrder` field is NOT accepted here — display order
+        changes go through `PATCH /api/v1/chef/menus/reorder`.
+      tags: [ChefMenus]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateMenuRequest" }
+      responses:
+        "200":
+          description: Menu updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefMenu" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+    delete:
+      operationId: softDeleteMenu
+      summary: Soft-delete a menu (FR-005).
+      description: |
+        Marks the menu's `deletedAt`. The menu (and its items via the
+        soft-delete chain) vanishes from every customer-facing read
+        and the chef's own browse list. The row is preserved for
+        audit (Constitution IV).
+      tags: [ChefMenus]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "204": { description: Menu soft-deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+  /api/v1/chef/menus/{id}/availability:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      operationId: addMenuAvailability
+      summary: Mark a weekday as available for this menu (FR-004).
+      description: |
+        Idempotent on the `(menuId, dayOfWeek)` composite key — a
+        re-submit with the same `dayOfWeek` is a no-op. `dayOfWeek` is
+        an integer 0..6 where 0 = Sunday.
+      tags: [MenuAvailability]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddAvailabilityRequest" }
+      responses:
+        "201":
+          description: Availability row present (created or already existed).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MenuAvailability" }
+        "400":
+          description: |
+            `MENU_AVAILABILITY_INVALID_WEEKDAY` when the integer is
+            outside [0, 6]; generic `VALIDATION_ERROR` for extra
+            fields.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+  /api/v1/chef/menus/{id}/availability/{dayOfWeek}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+      - in: path
+        name: dayOfWeek
+        required: true
+        schema: { type: integer, minimum: 0, maximum: 6 }
+        description: |
+          The weekday to unmark. 0 = Sunday, 6 = Saturday. Chef-side
+          clients always know the weekday integer (they just toggled
+          the day chip), so the integer is the natural identifier;
+          no MenuAvailability row UUID lookup is required.
+    delete:
+      operationId: removeMenuAvailability
+      summary: Unmark a weekday for this menu (FR-004).
+      description: |
+        Idempotent — removing a weekday that is not currently included
+        is a no-op (HTTP 204).
+      tags: [MenuAvailability]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "204": { description: Availability row absent (deleted or never existed). }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: |
+        `UNAUTHORIZED` — missing / invalid / expired JWT.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: |
+        `FORBIDDEN_ROLE` — the JWT's role claim is not `chef`.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: |
+        Validation error. Body's `code` identifies the specific
+        validator that refused.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    MenuNotFound:
+      description: |
+        `MENU_NOT_FOUND` — the menu does not exist, is soft-deleted,
+        OR belongs to a different chef. The response shape is
+        identical regardless of which case applies (no cross-chef
+        identifier enumeration).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    BilingualText:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string, minLength: 1 }
+        ar: { type: string, minLength: 1 }
+      description: |
+        Bilingual JSON shape used for `Menu.name`, `Item.name`,
+        `Item.description`, and the Phase 3 `Category.name`. Both
+        locales are required on write; both are echoed on read. The
+        client renders the locale matching the recipient's current
+        in-app language (Constitution Principle I).
+
+    CreateMenuRequest:
+      type: object
+      required: [name, categoryId, availableAllDays]
+      properties:
+        name:
+          allOf:
+            - $ref: "#/components/schemas/BilingualText"
+          description: Bilingual menu name. Each locale ≤ 60 chars after trim (FR-001).
+        categoryId:
+          type: string
+          format: uuid
+          description: Must reference a non-soft-deleted Category (FR-003).
+        availableAllDays:
+          type: boolean
+          description: |
+            When `true`, the menu is today-available regardless of
+            day-of-week rows. When `false`, the menu's
+            `MenuAvailability` rows govern visibility (FR-001).
+        initialAvailability:
+          type: array
+          items: { type: integer, minimum: 0, maximum: 6 }
+          uniqueItems: true
+          description: |
+            Optional: seed day-of-week rows alongside menu create. If
+            omitted (and `availableAllDays=false`), the menu is
+            invisible on the customer surface until the chef adds at
+            least one weekday via `POST /chef/menus/:id/availability`.
+
+    UpdateMenuRequest:
+      type: object
+      properties:
+        name:
+          allOf:
+            - $ref: "#/components/schemas/BilingualText"
+        categoryId:
+          type: string
+          format: uuid
+          description: Must reference a non-soft-deleted Category (FR-003).
+        availableAllDays:
+          type: boolean
+
+    ReorderMenusRequest:
+      type: object
+      required: [menuIds]
+      properties:
+        menuIds:
+          type: array
+          items: { type: string, format: uuid }
+          minItems: 1
+          uniqueItems: true
+          description: |
+            Ordered list of the chef's current non-soft-deleted
+            menu identifiers. MUST be an exact cover — missing IDs,
+            unknown IDs, or duplicates refuse the request (FR-002a).
+
+    AddAvailabilityRequest:
+      type: object
+      required: [dayOfWeek]
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 0 = Sunday, 6 = Saturday (FR-004).
+
+    MenuAvailability:
+      type: object
+      required: [id, menuId, dayOfWeek, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        menuId: { type: string, format: uuid }
+        dayOfWeek: { type: integer, minimum: 0, maximum: 6 }
+        createdAt: { type: string, format: date-time }
+
+    ChefMenu:
+      type: object
+      required:
+        - id
+        - chefId
+        - categoryId
+        - name
+        - displayOrder
+        - availableAllDays
+        - availability
+        - createdAt
+      properties:
+        id: { type: string, format: uuid }
+        chefId: { type: string, format: uuid }
+        categoryId: { type: string, format: uuid }
+        name: { $ref: "#/components/schemas/BilingualText" }
+        displayOrder: { type: integer, minimum: 0 }
+        availableAllDays: { type: boolean }
+        availability:
+          type: array
+          items: { $ref: "#/components/schemas/MenuAvailability" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ChefMenuWithItems:
+      allOf:
+        - $ref: "#/components/schemas/ChefMenu"
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              description: |
+                Chef-side item list — INCLUDES items the chef has
+                marked inactive (FR-015). Use the customer-facing
+                chef-profile read to get the active-only view.
+              items: { $ref: "./chef-items.openapi.yaml#/components/schemas/ChefItem" }
+
+    Error:
+      type: object
+      required: [statusCode, code]
+      properties:
+        statusCode: { type: integer }
+        code:
+          type: string
+          description: |
+            Stable identifier the mobile client maps to a bilingual
+            message. NEVER carries user-facing text (Constitution
+            Principle I).
+        details:
+          type: object
+          additionalProperties: true
+          description: |
+            Optional context (e.g., the offending field name on a
+            validation refusal). NEVER carries `latitude`,
+            `longitude`, or `coordinates` (FR-033).

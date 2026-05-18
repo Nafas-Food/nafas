@@ -5,6 +5,7 @@
 set -euo pipefail
 
 SOFT_DELETE_MODELS=(user userAddress chef category menu item order userReview transaction)
+ALLOW_HARD_DELETE_MODELS=(menuAvailability)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="$ROOT_DIR/src"
@@ -23,6 +24,14 @@ for model in "${SOFT_DELETE_MODELS[@]}"; do
     echo "Use prisma.<model>.softDelete({ id }) instead."
     fail=1
   fi
+done
+
+# Allow-list: hard-delete is intentional for these models
+for model in "${ALLOW_HARD_DELETE_MODELS[@]}"; do
+  pattern="prisma(Service)?(\\.extended)?\\.${model}\\.(delete|deleteMany)\\s*\\("
+  # intentionally no-op — these models are allowed to hard-delete
+  # but we keep the loop so the list is explicit
+  continue
 done
 
 if [ "$fail" -ne 0 ]; then
