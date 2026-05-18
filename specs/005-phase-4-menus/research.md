@@ -352,10 +352,10 @@ and item editor):
 }
 ```
 
-The chef-facing extra fields (`lastFiniteQuantity`, `isActive`)
-let the chef-side editor preserve the "unlimited" toggle's
-off-state without forcing the chef to re-enter a finite count
-from memory (FR-008 second sentence). When the chef has the
+The chef-facing extra field (`isActive`) and the client-side
+`lastFiniteQuantity` state let the chef-side editor preserve the
+"unlimited" toggle's off-state without forcing the chef to
+re-enter a finite count from memory (FR-008 second sentence). When the chef has the
 toggle on, the server stores `quantity = -1` (sentinel) AND
 the previously-typed finite value sits in client memory only
 — the chef-facing read surfaces it from the database via a

@@ -484,7 +484,7 @@ components:
         id: { type: string, format: uuid }
         menuId: { type: string, format: uuid }
         name: { $ref: "#/components/schemas/BilingualText" }
-        description: { $ref: "#/components/schemas/BilingualText" }
+        description: { $ref: "#/components/schemas/BilingualDescription" }
         price:
           type: string
           description: Base price, decimal string (e.g., `"60.00"`).

@@ -156,9 +156,9 @@ fills in.)
 5. Tap one of the five images → **Remove**. **Verify**: the array
    shrinks to 4 in stored order; the storage object is
    asynchronously deleted (check the Supabase console to confirm).
-   Tap **Remove** again on the same (now-gone) image via curl
-   (using the stored key). **Verify**: idempotent — HTTP 204, no
-   error. SC-007a.
+    Tap **Remove** again on the same (now-gone) image via curl
+    (using the stored key). **Verify**: idempotent — HTTP 200 with
+    the unchanged item payload. SC-007a.
 6. Toggle the "Unlimited" stock to OFF and enter `5`. Save.
    **Verify**: the item card's stock badge updates to "5 left".
    Decrement past zero via direct DB write (no Phase 4 endpoint
