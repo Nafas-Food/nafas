@@ -6,6 +6,7 @@ export const ar: I18nDict = {
     cancel: 'إلغاء',
     back: 'رجوع',
     submit: 'إرسال',
+    done: 'تم',
     loading: 'جارٍ التحميل...',
     networkError: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مجددًا.',
     cooldown: {
@@ -252,6 +253,7 @@ export const ar: I18nDict = {
       everyDay: 'كل يوم',
       specificDays: 'أيام محدّدة',
       itemCount: '{count} صنف',
+      items: 'الأصناف',
       nameEn: 'الاسم (بالإنجليزية)',
       nameAr: 'الاسم (بالعربية)',
       nameEnPlaceholder: 'e.g. Koshary',
@@ -263,6 +265,44 @@ export const ar: I18nDict = {
         'every-day': 'كل يوم',
         'specific-days': 'أيام محدّدة',
       },
+    },
+    item: {
+      create: 'إضافة صنف',
+      empty: 'لا توجد أصناف بعد. اضغط "إضافة صنف" لإضافة أول صنف.',
+      noImage: 'لا توجد صورة',
+      images: {
+        title: 'صور الصنف',
+        add: 'إضافة صورة',
+        limit: '{count} / 5 صور',
+        full: 'لقد وصلت إلى الحد الأقصى (5 صور) لهذا الصنف.',
+      },
+      editor: {
+        name: {
+          en: 'الاسم (بالإنجليزية)',
+          ar: 'الاسم (بالعربية)',
+        },
+        description: {
+          en: 'الوصف (بالإنجليزية)',
+          ar: 'الوصف (بالعربية)',
+        },
+        price: 'السعر (جنيه)',
+        discount: 'الخصم',
+        discountUnit: {
+          fixed: 'جنيه',
+          percent: '٪',
+        },
+        stock: {
+          unlimited: 'مخزون غير محدود',
+          quantity: 'الكمية',
+        },
+      },
+    },
+  },
+  customer: {
+    item: {
+      outOfStock: 'غير متوفر',
+      discountBadge: '-{discount}٪',
+      addToCart: 'إضافة إلى السلة',
     },
   },
   comingSoon: 'قريباً',
@@ -290,6 +330,22 @@ export const ar: I18nDict = {
       menu_not_found: 'لم نتمكّن من العثور على هذه القائمة.',
       menus_reorder_not_exact_set: 'ترتيب القوائم غير متطابق. حدّث الصفحة وحاول مرة أخرى.',
       category_not_found: 'هذه الفئة لم تعد متاحة. اختر فئة أخرى.',
+    },
+    item: {
+      item_name_required: 'يرجى إدخال اسم الصنف باللغتين.',
+      item_name_too_long: 'اسم الصنف طويل جدًا (الحد الأقصى 60 حرفًا).',
+      item_description_required: 'يرجى إدخال الوصف باللغتين.',
+      item_description_too_long: 'الوصف طويل جدًا (الحد الأقصى 500 حرف).',
+      item_price_invalid: 'أدخل سعرًا صحيحًا أكبر من صفر.',
+      item_discount_invalid: 'أدخل قيمة خصم صحيحة.',
+      item_negative_effective_price: 'لا يمكن أن يكون الخصم أكبر من السعر.',
+      item_stock_ambiguous: 'اختر إمّا "غير محدود" أو حدّد الكمية — وليس كلاهما.',
+      item_images_full: 'لقد وصلت إلى الحد الأقصى (5 صور) لهذا الصنف.',
+      item_not_found: 'لم نتمكّن من العثور على هذا الصنف.',
+      menu_not_found: 'لم نتمكّن من العثور على هذه القائمة.',
+      unsupported_media_type: 'الصورة يجب أن تكون JPEG أو PNG أو WebP.',
+      payload_too_large: 'حجم الصورة يجب ألا يتجاوز 3 ميغابايت.',
+      item_upload_rate_limited: 'أنت ترفع صورًا بسرعة كبيرة — حاول بعد قليل.',
     },
   },
 };

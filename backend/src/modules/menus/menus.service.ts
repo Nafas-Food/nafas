@@ -217,6 +217,18 @@ export class MenusService {
       throw new NotFoundException({ code: 'MENU_NOT_FOUND' });
     }
   }
+
+  /**
+   * Public alias of assertMenuOwnedByChef so cross-module callers
+   * (e.g., ItemsService) can validate menu ownership before mutating
+   * items under a menu.
+   */
+  async assertMenuOwnedByChefPublic(
+    menuId: string,
+    chefId: string,
+  ): Promise<void> {
+    return this.assertMenuOwnedByChef(menuId, chefId);
+  }
 }
 
 type MenuWithAvailability = Prisma.MenuGetPayload<{

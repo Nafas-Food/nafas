@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, View, Text, Pressable, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../../hooks/useColors';
 import { useLanguage } from '../../context/LanguageContext';
@@ -11,6 +12,7 @@ export default function ChefMenuScreen() {
   const colors = useColors();
   const { t, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [menus, setMenus] = useState<ChefMenu[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -105,7 +107,8 @@ export default function ChefMenuScreen() {
           const cat = categories.find((c) => c.id === item.categoryId);
           const catName = cat?.name[isRTL ? 'ar' : 'en'] ?? '';
           return (
-            <View
+            <Pressable
+              onPress={() => router.push(`/(chef)/menu/${item.id}`)}
               style={{
                 backgroundColor: colors.surface,
                 borderRadius: 16,
@@ -147,7 +150,7 @@ export default function ChefMenuScreen() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Pressable>
           );
         }}
       />
