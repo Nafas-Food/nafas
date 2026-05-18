@@ -153,10 +153,10 @@ paths:
         name, bilingual description, price, discount value, discount
         unit, stock count, `isActive` toggle). The `displayOrder`
         field is NOT accepted — display order changes go through
-        `PATCH /chef/menus/:menuId/items/reorder`. The `images`
+        `PATCH /api/v1/chef/menus/{menuId}/items/reorder`. The `images`
         array is NOT mutable via this endpoint — uploads go through
-        `POST /chef/items/:id/images` and removes through
-        `DELETE /chef/items/{id}/images?key={imageKey}`.
+        `POST /api/v1/chef/items/{id}/images` and removes through
+        `DELETE /api/v1/chef/items/{id}/images?key={imageKey}`.
       tags: [ChefItems]
       security: [ { bearerAuth: [] } ]
       requestBody:
@@ -404,6 +404,7 @@ components:
 
     CreateItemRequest:
       type: object
+      additionalProperties: false
       required: [name, description, price, stock]
       properties:
         name:
@@ -436,6 +437,7 @@ components:
 
     UpdateItemRequest:
       type: object
+      additionalProperties: false
       properties:
         name: { $ref: "#/components/schemas/BilingualText" }
         description: { $ref: "#/components/schemas/BilingualDescription" }
@@ -451,6 +453,7 @@ components:
 
     ReorderItemsRequest:
       type: object
+      additionalProperties: false
       required: [itemIds]
       properties:
         itemIds:

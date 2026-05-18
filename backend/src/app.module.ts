@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AdminContextModule } from './common/admin-context/admin-context.module';
+import { ActorContextModule } from './common/actor-context/actor-context.module';
 import { JobsModule } from './common/jobs/jobs.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
@@ -44,6 +45,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
       },
     ]),
     AdminContextModule,
+    ActorContextModule,
     PrismaModule,
     HealthModule,
     JobsModule,

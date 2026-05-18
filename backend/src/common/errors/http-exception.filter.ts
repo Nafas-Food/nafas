@@ -323,7 +323,8 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         event = 'item.reorder';
       if (method === 'PATCH' && !path.endsWith('/reorder'))
         event = 'item.update';
-      if (method === 'DELETE' && !isImageRemoveRoute) event = 'item.soft_delete';
+      if (method === 'DELETE' && !isImageRemoveRoute)
+        event = 'item.soft_delete';
       if (isImageRemoveRoute) event = 'item.image_remove';
       if (event && normalized.code === 'VALIDATION_ERROR') {
         this.itemEvents.emit({

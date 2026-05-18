@@ -609,7 +609,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### DTOs
 
-- [ ] T017 [P] [US1] Create `<repo>\backend\src\modules\menus\dto\create-menu.dto.ts`:
+- [X] T017 [P] [US1] Create `<repo>\backend\src\modules\menus\dto\create-menu.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import {
@@ -646,7 +646,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   }
   ```
 
-- [ ] T018 [P] [US1] Create `<repo>\backend\src\modules\menus\dto\add-availability.dto.ts`:
+- [X] T018 [P] [US1] Create `<repo>\backend\src\modules\menus\dto\add-availability.dto.ts`:
   ```ts
   import { IsInt, Max, Min } from 'class-validator';
 
@@ -660,7 +660,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Service methods
 
-- [ ] T019 [US1] Add `createMenu` to `<repo>\backend\src\modules\menus\menus.service.ts`. Append (alongside the Phase 3 shell methods `hasMenuInCategory`, `categoriesForChef`, `chefIdsInCategory` — do NOT remove them):
+- [X] T019 [US1] Add `createMenu` to `<repo>\backend\src\modules\menus\menus.service.ts`. Append (alongside the Phase 3 shell methods `hasMenuInCategory`, `categoriesForChef`, `chefIdsInCategory` — do NOT remove them):
   ```ts
   /**
    * FR-001: create a menu owned by the calling chef. The chef row is
@@ -723,7 +723,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Verify with `npx tsc --noEmit`.
 
-- [ ] T020 [US1] Add `findManyForChef` (chef's own browse) to `<repo>\backend\src\modules\menus\menus.service.ts`:
+- [X] T020 [US1] Add `findManyForChef` (chef's own browse) to `<repo>\backend\src\modules\menus\menus.service.ts`:
   ```ts
   /**
    * FR-006: chef-side browse. Returns every non-soft-deleted menu
@@ -755,7 +755,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add type alias `type ChefMenuWithItems = Prisma.MenuGetPayload<{ include: { availability: true; items: true } }>;`.
 
-- [ ] T021 [US1] Add `addAvailability` + `removeAvailability` to `<repo>\backend\src\modules\menus\menus.service.ts`:
+- [X] T021 [US1] Add `addAvailability` + `removeAvailability` to `<repo>\backend\src\modules\menus\menus.service.ts`:
   ```ts
   /**
    * FR-004: idempotent on the (menuId, dayOfWeek) composite. A re-
@@ -831,7 +831,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Controller
 
-- [ ] T022 [US1] Create `<repo>\backend\src\modules\menus\menus.controller.ts`. Verbatim content for the US1 scope (US5 extends this same file with PATCH/DELETE/reorder; do NOT pre-write those endpoints here — they'll be added in T046):
+- [X] T022 [US1] Create `<repo>\backend\src\modules\menus\menus.controller.ts`. Verbatim content for the US1 scope (US5 extends this same file with PATCH/DELETE/reorder; do NOT pre-write those endpoints here — they'll be added in T046):
   ```ts
   import {
     Body,
@@ -908,7 +908,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Mobile
 
-- [ ] T023 [P] [US1] Create `<repo>\mobile\services\menus.ts`. Verbatim:
+- [X] T023 [P] [US1] Create `<repo>\mobile\services\menus.ts`. Verbatim:
   ```ts
   import { api } from './api';
 
@@ -942,7 +942,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   This file declares `ChefMenu.items` typed as `import('./items').ChefItem[]` — that import resolves once T036 creates `services/items.ts`. TypeScript module resolution handles the lazy import; the chef-side US1 screen does not need to render items yet (US2 fills items in), so the `items` array will be empty on US1's first read.
 
-- [ ] T024 [P] [US1] Create `<repo>\mobile\components\DayOfWeekPicker.tsx`. Verbatim:
+- [X] T024 [P] [US1] Create `<repo>\mobile\components\DayOfWeekPicker.tsx`. Verbatim:
   ```tsx
   import React from 'react';
   import { Pressable, Text, View } from 'react-native';
@@ -1007,13 +1007,13 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add the seven `common.day.{sun..sat}` keys to T065/T066 (i18n) — for now, the keys are referenced; values will land in US6.
 
-- [ ] T025 [P] [US1] Create `<repo>\mobile\components\MenuEditorSheet.tsx`. The sheet is a modal that creates OR edits a menu. For US1 it only covers create — edit is added in US5. The sheet posts to `menusService.create` and on success calls an `onCreated(menu)` prop. Use design-system primitives via `useColors()`; the `DayOfWeekPicker` from T024; bilingual `t(key)` strings throughout. Mirror the design-system "chef catalogue editor" modal layout from the `nafas-design-system` skill. The exact JSX is design-system-driven (consult the skill before writing); the contract is:
+- [X] T025 [P] [US1] Create `<repo>\mobile\components\MenuEditorSheet.tsx`. The sheet is a modal that creates OR edits a menu. For US1 it only covers create — edit is added in US5. The sheet posts to `menusService.create` and on success calls an `onCreated(menu)` prop. Use design-system primitives via `useColors()`; the `DayOfWeekPicker` from T024; bilingual `t(key)` strings throughout. Mirror the design-system "chef catalogue editor" modal layout from the `nafas-design-system` skill. The exact JSX is design-system-driven (consult the skill before writing); the contract is:
   - props: `{ visible: boolean; categories: { id: string; name: BilingualText }[]; onClose: () => void; onCreated: (menu: ChefMenu) => void }`
   - state: `nameEn`, `nameAr`, `categoryId`, `mode: 'specific-days' | 'every-day'`, `selectedDays: number[]`
   - submit: if `mode === 'every-day'`, send `{ availableAllDays: true, initialAvailability: undefined }`; else send `{ availableAllDays: false, initialAvailability: selectedDays }` and refuse client-side if `selectedDays.length === 0`.
   - errors: display the server's error `code` mapped via `t('errors.menu.' + code.toLowerCase())`.
 
-- [ ] T026 [US1] Wire the menu editor into `<repo>\mobile\app\(chef)\menu.tsx`. The file is a Phase 3 placeholder — replace its body. The screen:
+- [X] T026 [US1] Wire the menu editor into `<repo>\mobile\app\(chef)\menu.tsx`. The file is a Phase 3 placeholder — replace its body. The screen:
   1. On mount, fetches `menusService.listOwn()` and `categoriesService.list()` in parallel.
   2. Renders a list of the chef's menus (empty state when zero).
   3. Top-right header action: "Create Menu" → opens `MenuEditorSheet` with `categories` prop populated.

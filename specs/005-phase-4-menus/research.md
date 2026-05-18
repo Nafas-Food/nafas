@@ -50,9 +50,9 @@ Nothing else is needed.
   best honoured by NOT introducing additive columns when the
   canonical schema already covers the use case.
 - The three indexes are the queries Phase 4 issues most often:
-  - The today-available chef-profile read filters by
+  - The today-available chef-profile read filters items by
     `menuId, isActive, deletedAt`. Without the composite, the
-    read falls back to the single-column `menus_chefid_idx`
+    read falls back to the single-column `items_menu_id_idx`
     (Phase 0) and full-scans the items, which is fine at v1
     scale but unnecessary cost.
   - The chef-side browse + customer-facing item card list sorts
@@ -364,15 +364,14 @@ separate column? **No** — see "Schema impact" below.
 **Schema impact**: The chef-side editor preserves
 `lastFiniteQuantity` **client-side only** (in `ChefMenuContext`
 local state — see plan.md). The database column
-`Item.quantity` carries either a non-negative integer (chef's
-last finite count, retained even while the unlimited toggle is
-on) OR `-1` (active unlimited sentinel — the chef's last
-finite count was lost the moment they flipped on the
-unlimited toggle and submitted). In v1, the chef's editor
-holds the in-flight value in client state; on edit reopen,
-the editor reads the database value, displays "Unlimited" if
-the value is `-1`, and the toggle-off restores a sensible
-default (the chef just types fresh). A v2 change could add
+`Item.quantity` stores `-1` when the unlimited toggle is active
+(active unlimited sentinel for Phase 6 stock-decrement logic).
+When the toggle is off, it stores the chef's typed non-negative
+integer. The prior finite count is NOT retained in the database
+once the chef switches to unlimited; on edit reopen the editor
+reads the database value, displays "Unlimited" if the value is
+`-1`, and the toggle-off restores a sensible default (the chef
+just types fresh). A v2 change could add
 `Item.lastFiniteQuantity: Int?` if the round-tripping is
 observed as a friction in practice. The spec text "the client
 preserves the last finite value so re-disabling 'unlimited'

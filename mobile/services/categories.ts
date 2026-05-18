@@ -14,3 +14,7 @@ export async function listCategories(): Promise<Category[]> {
   const { data } = await api.get('/categories');
   return data;
 }
+
+export const categoriesService = {
+  list: listCategories,
+};

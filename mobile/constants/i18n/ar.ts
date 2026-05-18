@@ -12,6 +12,15 @@ export const ar: I18nDict = {
       title: 'يرجى الانتظار',
       body: 'يمكنك المحاولة مجدداً بعد {timestamp}.',
     },
+    day: {
+      sun: 'الأحد',
+      mon: 'الاثنين',
+      tue: 'الثلاثاء',
+      wed: 'الأربعاء',
+      thu: 'الخميس',
+      fri: 'الجمعة',
+      sat: 'السبت',
+    },
   },
   welcome: {
     title: 'أهلاً بك في نَفَس',
@@ -235,6 +244,27 @@ export const ar: I18nDict = {
     schedule: 'الجدول',
     profile: 'الحساب',
   },
+  chef: {
+    menu: {
+      title: 'القائمة',
+      create: 'إضافة قائمة',
+      empty: 'لا توجد قوائم بعد. اضغط "إضافة قائمة" لإنشاء أول قائمة.',
+      everyDay: 'كل يوم',
+      specificDays: 'أيام محدّدة',
+      itemCount: '{count} صنف',
+      nameEn: 'الاسم (بالإنجليزية)',
+      nameAr: 'الاسم (بالعربية)',
+      nameEnPlaceholder: 'e.g. Koshary',
+      nameArPlaceholder: 'مثلاً: كشري',
+      category: 'الفئة',
+      availability: 'التوفّر',
+      selectDays: 'اختر الأيام',
+      mode: {
+        'every-day': 'كل يوم',
+        'specific-days': 'أيام محدّدة',
+      },
+    },
+  },
   comingSoon: 'قريباً',
   errors: {
     AUTH_OTP_INVALID: 'الرمز غير صحيح أو منتهي. حاول مرة أخرى.',
@@ -253,5 +283,13 @@ export const ar: I18nDict = {
     VALIDATION_ERROR: 'الرجاء مراجعة البيانات والمحاولة مجددًا.',
     NETWORK: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مجددًا.',
     UNKNOWN: 'حدث خطأ ما. حاول مرة أخرى.',
+    menu: {
+      menu_name_required: 'يرجى إدخال اسم القائمة باللغتين.',
+      menu_name_too_long: 'اسم القائمة طويل جدًا (الحد الأقصى 60 حرفًا).',
+      menu_availability_invalid_weekday: 'اختر يومًا واحدًا على الأقل.',
+      menu_not_found: 'لم نتمكّن من العثور على هذه القائمة.',
+      menus_reorder_not_exact_set: 'ترتيب القوائم غير متطابق. حدّث الصفحة وحاول مرة أخرى.',
+      category_not_found: 'هذه الفئة لم تعد متاحة. اختر فئة أخرى.',
+    },
   },
 };
