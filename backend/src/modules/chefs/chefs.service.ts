@@ -421,4 +421,18 @@ export class ChefsService {
     const categoryIds = await this.menusService.categoriesForChef(chef.id);
     return ChefPrivateProfileResponseDto.fromEntity(chef, categoryIds);
   }
+
+  /**
+   * Top-rated grid query for the Home surface (FR-022).
+   * Sorts by (ratings DESC, verifiedAt DESC, id ASC) so the
+   * tiebreaker is deterministic. Until Phase 7 wires reviews, every
+   * chef's rating is 0 and the order collapses to verified-newest-first.
+   */
+  async findTopRated(limit = 12): Promise<Chef[]> {
+    return this.prismaService.extended.chef.findMany({
+      where: { isVerified: true },
+      orderBy: [{ ratings: 'desc' }, { verifiedAt: 'desc' }, { id: 'asc' }],
+      take: limit,
+    });
+  }
 }

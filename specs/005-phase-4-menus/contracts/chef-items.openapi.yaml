@@ -1,0 +1,547 @@
+openapi: 3.1.0
+info:
+  title: Nafas Chef Items API
+  version: 0.5.0
+  description: |
+    Phase 4 chef-side item lifecycle: list items under a menu, create,
+    edit (including the `isActive` toggle and the chef-set discount),
+    bulk-reorder, soft-delete, image upload (with per-chef throttle),
+    and per-image remove.
+
+    All endpoints below require the `chef` role. The item's owning
+    chef is re-derived from the JWT `sub` claim on every request:
+    `items.service` walks item → menu → chefId and refuses with
+    `404 ITEM_NOT_FOUND` when the chain resolves to a different chef
+    (FR-026 / SC-014). The 404 shape is identical to the
+    "genuinely missing item" case (no cross-chef identifier
+    enumeration).
+
+    The server-authoritative effective-price helper (FR-016) computes
+    the customer-visible effective sell price from
+    `(price, discountValue, discountUnit)`. Every item read returns
+    BOTH the base price and the effective price as decimal strings —
+    the client never recomputes (Constitution Principle II).
+
+    Item images are stored in the `item-images` Supabase bucket under
+    `items/<chefId>/<itemId>/<uuid>.<ext>`. The wire returns the
+    public URL.
+
+    Per FR-033, no error response body MAY include `latitude`,
+    `longitude`, or any nested `coordinates` property; the global
+    `HttpExceptionNormalizerFilter` strips these fields before
+    serialisation.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: ChefItems
+    description: Chef-owned item lifecycle (post-verification).
+  - name: ChefItemImages
+    description: Item image upload + remove. Upload is per-chef throttled (FR-012b).
+
+paths:
+  /api/v1/chef/menus/{menuId}/items:
+    parameters:
+      - in: path
+        name: menuId
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: listMenuItems
+      summary: List items under one of the chef's own menus (FR-015).
+      description: |
+        Returns every non-soft-deleted item under the menu, INCLUDING
+        items the chef has marked inactive. Ordered
+        `(displayOrder ASC, createdAt ASC, id ASC)`.
+      tags: [ChefItems]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "200":
+          description: List of items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChefItem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+    post:
+      operationId: createItem
+      summary: Create a new item under a menu (FR-007).
+      tags: [ChefItems]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateItemRequest" }
+      responses:
+        "201":
+          description: Item created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefItem" }
+        "400":
+          description: |
+            Validation refusal. Possible `code` values:
+            `ITEM_NAME_REQUIRED`, `ITEM_NAME_TOO_LONG`,
+            `ITEM_DESCRIPTION_REQUIRED`, `ITEM_DESCRIPTION_TOO_LONG`,
+            `ITEM_PRICE_INVALID`, `ITEM_DISCOUNT_INVALID`,
+            `ITEM_NEGATIVE_EFFECTIVE_PRICE` (FR-010),
+            `ITEM_STOCK_AMBIGUOUS`,
+            generic `VALIDATION_ERROR` for extra-field refusal.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+  /api/v1/chef/menus/{menuId}/items/reorder:
+    parameters:
+      - in: path
+        name: menuId
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: reorderItems
+      summary: Bulk-reorder items inside a menu (FR-009a).
+      description: |
+        Atomic dense renumber inside one `prisma.$transaction`.
+        The submitted `itemIds` MUST be an exact cover of the menu's
+        current non-soft-deleted items — missing IDs, unknown IDs, or
+        duplicates refuse with `ITEMS_REORDER_NOT_EXACT_SET` and no
+        rows are written. A partial reorder is never observable.
+      tags: [ChefItems]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReorderItemsRequest" }
+      responses:
+        "204": { description: Reorder applied. }
+        "400":
+          description: |
+            `ITEMS_REORDER_NOT_EXACT_SET` when the submitted set does
+            not exactly cover the menu's current non-soft-deleted
+            items.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/MenuNotFound" }
+
+  /api/v1/chef/items/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: updateItem
+      summary: Edit item fields (FR-009, FR-011).
+      description: |
+        Updates any subset of the item's mutable fields (bilingual
+        name, bilingual description, price, discount value, discount
+        unit, stock count, `isActive` toggle). The `displayOrder`
+        field is NOT accepted — display order changes go through
+        `PATCH /chef/menus/:menuId/items/reorder`. The `images`
+        array is NOT mutable via this endpoint — uploads go through
+        `POST /chef/items/:id/images` and removes through
+        `DELETE /chef/items/{id}/images?key={imageKey}`.
+      tags: [ChefItems]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateItemRequest" }
+      responses:
+        "200":
+          description: Item updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefItem" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/ItemNotFound" }
+
+    delete:
+      operationId: softDeleteItem
+      summary: Soft-delete an item (FR-014).
+      description: |
+        Marks the item's `deletedAt`. The item vanishes from every
+        customer-facing read and the chef's own browse list. The row
+        and its storage objects are preserved for audit
+        (Constitution IV; the storage cleanup is a Phase 12+ concern).
+      tags: [ChefItems]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "204": { description: Item soft-deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/ItemNotFound" }
+
+  /api/v1/chef/items/{id}/images:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      operationId: uploadItemImage
+      summary: Append a new image to an item (FR-012, FR-013).
+      description: |
+        Throttled per chef at **20 successful uploads / 60 s**
+        (FR-012b / SC-007b). The Phase 1 default per-IP `60 / 60 s`
+        ceiling remains as a backstop. A refused request emits the
+        FR-032 `item.image_upload / rate_limited` event.
+
+        File constraints (FR-012):
+        - `Content-Type` must be one of `image/jpeg`, `image/png`,
+          `image/webp`.
+        - File size ≤ 3 MB.
+        - The item's current image count must be < 5 (the 5-image cap
+          is enforced server-side; a request that would push the array
+          above 5 refuses with `ITEM_IMAGES_FULL`).
+
+        On success, the new image URL is appended to the item's
+        `images` array (preserving the existing order) and the full
+        updated array is returned in the response body alongside the
+        ChefItem shape.
+      tags: [ChefItemImages]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The image file (JPEG / PNG / WebP, ≤ 3 MB).
+      responses:
+        "201":
+          description: Image appended.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefItem" }
+        "400":
+          description: |
+            `ITEM_IMAGES_FULL` when the item already has 5 images.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/ItemNotFound" }
+        "413":
+          description: |
+            `PAYLOAD_TOO_LARGE` — the upload exceeded 3 MB
+            (enforced at the multipart parse layer).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "415":
+          description: |
+            `UNSUPPORTED_MEDIA_TYPE` — the file's mime-type is not
+            one of JPEG, PNG, WebP.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: |
+            `ITEM_UPLOAD_RATE_LIMITED` — the chef has exceeded the
+            20-uploads / 60-s per-chef cap (FR-012b). The refused
+            upload consumes no image storage.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+    delete:
+      operationId: removeItemImage
+      summary: Remove a single image from an item (FR-012a, FR-013).
+      description: |
+        Idempotent — removing an image that is no longer in the
+        array (e.g., from a stale client view) resolves with HTTP
+        200 + the unchanged image array rather than an error
+        (FR-012a). The remaining images keep their relative order.
+        A chef MAY reduce the array all the way to empty; an item
+        with zero images is a valid state (the customer surface
+        renders the design-system default item placeholder).
+
+        The image is identified by the `key` query parameter — the
+        storage object key suffix (everything after the bucket name
+        in the public URL, e.g.,
+        `items/<chefId>/<itemId>/<uuid>.jpg`). This is a stable
+        identifier across concurrent edits, and using a query
+        parameter (rather than a path param containing slashes)
+        avoids the routing-greedy-match complication that would
+        otherwise force a NestJS wildcard route.
+      tags: [ChefItemImages]
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema: { type: string, minLength: 1 }
+          description: |
+            The storage object key suffix. Slashes are permitted —
+            standard query-string URL-encoding handles them
+            transparently (`%2F` etc.). Identifies one image
+            unambiguously without depending on array indices that
+            drift across concurrent edits (R6).
+      responses:
+        "200":
+          description: |
+            Returns the item with the updated `images` array. Same
+            shape as the upload response. When the requested key
+            was already absent, the array is unchanged.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefItem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/ItemNotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: '`UNAUTHORIZED` — missing / invalid / expired JWT.'
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: '`FORBIDDEN_ROLE` — the JWT''s role claim is not `chef`.'
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: Validation error. Body's `code` identifies the specific validator.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    MenuNotFound:
+      description: |
+        `MENU_NOT_FOUND` — the menu does not exist, is soft-deleted,
+        OR belongs to a different chef. Identical shape across all
+        three cases.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ItemNotFound:
+      description: |
+        `ITEM_NOT_FOUND` — the item does not exist, is soft-deleted,
+        OR its owning chef differs from the authenticated caller.
+        Identical shape across all three cases (FR-026 / SC-014).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    BilingualText:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string, minLength: 1, maxLength: 60 }
+        ar: { type: string, minLength: 1, maxLength: 60 }
+
+    BilingualDescription:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string, minLength: 1, maxLength: 500 }
+        ar: { type: string, minLength: 1, maxLength: 500 }
+
+    DiscountUnit:
+      type: string
+      enum: [fixed, percent]
+
+    StockInput:
+      type: object
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [isUnlimitedStock]
+          properties:
+            isUnlimitedStock:
+              type: boolean
+              enum: [true]
+        - type: object
+          additionalProperties: false
+          required: [isUnlimitedStock, quantity]
+          properties:
+            isUnlimitedStock:
+              type: boolean
+              enum: [false]
+            quantity:
+              type: integer
+              minimum: 0
+      description: |
+        Encodes the FR-008 chef-side "unlimited stock" toggle. When
+        `isUnlimitedStock=true`, `quantity` MUST be absent. When
+        `false`, `quantity` MUST be a non-negative integer. An
+        ambiguous combination (both / neither) refuses with
+        `ITEM_STOCK_AMBIGUOUS`.
+
+    CreateItemRequest:
+      type: object
+      required: [name, description, price, stock]
+      properties:
+        name:
+          allOf:
+            - $ref: "#/components/schemas/BilingualText"
+          description: Each locale ≤ 60 chars after trim (FR-007).
+        description:
+          allOf:
+            - $ref: "#/components/schemas/BilingualDescription"
+          description: Each locale ≤ 500 chars after trim (FR-007).
+        price:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,2})?$"
+          description: Decimal string. Must be > 0 (FR-007).
+        discountValue:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,2})?$"
+          default: "0"
+          description: |
+            Decimal string. Must be ≥ 0. Combined with `discountUnit`
+            it MUST yield a non-negative effective price (FR-010).
+        discountUnit:
+          $ref: "#/components/schemas/DiscountUnit"
+          default: fixed
+        stock: { $ref: "#/components/schemas/StockInput" }
+        isActive:
+          type: boolean
+          default: true
+          description: Optional; defaults true. May be flipped on update.
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        name: { $ref: "#/components/schemas/BilingualText" }
+        description: { $ref: "#/components/schemas/BilingualDescription" }
+        price:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,2})?$"
+        discountValue:
+          type: string
+          pattern: "^\\d+(\\.\\d{1,2})?$"
+        discountUnit: { $ref: "#/components/schemas/DiscountUnit" }
+        stock: { $ref: "#/components/schemas/StockInput" }
+        isActive: { type: boolean }
+
+    ReorderItemsRequest:
+      type: object
+      required: [itemIds]
+      properties:
+        itemIds:
+          type: array
+          items: { type: string, format: uuid }
+          minItems: 1
+          uniqueItems: true
+          description: |
+            Ordered list of the menu's current non-soft-deleted item
+            identifiers. MUST be an exact cover — missing IDs,
+            unknown IDs, or duplicates refuse the request (FR-009a).
+
+    ChefItem:
+      type: object
+      required:
+        - id
+        - menuId
+        - name
+        - description
+        - price
+        - effectivePrice
+        - discountValue
+        - discountUnit
+        - isUnlimitedStock
+        - inStock
+        - images
+        - displayOrder
+        - isActive
+        - createdAt
+      properties:
+        id: { type: string, format: uuid }
+        menuId: { type: string, format: uuid }
+        name: { $ref: "#/components/schemas/BilingualText" }
+        description: { $ref: "#/components/schemas/BilingualDescription" }
+        price:
+          type: string
+          description: Base price, decimal string (e.g., `"60.00"`).
+        effectivePrice:
+          type: string
+          description: |
+            Server-computed effective sell price (FR-016), decimal
+            string. The client renders this alongside the
+            struck-through `price` when `discountValue > 0`.
+        discountValue: { type: string }
+        discountUnit: { $ref: "#/components/schemas/DiscountUnit" }
+        isUnlimitedStock:
+          type: boolean
+          description: |
+            FR-008 wire-shape semantic. When `true`, the chef's
+            editor renders the "unlimited" toggle on and `quantity`
+            is omitted from the response.
+        quantity:
+          type: integer
+          minimum: 0
+          description: |
+            Present only when `isUnlimitedStock=false`. The
+            database-internal unlimited sentinel (`-1`) is NEVER on
+            the wire (R4).
+        inStock:
+          type: boolean
+          description: |
+            Server-computed: `true` when `isUnlimitedStock=true` OR
+            `quantity > 0`; otherwise `false`.
+        images:
+          type: array
+          maxItems: 5
+          items: { type: string, format: uri }
+          description: |
+            Public Supabase Storage URLs in the chef-set display
+            order (preserved across appends and removes).
+        displayOrder: { type: integer, minimum: 0 }
+        isActive:
+          type: boolean
+          description: |
+            Chef-controlled hide-from-customer toggle (FR-011).
+            Customer-facing reads filter this to `true`; chef-side
+            reads return both states.
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Error:
+      type: object
+      required: [statusCode, code]
+      properties:
+        statusCode: { type: integer }
+        code:
+          type: string
+          description: Stable identifier; client maps to bilingual messages.
+        details:
+          type: object
+          additionalProperties: true
+          description: |
+            Optional context. NEVER carries `latitude`, `longitude`,
+            or `coordinates` (FR-033).

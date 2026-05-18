@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: Nafas Public Chef Profile API (Phase 4 extension)
+  version: 0.5.0
+  description: |
+    Phase 4 extends the Phase 3 `GET /api/v1/chefs/{id}` chef-profile
+    read with a `menus` section. The header (name, banner, logo, bio,
+    rating, open/closed state, category chips) is unchanged from the
+    Phase 3 contract (see `004-phase-3-chefs/contracts/chefs.openapi.yaml`).
+
+    The menus section returns ONLY today-available menus — a menu is
+    today-available iff its `availableAllDays` flag is `true` OR a
+    `MenuAvailability` row exists for the current Africa/Cairo
+    weekday (FR-017). "Today" is computed server-side at
+    request-handler entry against the `Africa/Cairo` wall clock — the
+    client's clock is NOT used (R2).
+
+    Inside each included menu section, ONLY items that are active
+    (`isActive=true`) AND non-soft-deleted are returned. The
+    `effectivePrice` server-computed value is returned alongside the
+    base price so the client renders the discounted view without
+    recomputing (FR-016 / FR-018).
+
+    A chef whose row is not verified, OR is soft-deleted, returns
+    `404 CHEF_NOT_FOUND` — identical shape to a genuinely missing
+    chef identifier (FR-020). The response NEVER leaks the existence
+    of a pending or revoked chef at that identifier.
+
+    Per FR-033, no error response body MAY include `latitude`,
+    `longitude`, or any nested `coordinates` property.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: PublicChefProfile
+    description: Customer-facing chef profile read (extended with today-available menus + items).
+
+paths:
+  /api/v1/chefs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getChefPublicProfileWithMenus
+      summary: Read a verified chef's public profile with today-available menus.
+      description: |
+        **Phase 4 extension of the Phase 3 endpoint.** The header
+        fields (name, banner, logo, bio, rating, currentlyOpen,
+        categoryIds, totalReviews) come from the Phase 3 read; the
+        new `menus` array is the today-available menu region (FR-017
+        / FR-018 / FR-019).
+
+        Possible response shapes:
+
+        - The chef is verified AND has today-available menus with
+          active items → header + `menus: [{ ..., items: [...] }]`.
+        - The chef is verified but has zero today-available menus
+          OR no active items in any today-available menu → header +
+          `menus: []` (FR-019: the client renders a "no items
+          available right now" empty state).
+        - The chef is unverified OR soft-deleted →
+          `404 CHEF_NOT_FOUND` (FR-020).
+      tags: [PublicChefProfile]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "200":
+          description: Chef profile with today-available menus.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChefPublicProfileWithMenus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
+          description: |
+            `CHEF_NOT_FOUND` — chef does not exist, is unverified,
+            or is soft-deleted. Identical shape across all three
+            cases (FR-020).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: '`UNAUTHORIZED` — missing / invalid / expired JWT.'
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    BilingualText:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string }
+        ar: { type: string }
+
+    DiscountUnit:
+      type: string
+      enum: [fixed, percent]
+
+    PublicItem:
+      type: object
+      description: |
+        Customer-facing item shape. Omits chef-only fields
+        (`isActive`, `lastFiniteQuantity`); always renders only
+        active, non-soft-deleted items in `displayOrder` order
+        (FR-018).
+      required:
+        - id
+        - name
+        - description
+        - price
+        - effectivePrice
+        - discountValue
+        - discountUnit
+        - isUnlimitedStock
+        - inStock
+        - images
+        - displayOrder
+      properties:
+        id: { type: string, format: uuid }
+        name: { $ref: "#/components/schemas/BilingualText" }
+        description: { $ref: "#/components/schemas/BilingualText" }
+        price:
+          type: string
+          description: Base price, decimal string (e.g., `"60.00"`).
+        effectivePrice:
+          type: string
+          description: |
+            Server-computed effective sell price (FR-016 / FR-018).
+            The client renders this as the current price; the base
+            `price` is rendered struck-through when
+            `discountValue > 0`.
+        discountValue: { type: string }
+        discountUnit: { $ref: "#/components/schemas/DiscountUnit" }
+        isUnlimitedStock: { type: boolean }
+        quantity:
+          type: integer
+          minimum: 0
+          description: |
+            Present only when `isUnlimitedStock=false`. The
+            database-internal `-1` sentinel is NEVER on the wire.
+        inStock:
+          type: boolean
+          description: |
+            `true` when `isUnlimitedStock=true` OR `quantity > 0`;
+            otherwise `false`.
+        images:
+          type: array
+          maxItems: 5
+          items: { type: string, format: uri }
+        displayOrder: { type: integer, minimum: 0 }
+
+    PublicMenuSection:
+      type: object
+      description: |
+        One today-available menu rendered as a customer-facing
+        section. Sections are returned in
+        `(displayOrder ASC, createdAt ASC, id ASC)` order (FR-018).
+        Items inside the section follow the same deterministic sort.
+      required: [id, categoryId, name, displayOrder, items]
+      properties:
+        id: { type: string, format: uuid }
+        categoryId: { type: string, format: uuid }
+        name: { $ref: "#/components/schemas/BilingualText" }
+        displayOrder: { type: integer, minimum: 0 }
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/PublicItem" }
+
+    ChefPublicProfileHeader:
+      type: object
+      description: |
+        Phase 3 chef-profile header. Carried unchanged into Phase 4.
+      required:
+        - id
+        - chefName
+        - banner
+        - logo
+        - bio
+        - ratings
+        - totalReviews
+        - currentlyOpen
+        - categoryIds
+      properties:
+        id: { type: string, format: uuid }
+        chefName: { type: string }
+        banner: { type: string, format: uri }
+        logo: { type: string, format: uri }
+        bio: { type: string }
+        ratings:
+          type: string
+          description: Decimal string (e.g., `"4.62"`); `0` until Phase 7 wires reviews.
+        totalReviews:
+          type: integer
+          minimum: 0
+        currentlyOpen: { type: boolean }
+        categoryIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    ChefPublicProfileWithMenus:
+      allOf:
+        - $ref: "#/components/schemas/ChefPublicProfileHeader"
+        - type: object
+          required: [menus]
+          properties:
+            menus:
+              type: array
+              maxItems: 50
+              description: |
+                Today-available menus only (FR-017). Empty array
+                when the chef has zero today-available menus OR no
+                active items in any today-available menu (FR-019).
+              items: { $ref: "#/components/schemas/PublicMenuSection" }
+
+    Error:
+      type: object
+      required: [statusCode, code]
+      properties:
+        statusCode: { type: integer }
+        code: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+          description: NEVER carries `latitude`, `longitude`, or `coordinates` (FR-033).

@@ -1,11 +1,12 @@
 # nafas Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-15
+Auto-generated from all feature plans. Last updated: 2026-05-18
 
 ## Active Technologies
 - TypeScript 5.x across all three workspaces (unchanged — 002-phase-1-auth)
 - PostgreSQL 15 via Supabase (per-contributor projects, Phase 0 — 002-phase-1-auth)
 - `firebase-admin` for FCM push delivery (new in 004-phase-3-chefs)
+- `Intl.DateTimeFormat` with `timeZone: 'Africa/Cairo'` for the today-available filter (new in 005-phase-4-menus; zero new deps)
 
 - TypeScript 5.x across all three workspaces (001-phase-0-foundation)
 - Backend: Node.js 20 LTS, NestJS 10, Prisma 5, `@nestjs/swagger`, `@nestjs/throttler`, `@nestjs/schedule`, `@nestjs/terminus`, `helmet`, `class-validator`, `class-transformer`, `decimal.js`
@@ -61,10 +62,9 @@ npm run build       # Next.js build
 TypeScript 5.x across all three workspaces: Follow standard conventions. All monetary math uses `decimal.js`; never call `Number()` on a Decimal field.
 
 ## Recent Changes
+- 005-phase-4-menus: Chef-side menu/item editor (CRUD, day-of-week availability, bulk-reorder, image upload/remove with per-chef throttle), server-authoritative `effectivePrice` helper, today-available chef-profile read against Africa/Cairo wall clock, customer Home composer surface, Explore debounce/cancellation. Zero new deps; index-only Prisma migration.
 - 004-phase-3-chefs: Chef application + admin verification/rejection/revocation, public chef discovery (pure-Prisma bounding-box + JS Haversine), chef profile self-edit, seeded categories + admin CRUD/reorder, firebase-admin FCM, role-driven mobile tab switch.
 - 003-phase-2-addresses: Saved customer addresses + map picker, FR-013 in-flight-order delete safety rail, coordinate-redaction in error responses.
-- 002-phase-1-auth: Authentication (RS256 JWT), Twilio Verify OTP, refresh-token rotation + blacklist, single-tier throttler.
-- 001-phase-0-foundation: Scaffolded backend (NestJS), mobile (Expo), admin (Next.js), canonical Prisma schema, soft-delete extension, health endpoint.
 
 <!-- MANUAL ADDITIONS START -->
 ## Phase 0 conventions (do not regress)
@@ -203,4 +203,104 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
   POST) produce a body Nest's `FileInterceptor` cannot parse — the route
   handler never runs (silent on the backend) and the client surfaces a
   generic "Network error".
+
+## Phase 4 conventions (do not regress)
+
+- `effectivePrice(item)` at `backend/src/modules/items/effective-price.ts`
+  is the ONE canonical place that converts `(price, discountValue,
+  discountUnit)` into the customer-visible effective sell price
+  (FR-016, Constitution Principle II). It is exported as a **pure
+  function**, not a service method — Phase 5 (cart) and Phase 6
+  (`OrderItem.price` / `OrderItem.priceBeforeDiscount` snapshots) MUST
+  import it from there. Treating it as a service method would force
+  a `forwardRef` circular dep through cart and orders. The function
+  uses `decimal.js` exclusively; never `Number()` on a Decimal field.
+- The today-available filter resolves "today" against the
+  **Africa/Cairo wall clock** at request-handler entry via
+  `todaysCairoWeekday()` at `backend/src/modules/menus/today-cairo.ts`
+  (research R2). The transport timestamp / client clock is NEVER
+  used. The helper takes an optional `now` argument so unit tests
+  can pin the clock without `jest.useFakeTimers()` global state.
+- `Menu.displayOrder` and `Item.displayOrder` collisions are
+  impossible by construction — bulk-reorder is the ONLY mutation
+  path that writes `displayOrder`, and it always rewrites a dense
+  `0, 1, 2, …` sequence inside one `prisma.$transaction`. The
+  per-menu / per-item update endpoints (`PATCH /chef/menus/:id`,
+  `PATCH /chef/items/:id`) do NOT accept `displayOrder` in their
+  DTOs — the global `whitelist: true, forbidNonWhitelisted: true`
+  pipe refuses the field. Reads always sort by
+  `(displayOrder ASC, createdAt ASC, id ASC)` as a defensive
+  tiebreaker (FR-002a / FR-009a / FR-006 / FR-018).
+- Both bulk-reorder endpoints validate that the submitted
+  identifier list is an **exact cover** of the current
+  non-soft-deleted collection (no missing IDs, no unknown IDs, no
+  duplicates) BEFORE any write inside the transaction. Refusal
+  code: `MENUS_REORDER_NOT_EXACT_SET` / `ITEMS_REORDER_NOT_EXACT_SET`.
+- The `Item.quantity = -1` sentinel is the platform-defined
+  "unlimited stock" marker (Phase 6 stock-decrement logic
+  honours it). It is database-internal and MUST NEVER appear on
+  the wire — every read maps it to the wire-shape
+  `{ isUnlimitedStock: true, quantity: omitted, inStock: true }`
+  (research R4). The chef-side editor preserves the chef's last
+  finite quantity in client memory only; the database does not
+  retain a separate `lastFiniteQuantity` field in v1.
+- Item-image uploads (`POST /chef/items/:id/images`) are
+  throttled per-chef at **20 successful uploads per 60-s rolling
+  window** via `@Throttle({ default: { limit: 20, ttl: 60_000 } })`
+  (research R3). The Phase 1 single-tier rule is preserved (no
+  new named tier). Refusals emit
+  `item.image_upload / rate_limited` events from
+  `HttpExceptionNormalizerFilter` and DO NOT consume image
+  storage.
+- `Item.images: String[]` mutations go through the read-mutate-
+  `set` cycle in `items.service.appendImage` /
+  `items.service.removeImage` (research R6) — NEVER raw SQL.
+  Individual-image removal identifies the target by **storage
+  object key** (the suffix of the public URL), not by array
+  index. Removal is idempotent: a `DELETE` for a key that is no
+  longer in the array returns HTTP 204 (FR-012a). The Supabase
+  Storage object IS deleted on remove, best-effort (mirrors the
+  Phase 3 chef-logo / banner replacement pattern: row is source
+  of truth, storage cleanup logs on failure but never throws).
+- Bilingual `Menu.name` / `Item.name` / `Item.description` JSON
+  fields validate per-locale length AFTER server-side trim:
+  names ≤ 60 chars per locale; description ≤ 500 chars per
+  locale. Empty value on either locale is refused (not silently
+  truncated). Validator codes:
+  `MENU_NAME_REQUIRED` / `MENU_NAME_TOO_LONG` /
+  `ITEM_NAME_REQUIRED` / `ITEM_NAME_TOO_LONG` /
+  `ITEM_DESCRIPTION_REQUIRED` / `ITEM_DESCRIPTION_TOO_LONG`.
+- `Menu` has NO `isActive` field — only `Item` does. "Hide a menu
+  from customers" = soft-delete the menu (no resurrection in v1).
+  "Hide an item from customers without losing history" = toggle
+  `Item.isActive = false`. Customer-facing reads filter
+  `Item.isActive = true`; chef-facing browse returns both states
+  (FR-011 / FR-015).
+- `MenuAvailability` is the ONE Phase 4 entity that does NOT
+  soft-delete — rows are hard-deleted via
+  `prisma.menuAvailability.delete({ where: { menuId_dayOfWeek:
+  { ... } } })`. The CI grep gate
+  (`backend/scripts/ci-no-hard-delete.sh`) is configured to allow
+  this. Add (`POST .../availability`) is idempotent via `upsert`
+  on the same composite key; remove is idempotent via try/catch
+  on `P2025`.
+- The `home` module is a **composer** — it never reads
+  `prisma.chef`, `prisma.menu`, or `prisma.category` directly. It
+  calls `chefs.service.findManyForDiscovery({ isOpen: true })`,
+  `categories.service.listActive()`, and the new
+  `chefs.service.findTopRated(limit)` through injected service
+  interfaces (Constitution Principle III).
+- `categories.service.findOneActiveOrThrow(id)` is the canonical
+  FR-003 menu-category existence guard. `menus.service` MUST call
+  it (through the injected interface) at menu create / update
+  rather than reading `prisma.category` directly. Refusal code:
+  `CATEGORY_NOT_FOUND`.
+- The `HttpExceptionNormalizerFilter` coord-redaction list widens
+  to also match `/chef/menus/*`, `/chef/items/*`, `/chefs/*/profile`
+  paths in addition to the Phase 2 / 3 prefixes (FR-033). The
+  same filter emits FR-032 menu.* / item.* events for
+  `validation_rejected` / `not_found` / `role_refused` /
+  `rate_limited` outcomes — service-layer success outcomes emit
+  directly from the service via `MenuEventLogger` /
+  `ItemEventLogger` (siblings to the Phase 1/2/3 loggers).
 <!-- MANUAL ADDITIONS END -->

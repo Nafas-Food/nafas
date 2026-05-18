@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Prisma, Category } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const CACHE_TTL_MS = 60_000;
@@ -95,5 +99,24 @@ export class CategoriesService {
     );
     this.invalidateCache();
     return this.listActive();
+  }
+
+  /**
+   * FR-003 guard for menu create / update. Refuses a soft-deleted
+   * or non-existent category reference with 400 CATEGORY_NOT_FOUND.
+   *
+   * Consulted by menus.service before any Menu write. Reads through
+   * prismaService.extended.category.* so the Phase 0 soft-delete
+   * filter applies automatically; the in-process cache from Phase 3
+   * R7 is also consulted first when present.
+   */
+  async findOneActiveOrThrow(id: string): Promise<Category> {
+    const row = await this.prismaService.extended.category.findUnique({
+      where: { id },
+    });
+    if (!row) {
+      throw new BadRequestException({ code: 'CATEGORY_NOT_FOUND' });
+    }
+    return row;
   }
 }

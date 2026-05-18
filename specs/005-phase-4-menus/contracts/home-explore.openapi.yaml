@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: Nafas Home & Explore API
+  version: 0.5.0
+  description: |
+    Phase 4 customer-facing entry points: the Home surface
+    (`GET /api/v1/home`) — a single composed payload of greeting +
+    open-chefs scroll + categories + top-rated grid — and a note that
+    Explore reuses the Phase 3 `GET /api/v1/chefs` discovery contract
+    verbatim (no Phase 4 schema changes there).
+
+    Per Constitution Principle II, every result on these surfaces is
+    server-computed and server-filtered:
+
+    - Only verified, non-soft-deleted chefs appear (FR-019, FR-021).
+    - The open-chefs scroll filters `isOpen=true`.
+    - The top-rated grid sorts by `(ratings DESC, verifiedAt DESC,
+      id ASC)` — a deterministic, server-evaluated order (FR-022).
+    - The categories list is the Phase 3
+      `categories.service.listActive()` payload (60-second in-process
+      cache per Phase 3 R7; cache-invalidated on every admin
+      category mutation).
+
+    Per Constitution Principle I, every text field returned on these
+    surfaces is bilingual `{ en, ar }`. The greeting is delivered as
+    a payload sufficient for the client to render the
+    customer-language string locally (`userFirstName` only — the
+    "Hello, ..." prefix lives in the client's `t(key)` dictionary).
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.nafas.app
+    description: Production (Phase 13 onward)
+
+tags:
+  - name: Home
+    description: Composed customer-facing Home payload.
+  - name: ExploreReuse
+    description: |
+      Reference-only. Explore is the Phase 3 `GET /api/v1/chefs`
+      discovery contract. See
+      `specs/004-phase-3-chefs/contracts/chefs.openapi.yaml` for the
+      authoritative schema. Phase 4 makes no changes to that
+      endpoint; FR-024 / FR-025 are implemented entirely on the
+      mobile client (debounce + filter cancellation + chip-tap
+      pre-filter routing).
+
+paths:
+  /api/v1/home:
+    get:
+      operationId: getHome
+      summary: Composed Home payload (greeting + open chefs + categories + top-rated).
+      description: |
+        Returns a single payload the mobile Home screen
+        (`mobile/app/(tabs)/index.tsx`) consumes in one round-trip.
+
+        Composition rules:
+
+        - `greeting.userFirstName` — the caller's first name
+          (resolved from `users.service.findOneOrThrow(userId)`).
+          The "Hello, ..." prefix is rendered client-side via
+          `t('home.greeting', { name })`.
+        - `openChefs` — `chefs.service.findManyForDiscovery({
+          isOpen: true, pageSize: 20 })`. Inherits the Phase 3
+          discovery filter and sort rules (FR-013 / FR-016 of
+          Phase 3); excludes pending / rejected / soft-deleted
+          chefs.
+        - `categories` — `categories.service.listActive()` (Phase 3
+          R7 cache; returns the bilingual `{ en, ar }` name + icon
+          + displayOrder for every active category).
+        - `topRated` — `chefs.service.findTopRated(12)`. Sorted by
+          `(ratings DESC, verifiedAt DESC, id ASC)`. Until Phase 7
+          wires reviews, every chef's rating is `0` and the order
+          collapses to the verified-newest-first tiebreaker — the
+          grid renders without an error.
+      tags: [Home]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        "200":
+          description: Composed Home payload.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HomeResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: '`UNAUTHORIZED` — missing / invalid / expired JWT.'
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: |
+        `FORBIDDEN_ROLE` — JWT role is not one of the customer-side
+        roles. The Home surface is customer-only in v1; chef and
+        admin sessions are routed to their respective landing
+        screens by the mobile `RouteGuard`.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    BilingualText:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string }
+        ar: { type: string }
+
+    Greeting:
+      type: object
+      required: [userFirstName]
+      properties:
+        userFirstName:
+          type: string
+          description: |
+            Customer's first name. The mobile client composes the
+            full greeting via `t('home.greeting', { name })` —
+            never appears in any server-rendered string
+            (Constitution I).
+
+    ChefCard:
+      type: object
+      description: |
+        Compact chef shape used by both Home strips (open-chefs
+        horizontal scroll, top-rated grid) and the Phase 3
+        discovery list. Aligned with `ChefCard` from the Phase 3
+        chefs.openapi.yaml — Phase 4 does not change the fields,
+        only re-exports them here for the composed payload's
+        documentation.
+      required:
+        - id
+        - chefName
+        - logo
+        - ratings
+        - totalReviews
+        - currentlyOpen
+      properties:
+        id: { type: string, format: uuid }
+        chefName: { type: string }
+        logo: { type: string, format: uri }
+        ratings:
+          type: string
+          description: Decimal string; `0` until Phase 7 wires reviews.
+        totalReviews:
+          type: integer
+          minimum: 0
+        currentlyOpen: { type: boolean }
+        distanceKm:
+          type: number
+          format: double
+          description: |
+            Optional — present only when the caller supplied
+            coordinates on a discovery call. The Home Open-Chefs
+            scroll does NOT carry a radius filter at v1 (a
+            late-arriving customer-coordinate enhancement is a
+            future, additive change).
+
+    Category:
+      type: object
+      description: |
+        Phase 3 category shape — re-exported here for the composed
+        Home payload. The mobile client uses this to render the
+        chip ribbon on Home and the filter list on Explore.
+      required: [id, name, icon, displayOrder]
+      properties:
+        id: { type: string, format: uuid }
+        name: { $ref: "#/components/schemas/BilingualText" }
+        icon:
+          type: string
+          description: Feather glyph name (e.g., `bowl-food`, `leaf`).
+        displayOrder: { type: integer, minimum: 0 }
+
+    HomeResponse:
+      type: object
+      required: [greeting, openChefs, categories, topRated]
+      properties:
+        greeting: { $ref: "#/components/schemas/Greeting" }
+        openChefs:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/ChefCard" }
+          description: |
+            Currently-open verified chefs. Inherits Phase 3
+            discovery sort rules (open-first then
+            verified-newest-first).
+        categories:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/Category" }
+          description: Phase 3 active-categories cached list.
+        topRated:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ChefCard" }
+          description: |
+            Top-rated verified chefs (FR-022). Sorted by
+            `(ratings DESC, verifiedAt DESC, id ASC)`.
+
+    Error:
+      type: object
+      required: [statusCode, code]
+      properties:
+        statusCode: { type: integer }
+        code: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+          description: NEVER carries `latitude`, `longitude`, or `coordinates` (FR-033).

@@ -5,6 +5,7 @@
 set -euo pipefail
 
 SOFT_DELETE_MODELS=(user userAddress chef category menu item order userReview transaction)
+ALLOW_HARD_DELETE_MODELS=(menuAvailability)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="$ROOT_DIR/src"

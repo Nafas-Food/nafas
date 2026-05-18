@@ -26,13 +26,17 @@ export class ApplyChefDto {
   // require them — the service substitutes (0, 0) as the "unset" sentinel.
   // They must be provided as an all-or-none pair.
   @ApiPropertyOptional({ minimum: -90, maximum: 90 })
-  @ValidateIf((o: ApplyChefDto) => o.latitude !== undefined || o.longitude !== undefined)
+  @ValidateIf(
+    (o: ApplyChefDto) => o.latitude !== undefined || o.longitude !== undefined,
+  )
   @Type(() => Number)
   @IsLatitude()
   latitude?: number;
 
   @ApiPropertyOptional({ minimum: -180, maximum: 180 })
-  @ValidateIf((o: ApplyChefDto) => o.latitude !== undefined || o.longitude !== undefined)
+  @ValidateIf(
+    (o: ApplyChefDto) => o.latitude !== undefined || o.longitude !== undefined,
+  )
   @Type(() => Number)
   @IsLongitude()
   longitude?: number;
