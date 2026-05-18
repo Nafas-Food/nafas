@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { LoggingModule } from '../../common/logging/logging.module';
 import { MenusModule } from '../menus/menus.module';
@@ -15,7 +15,7 @@ import { ChefApplicationService } from './chef-application.service';
   imports: [
     PrismaModule,
     LoggingModule,
-    MenusModule,
+    forwardRef(() => MenusModule),
     StorageModule,
     NotificationsModule,
     UsersModule,

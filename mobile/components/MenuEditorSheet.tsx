@@ -39,6 +39,7 @@ export function MenuEditorSheet({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reset the whole form only when the sheet opens (false → true)
   useEffect(() => {
     if (visible) {
       setNameEn('');
@@ -49,7 +50,15 @@ export function MenuEditorSheet({
       setSubmitting(false);
       setError(null);
     }
-  }, [visible, categories]);
+  }, [visible]);
+
+  // If categories load (or change) while the sheet is already open,
+  // only set the default category when none is selected yet.
+  useEffect(() => {
+    if (visible && !categoryId && categories.length > 0) {
+      setCategoryId(categories[0].id);
+    }
+  }, [visible, categories, categoryId]);
 
   async function submit() {
     setError(null);

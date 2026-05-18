@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -76,6 +77,11 @@ export class MenusController {
     @Param('id') menuId: string,
     @Param('dayOfWeek', ParseIntPipe) dayOfWeek: number,
   ) {
+    if (dayOfWeek < 0 || dayOfWeek > 6) {
+      throw new BadRequestException({
+        code: 'MENU_AVAILABILITY_INVALID_WEEKDAY',
+      });
+    }
     const chef = await this.chefsService.findOwnedOrThrow(user.sub);
     await this.actorContext.run(user.sub, sourceIp, () =>
       this.menusService.removeAvailability(menuId, chef.id, dayOfWeek),

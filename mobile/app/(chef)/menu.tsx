@@ -15,12 +15,21 @@ export default function ChefMenuScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   async function refresh() {
+    // Fetch menus independently — always set menus even if categories fail
+    let m: ChefMenu[] = [];
     try {
-      const [m, c] = await Promise.all([menusService.listOwn(), categoriesService.list()]);
-      setMenus(m);
+      m = await menusService.listOwn();
+    } catch {
+      // silent fail for menus
+    }
+    setMenus(m);
+
+    // Fetch categories separately so a categories failure doesn't block menus
+    try {
+      const c = await categoriesService.list();
       setCategories(c);
     } catch {
-      // silent fail — user can pull-to-refresh
+      // silent fail for categories — leave previous state or empty
     }
   }
 
@@ -69,73 +78,72 @@ export default function ChefMenuScreen() {
         </Pressable>
       </View>
 
-      {/* List or empty state */}
-      {menus.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          <Text style={{ color: colors.muted, fontSize: 15, textAlign: 'center' }}>
-            {t('chef.menu.empty')}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={menus}
-          keyExtractor={(m) => m.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-          }
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
-          renderItem={({ item }) => {
-            const name = item.name[isRTL ? 'ar' : 'en'];
-            const cat = categories.find((c) => c.id === item.categoryId);
-            const catName = cat?.name[isRTL ? 'ar' : 'en'] ?? '';
-            return (
-              <View
-                style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 12,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{name}</Text>
-                {catName ? (
-                  <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>{catName}</Text>
-                ) : null}
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginTop: 8, gap: 6 }}>
-                  <View
-                    style={{
-                      backgroundColor: colors.primaryLight,
-                      borderRadius: 100,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                    }}
-                  >
-                    <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
-                      {item.availableAllDays
-                        ? t('chef.menu.everyDay')
-                        : t('chef.menu.specificDays')}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      backgroundColor: colors.primaryLight,
-                      borderRadius: 100,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                    }}
-                  >
-                    <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
-                      {t('chef.menu.itemCount', { count: item.items?.length ?? 0 })}
-                    </Text>
-                  </View>
+      {/* Always render FlatList so RefreshControl is available even when empty */}
+      <FlatList
+        data={menus}
+        keyExtractor={(m) => m.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, flexGrow: 1 }}
+        ListEmptyComponent={
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+            <Text style={{ color: colors.muted, fontSize: 15, textAlign: 'center' }}>
+              {t('chef.menu.empty')}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const name = item.name[isRTL ? 'ar' : 'en'];
+          const cat = categories.find((c) => c.id === item.categoryId);
+          const catName = cat?.name[isRTL ? 'ar' : 'en'] ?? '';
+          return (
+            <View
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{name}</Text>
+              {catName ? (
+                <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>{catName}</Text>
+              ) : null}
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginTop: 8, gap: 6 }}>
+                <View
+                  style={{
+                    backgroundColor: colors.primaryLight,
+                    borderRadius: 100,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
+                    {item.availableAllDays
+                      ? t('chef.menu.everyDay')
+                      : t('chef.menu.specificDays')}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: colors.primaryLight,
+                    borderRadius: 100,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
+                    {t('chef.menu.itemCount', { count: item.items?.length ?? 0 })}
+                  </Text>
                 </View>
               </View>
-            );
-          }}
-        />
-      )}
+            </View>
+          );
+        }}
+      />
 
       <MenuEditorSheet
         visible={sheetOpen}

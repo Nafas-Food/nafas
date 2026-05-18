@@ -72,8 +72,8 @@ export class MenusService {
   ): Promise<MenuWithAvailability> {
     await this.categoriesService.findOneActiveOrThrow(dto.categoryId);
 
-    const menu = await this.prismaService.$transaction(async (tx) => {
-      const created = await tx.menu.create({
+    const created = await this.prismaService.$transaction(async (tx) => {
+      const menu = await tx.menu.create({
         data: {
           chefId,
           categoryId: dto.categoryId,
@@ -84,16 +84,21 @@ export class MenusService {
       if (dto.initialAvailability && dto.initialAvailability.length > 0) {
         await tx.menuAvailability.createMany({
           data: dto.initialAvailability.map((dayOfWeek) => ({
-            menuId: created.id,
+            menuId: menu.id,
             dayOfWeek,
           })),
           skipDuplicates: true,
         });
       }
-      return tx.menu.findUniqueOrThrow({
-        where: { id: created.id },
-        include: { availability: true },
-      });
+      return menu;
+    });
+
+    // Read back through the extended client so the soft-delete contract
+    // applies (Phase 0 convention). The row was just created, so it
+    // necessarily exists.
+    const menu = await this.prismaService.extended.menu.findUniqueOrThrow({
+      where: { id: created.id },
+      include: { availability: true },
     });
 
     this.menuEventLogger.emit({
@@ -178,9 +183,10 @@ export class MenusService {
         'code' in err &&
         (err as { code: string }).code === 'P2025'
       ) {
-        return;
+        // fall through to success event below
+      } else {
+        throw err;
       }
-      throw err;
     }
     this.menuEventLogger.emit({
       event: 'menu.availability_remove',
