@@ -59,7 +59,7 @@ export const en = {
     signOut: 'Sign out',
     becomeChef: {
       body: 'To become a chef, contact us at',
-      phone: '+20 XXX XXX XXXX',
+      phone: '+201234567891',
     },
   },
   setLocation: {

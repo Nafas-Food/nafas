@@ -56,7 +56,7 @@ export const ar: I18nDict = {
     signOut: 'تسجيل الخروج',
     becomeChef: {
       body: 'لتصبح طاهيًا، تواصل معنا على',
-      phone: '+20 XXX XXX XXXX',
+      phone: '+201234567891',
     },
   },
   setLocation: {
