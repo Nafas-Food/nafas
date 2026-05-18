@@ -29,7 +29,12 @@ import { ActorContext } from '../../common/actor-context/actor-context.service';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('chef')
-@Controller('api/v1/chef/menus')
+// Path is relative to `app.setGlobalPrefix('api/v1')` in main.ts —
+// do NOT prefix `/api/v1` here (mirrors ChefsController,
+// CategoriesController, AddressesController). The verbatim spec text
+// at T022 had the prefix; following it registered the route as
+// /api/v1/api/v1/chef/menus and every request 404'd.
+@Controller('chef/menus')
 export class MenusController {
   constructor(
     private readonly menusService: MenusService,
