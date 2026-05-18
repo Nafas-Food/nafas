@@ -15,6 +15,15 @@ export const en = {
       title: 'Please wait',
       body: 'You can try again after {timestamp}.',
     },
+    day: {
+      sun: 'Sun',
+      mon: 'Mon',
+      tue: 'Tue',
+      wed: 'Wed',
+      thu: 'Thu',
+      fri: 'Fri',
+      sat: 'Sat',
+    },
   },
   welcome: {
     title: 'Welcome to Nafas',
@@ -238,6 +247,30 @@ export const en = {
     schedule: 'Schedule',
     profile: 'Profile',
   },
+  // Phase 4 US1 chef-side menu editor strings. Lives under `chef.menu`
+  // because T024/T025/T026 reference keys as `chef.menu.*` (see spec
+  // option in T064 — "merge into the existing `chef.*` namespace").
+  chef: {
+    menu: {
+      title: 'Menu',
+      create: 'Create menu',
+      empty: 'No menus yet. Tap "Create menu" to add your first one.',
+      everyDay: 'Every day',
+      specificDays: 'Specific days',
+      itemCount: '{count} items',
+      nameEn: 'Name (English)',
+      nameAr: 'Name (Arabic)',
+      nameEnPlaceholder: 'e.g. Koshary',
+      nameArPlaceholder: 'مثلاً: كشري',
+      category: 'Category',
+      availability: 'Availability',
+      selectDays: 'Select days',
+      mode: {
+        'every-day': 'Every day',
+        'specific-days': 'Specific days',
+      },
+    },
+  },
   comingSoon: 'Coming soon',
   errors: {
     AUTH_OTP_INVALID: 'The code is incorrect or has expired. Try again.',
@@ -256,6 +289,17 @@ export const en = {
     VALIDATION_ERROR: 'Please check the form and try again.',
     NETWORK: 'Network error. Check your connection and try again.',
     UNKNOWN: 'Something went wrong. Please try again.',
+    // Phase 4 US1 menu errors. Keys are the server's error `code` lower-
+    // cased (the MenuEditorSheet maps `code.toLowerCase()` into this
+    // namespace).
+    menu: {
+      menu_name_required: 'Please enter the menu name in both languages.',
+      menu_name_too_long: 'The menu name is too long (max 60 characters).',
+      menu_availability_invalid_weekday: 'Pick at least one day of the week.',
+      menu_not_found: "We couldn't find that menu.",
+      menus_reorder_not_exact_set: 'The menu order is out of sync. Please refresh and try again.',
+      category_not_found: 'That category is no longer available. Pick another.',
+    },
   },
 } as const;
 

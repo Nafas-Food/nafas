@@ -53,10 +53,14 @@ export function MenuEditorSheet({
   }, [visible]);
 
   // If categories load (or change) while the sheet is already open,
-  // only set the default category when none is selected yet.
+  // reset to the first category when none is selected OR the selected
+  // id is no longer present in the array (stale / soft-deleted category).
   useEffect(() => {
-    if (visible && !categoryId && categories.length > 0) {
-      setCategoryId(categories[0].id);
+    if (visible && categories.length > 0) {
+      const stillValid = categories.some((c) => c.id === categoryId);
+      if (!categoryId || !stillValid) {
+        setCategoryId(categories[0].id);
+      }
     }
   }, [visible, categories, categoryId]);
 

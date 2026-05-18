@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, View, Text, Pressable, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../../hooks/useColors';
 import { useLanguage } from '../../context/LanguageContext';
 import { menusService, type ChefMenu } from '../../services/menus';
@@ -9,6 +10,7 @@ import { MenuEditorSheet } from '../../components/MenuEditorSheet';
 export default function ChefMenuScreen() {
   const colors = useColors();
   const { t, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [menus, setMenus] = useState<ChefMenu[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -45,12 +47,13 @@ export default function ChefMenuScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+      {/* Header — paddingTop accounts for the status bar / notch (mirrors
+          the profile-tab pattern with useSafeAreaInsets). */}
       <View
         style={{
           flexDirection: isRTL ? 'row-reverse' : 'row',
           paddingHorizontal: 20,
-          paddingTop: 16,
+          paddingTop: insets.top + 12,
           paddingBottom: 14,
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -85,7 +88,11 @@ export default function ChefMenuScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 96, // clears the floating ChefGlassTabBar
+          flexGrow: 1,
+        }}
         ListEmptyComponent={
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
             <Text style={{ color: colors.muted, fontSize: 15, textAlign: 'center' }}>
