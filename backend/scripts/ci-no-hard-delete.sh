@@ -26,14 +26,6 @@ for model in "${SOFT_DELETE_MODELS[@]}"; do
   fi
 done
 
-# Allow-list: hard-delete is intentional for these models
-for model in "${ALLOW_HARD_DELETE_MODELS[@]}"; do
-  pattern="prisma(Service)?(\\.extended)?\\.${model}\\.(delete|deleteMany)\\s*\\("
-  # intentionally no-op — these models are allowed to hard-delete
-  # but we keep the loop so the list is explicit
-  continue
-done
-
 if [ "$fail" -ne 0 ]; then
   exit 1
 fi

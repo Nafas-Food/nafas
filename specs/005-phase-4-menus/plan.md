@@ -42,14 +42,14 @@ Concretely it delivers:
    verbatim — see also `mobile/app/(tabs)/explore.tsx` from Phase
    3). The Home module is a thin composer; it never reads
    `prisma.chef` or `prisma.menu` directly (Constitution III).
-3. **Two schema additions only** (one migration):
-   `Chef.ratings`, `Chef.totalReviews` already exist (Phase 0).
-   Phase 4 adds NO new columns to `Menu`, `Item`, or
-   `MenuAvailability` — the canonical schema migrated in Phase 0
-   already covers everything Phase 4 needs (see R1). The single
-   migration `0004_item_active_displayorder_indexes` adds two
-   composite indexes the today-available read and the bulk-reorder
-   read consume frequently (R7).
+3. **Three composite indexes** (one migration):
+    `Chef.ratings`, `Chef.totalReviews` already exist (Phase 0).
+    Phase 4 adds NO new columns to `Menu`, `Item`, or
+    `MenuAvailability` — the canonical schema migrated in Phase 0
+    already covers everything Phase 4 needs (see R1). The single
+    migration `0004_item_active_displayorder_indexes` adds three
+    composite indexes the today-available read and the bulk-reorder
+    read consume frequently (R7).
 4. **A pure-Prisma today-available read** — no raw SQL. The
    chef-profile menu-region read filters menus by
    `OR: [{ availableAllDays: true }, { availability: { some: {
@@ -83,10 +83,9 @@ Concretely it delivers:
    boolean` alongside `quantity: number | null` (with `null` on
    the wire when the chef has the unlimited toggle on — the
    `-1` sentinel is database-internal, never client-visible).
-   The chef-side read returns the chef's last finite quantity in
-   a separate `lastFiniteQuantity: number | null` field so the
-   editor can preserve the toggle-off state across edits per
-   FR-008 (R4).
+    The chef-side editor preserves the chef's last finite quantity
+    in client memory only; the database does not retain a separate
+    `lastFiniteQuantity` field in v1 (FR-008 / R4).
 8. **A new mobile component `MenuSectionList`** and **`ItemCard`**
    — both consume `useColors()` (Constitution V). Menu sections
    render the design-system collapsible menu pattern;
@@ -492,7 +491,7 @@ nafas/
 │   │   │   │       ├── stock-input.dto.ts                 # encodes {isUnlimitedStock, quantity}
 │   │   │   │       │                                      # union shape; validator refuses ambiguous
 │   │   │   │       └── item.response.dto.ts               # includes both base and effective price,
-│   │   │   │                                              # isUnlimitedStock, lastFiniteQuantity
+│   │   │   │                                              # isUnlimitedStock
 │   │   │   │                                              # (chef read only — omitted on customer read)
 │   │   │   └── home/                                      # NEW (composer only — no Prisma reads)
 │   │   │       ├── home.module.ts

@@ -330,12 +330,13 @@ npm run test:e2e -- items-throttle.e2e-spec
 
 **Verify**: the test seeds a fresh chef + item, then issues 25
 successive valid image uploads as that chef within a 60-second
-window. Exactly the first 20 succeed (HTTP 201, item.images grows
-to 5 then plateaus as further uploads hit `ITEM_IMAGES_FULL`
-unless interleaved with `removeImage` calls). Uploads 21 – 25
-refuse with HTTP 429 / `ITEM_UPLOAD_RATE_LIMITED`. Refused uploads
-consume no image storage (the Supabase bucket count is unchanged
-across the refused calls). SC-007b.
+window. After each upload when `item.images.length === 5`, the
+test calls `removeImage` to free a slot, ensuring the per-item
+5-image cap (`ITEM_IMAGES_FULL`) is never hit. Exactly the first
+20 uploads succeed (HTTP 201). Uploads 21 – 25 refuse with HTTP
+429 / `ITEM_UPLOAD_RATE_LIMITED`. Refused uploads consume no
+image storage (the Supabase bucket count is unchanged across the
+refused calls). SC-007b.
 
 Also verify the FR-032 log stream:
 

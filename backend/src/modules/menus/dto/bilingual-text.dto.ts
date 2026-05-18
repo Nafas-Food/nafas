@@ -35,9 +35,13 @@ export class BilingualText {
  * field with `@ValidateNested()` + `@Type(() => CappedBilingualText(...))`.
  *
  * In practice we declare a per-locale-capped subclass per field;
- * see `Name60` and `Description500` below.
+ * see `MenuName60`, `ItemName60`, and `ItemDescription500` below.
  */
-function bilingualSubclass(maxLen: number, code: string): typeof BilingualText {
+function bilingualSubclass(
+  maxLen: number,
+  requiredCode: string,
+  tooLongCode: string,
+): typeof BilingualText {
   // The subclass MUST re-assert @IsString + @MinLength alongside @MaxLength.
   // class-validator does not merge parent + child metadata when both
   // decorate the same property; the subclass's metadata replaces the
@@ -48,24 +52,39 @@ function bilingualSubclass(maxLen: number, code: string): typeof BilingualText {
     @Transform(({ value }) =>
       typeof value === 'string' ? value.trim() : value,
     )
-    @IsString({ message: 'BILINGUAL_EN_REQUIRED' })
-    @MinLength(1, { message: 'BILINGUAL_EN_REQUIRED' })
-    @MaxLength(maxLen, { message: `${code}_TOO_LONG_EN` })
+    @IsString({ message: requiredCode })
+    @MinLength(1, { message: requiredCode })
+    @MaxLength(maxLen, { message: tooLongCode })
     declare en: string;
 
     @Transform(({ value }) =>
       typeof value === 'string' ? value.trim() : value,
     )
-    @IsString({ message: 'BILINGUAL_AR_REQUIRED' })
-    @MinLength(1, { message: 'BILINGUAL_AR_REQUIRED' })
-    @MaxLength(maxLen, { message: `${code}_TOO_LONG_AR` })
+    @IsString({ message: requiredCode })
+    @MinLength(1, { message: requiredCode })
+    @MaxLength(maxLen, { message: tooLongCode })
     declare ar: string;
   }
   return Capped;
 }
 
-/** Bilingual name capped at 60 characters per locale. */
-export const Name60 = bilingualSubclass(60, 'NAME');
+/** Bilingual menu name capped at 60 characters per locale. */
+export const MenuName60 = bilingualSubclass(
+  60,
+  'MENU_NAME_REQUIRED',
+  'MENU_NAME_TOO_LONG',
+);
 
-/** Bilingual description capped at 500 characters per locale. */
-export const Description500 = bilingualSubclass(500, 'DESCRIPTION');
+/** Bilingual item name capped at 60 characters per locale. */
+export const ItemName60 = bilingualSubclass(
+  60,
+  'ITEM_NAME_REQUIRED',
+  'ITEM_NAME_TOO_LONG',
+);
+
+/** Bilingual item description capped at 500 characters per locale. */
+export const ItemDescription500 = bilingualSubclass(
+  500,
+  'ITEM_DESCRIPTION_REQUIRED',
+  'ITEM_DESCRIPTION_TOO_LONG',
+);

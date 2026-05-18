@@ -251,13 +251,19 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         '';
       const userSub = (req as Request & { user?: { sub?: string } }).user?.sub;
       const method = req.method;
+      const isAvailabilityPath = path.includes('/availability');
       let event: MenuEventName | null = null;
-      if (method === 'POST') event = 'menu.create';
-      if (method === 'PATCH' && path.endsWith('/reorder'))
-        event = 'menu.reorder';
-      if (method === 'PATCH' && !path.endsWith('/reorder'))
-        event = 'menu.update';
-      if (method === 'DELETE') event = 'menu.soft_delete';
+      if (isAvailabilityPath) {
+        if (method === 'POST') event = 'menu.availability_add';
+        if (method === 'DELETE') event = 'menu.availability_remove';
+      } else {
+        if (method === 'POST') event = 'menu.create';
+        if (method === 'PATCH' && path.endsWith('/reorder'))
+          event = 'menu.reorder';
+        if (method === 'PATCH' && !path.endsWith('/reorder'))
+          event = 'menu.update';
+        if (method === 'DELETE') event = 'menu.soft_delete';
+      }
       if (event && normalized.code === 'VALIDATION_ERROR') {
         this.menuEvents.emit({
           event,
@@ -308,13 +314,17 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         '';
       const userSub = (req as Request & { user?: { sub?: string } }).user?.sub;
       const method = req.method;
+      const isImageRoute = path.endsWith('/images');
+      const isImageUploadRoute = isImageRoute && method === 'POST';
+      const isImageRemoveRoute = isImageRoute && method === 'DELETE';
       let event: ItemEventName | null = null;
-      if (method === 'POST') event = 'item.create';
+      if (method === 'POST' && !isImageUploadRoute) event = 'item.create';
       if (method === 'PATCH' && path.endsWith('/reorder'))
         event = 'item.reorder';
       if (method === 'PATCH' && !path.endsWith('/reorder'))
         event = 'item.update';
-      if (method === 'DELETE') event = 'item.soft_delete';
+      if (method === 'DELETE' && !isImageRemoveRoute) event = 'item.soft_delete';
+      if (isImageRemoveRoute) event = 'item.image_remove';
       if (event && normalized.code === 'VALIDATION_ERROR') {
         this.itemEvents.emit({
           event,
@@ -346,15 +356,18 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
         status === HttpStatus.TOO_MANY_REQUESTS ||
         exception instanceof ThrottlerException
       ) {
+        const throttleEvent: ItemEventName = isImageUploadRoute
+          ? 'item.image_upload'
+          : (event ?? 'item.update');
         this.itemEvents.emit({
-          event: 'item.image_upload',
+          event: throttleEvent,
           outcome: 'rate_limited',
           actorUserId: userSub ?? null,
           actorRole: 'chef',
           sourceIp: req.ip ?? null,
         });
       }
-      if (status === HttpStatus.PAYLOAD_TOO_LARGE) {
+      if (isImageUploadRoute && status === HttpStatus.PAYLOAD_TOO_LARGE) {
         this.itemEvents.emit({
           event: 'item.image_upload',
           outcome: 'payload_too_large',
@@ -363,7 +376,7 @@ export class HttpExceptionNormalizerFilter implements ExceptionFilter {
           sourceIp: req.ip ?? null,
         });
       }
-      if (status === HttpStatus.UNSUPPORTED_MEDIA_TYPE) {
+      if (isImageUploadRoute && status === HttpStatus.UNSUPPORTED_MEDIA_TYPE) {
         this.itemEvents.emit({
           event: 'item.image_upload',
           outcome: 'unsupported_media_type',

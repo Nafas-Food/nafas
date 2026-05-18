@@ -348,8 +348,6 @@ and item editor):
 ```jsonc
 {
   // ... everything from the customer read, PLUS:
-  "lastFiniteQuantity": 8,     // last numeric value the chef typed
-                               //   (null if never set)
   "isActive": true             // chef sees inactive items in their browse
 }
 ```
@@ -379,7 +377,8 @@ default (the chef just types fresh). A v2 change could add
 observed as a friction in practice. The spec text "the client
 preserves the last finite value so re-disabling 'unlimited'
 restores it for editing" is satisfied by client-state
-preservation within a single editor session.
+preservation within a single editor session. The chef-facing
+read shape does NOT include `lastFiniteQuantity` on the wire.
 
 **Mapping rules** (in `items.service`):
 

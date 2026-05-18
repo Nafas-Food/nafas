@@ -266,26 +266,53 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
    * field with `@ValidateNested()` + `@Type(() => CappedBilingualText(...))`.
    *
    * In practice we declare a per-locale-capped subclass per field;
-   * see `Name60` and `Description500` below.
+   * see `MenuName60`, `ItemName60`, and `ItemDescription500` below.
    */
-  function bilingualSubclass(maxLen: number, code: string): typeof BilingualText {
+  function bilingualSubclass(
+    maxLen: number,
+    requiredCode: string,
+    tooLongCode: string,
+  ): typeof BilingualText {
     class Capped extends BilingualText {
-      @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-      @MaxLength(maxLen, { message: `${code}_TOO_LONG_EN` })
+      @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value,
+      )
+      @IsString({ message: requiredCode })
+      @MinLength(1, { message: requiredCode })
+      @MaxLength(maxLen, { message: tooLongCode })
       declare en: string;
 
-      @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-      @MaxLength(maxLen, { message: `${code}_TOO_LONG_AR` })
+      @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value,
+      )
+      @IsString({ message: requiredCode })
+      @MinLength(1, { message: requiredCode })
+      @MaxLength(maxLen, { message: tooLongCode })
       declare ar: string;
     }
     return Capped;
   }
 
-  /** Bilingual name capped at 60 characters per locale. */
-  export const Name60 = bilingualSubclass(60, 'NAME');
+  /** Bilingual menu name capped at 60 characters per locale. */
+  export const MenuName60 = bilingualSubclass(
+    60,
+    'MENU_NAME_REQUIRED',
+    'MENU_NAME_TOO_LONG',
+  );
 
-  /** Bilingual description capped at 500 characters per locale. */
-  export const Description500 = bilingualSubclass(500, 'DESCRIPTION');
+  /** Bilingual item name capped at 60 characters per locale. */
+  export const ItemName60 = bilingualSubclass(
+    60,
+    'ITEM_NAME_REQUIRED',
+    'ITEM_NAME_TOO_LONG',
+  );
+
+  /** Bilingual item description capped at 500 characters per locale. */
+  export const ItemDescription500 = bilingualSubclass(
+    500,
+    'ITEM_DESCRIPTION_REQUIRED',
+    'ITEM_DESCRIPTION_TOO_LONG',
+  );
   ```
   Verify with `npx tsc --noEmit` from `<repo>\backend`.
 
@@ -596,12 +623,12 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
     ValidateNested,
     ArrayUnique,
   } from 'class-validator';
-  import { Name60 } from './bilingual-text.dto';
+  import { MenuName60 } from './bilingual-text.dto';
 
   export class CreateMenuDto {
     @ValidateNested()
-    @Type(() => Name60)
-    name!: InstanceType<typeof Name60>;
+    @Type(() => MenuName60)
+    name!: InstanceType<typeof MenuName60>;
 
     @IsUUID('4', { message: 'CATEGORY_NOT_FOUND' })
     categoryId!: string;
@@ -1082,17 +1109,17 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
     IsOptional,
     ValidateNested,
   } from 'class-validator';
-  import { Name60, Description500 } from '../../menus/dto/bilingual-text.dto';
+  import { ItemName60, ItemDescription500 } from '../../menus/dto/bilingual-text.dto';
   import { StockInputDto } from './stock-input.dto';
 
   export class CreateItemDto {
     @ValidateNested()
-    @Type(() => Name60)
-    name!: InstanceType<typeof Name60>;
+    @Type(() => ItemName60)
+    name!: InstanceType<typeof ItemName60>;
 
     @ValidateNested()
-    @Type(() => Description500)
-    description!: InstanceType<typeof Description500>;
+    @Type(() => ItemDescription500)
+    description!: InstanceType<typeof ItemDescription500>;
 
     /**
      * Decimal string with up to 2 decimal places, > 0. The service
@@ -2066,11 +2093,11 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```ts
   import { Type } from 'class-transformer';
   import { IsBoolean, IsOptional, IsUUID, ValidateNested } from 'class-validator';
-  import { Name60 } from './bilingual-text.dto';
+  import { MenuName60 } from './bilingual-text.dto';
 
   export class UpdateMenuDto {
-    @IsOptional() @ValidateNested() @Type(() => Name60)
-    name?: InstanceType<typeof Name60>;
+    @IsOptional() @ValidateNested() @Type(() => MenuName60)
+    name?: InstanceType<typeof MenuName60>;
 
     @IsOptional() @IsUUID('4', { message: 'CATEGORY_NOT_FOUND' })
     categoryId?: string;
@@ -2104,15 +2131,15 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
     IsOptional,
     ValidateNested,
   } from 'class-validator';
-  import { Name60, Description500 } from '../../menus/dto/bilingual-text.dto';
+  import { ItemName60, ItemDescription500 } from '../../menus/dto/bilingual-text.dto';
   import { StockInputDto } from './stock-input.dto';
 
   export class UpdateItemDto {
-    @IsOptional() @ValidateNested() @Type(() => Name60)
-    name?: InstanceType<typeof Name60>;
+    @IsOptional() @ValidateNested() @Type(() => ItemName60)
+    name?: InstanceType<typeof ItemName60>;
 
-    @IsOptional() @ValidateNested() @Type(() => Description500)
-    description?: InstanceType<typeof Description500>;
+    @IsOptional() @ValidateNested() @Type(() => ItemDescription500)
+    description?: InstanceType<typeof ItemDescription500>;
 
     @IsOptional() @IsNumberString({ no_symbols: false }, { message: 'ITEM_PRICE_INVALID' })
     price?: string;

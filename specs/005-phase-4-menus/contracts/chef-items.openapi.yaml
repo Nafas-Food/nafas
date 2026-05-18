@@ -156,7 +156,7 @@ paths:
         `PATCH /chef/menus/:menuId/items/reorder`. The `images`
         array is NOT mutable via this endpoint — uploads go through
         `POST /chef/items/:id/images` and removes through
-        `DELETE /chef/items/:id/images/:imageKey`.
+        `DELETE /chef/items/{id}/images?key={imageKey}`.
       tags: [ChefItems]
       security: [ { bearerAuth: [] } ]
       requestBody:
@@ -361,8 +361,15 @@ components:
       type: object
       required: [en, ar]
       properties:
-        en: { type: string, minLength: 1 }
-        ar: { type: string, minLength: 1 }
+        en: { type: string, minLength: 1, maxLength: 60 }
+        ar: { type: string, minLength: 1, maxLength: 60 }
+
+    BilingualDescription:
+      type: object
+      required: [en, ar]
+      properties:
+        en: { type: string, minLength: 1, maxLength: 500 }
+        ar: { type: string, minLength: 1, maxLength: 500 }
 
     DiscountUnit:
       type: string
@@ -371,12 +378,16 @@ components:
     StockInput:
       type: object
       oneOf:
-        - required: [isUnlimitedStock]
+        - type: object
+          additionalProperties: false
+          required: [isUnlimitedStock]
           properties:
             isUnlimitedStock:
               type: boolean
               enum: [true]
-        - required: [isUnlimitedStock, quantity]
+        - type: object
+          additionalProperties: false
+          required: [isUnlimitedStock, quantity]
           properties:
             isUnlimitedStock:
               type: boolean
@@ -401,7 +412,7 @@ components:
           description: Each locale ≤ 60 chars after trim (FR-007).
         description:
           allOf:
-            - $ref: "#/components/schemas/BilingualText"
+            - $ref: "#/components/schemas/BilingualDescription"
           description: Each locale ≤ 500 chars after trim (FR-007).
         price:
           type: string
@@ -427,7 +438,7 @@ components:
       type: object
       properties:
         name: { $ref: "#/components/schemas/BilingualText" }
-        description: { $ref: "#/components/schemas/BilingualText" }
+        description: { $ref: "#/components/schemas/BilingualDescription" }
         price:
           type: string
           pattern: "^\\d+(\\.\\d{1,2})?$"

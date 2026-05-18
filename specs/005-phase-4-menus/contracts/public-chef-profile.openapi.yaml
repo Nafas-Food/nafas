@@ -178,6 +178,7 @@ components:
         displayOrder: { type: integer, minimum: 0 }
         items:
           type: array
+          maxItems: 100
           items: { $ref: "#/components/schemas/PublicItem" }
 
     ChefPublicProfileHeader:
@@ -219,6 +220,7 @@ components:
           properties:
             menus:
               type: array
+              maxItems: 50
               description: |
                 Today-available menus only (FR-017). Empty array
                 when the chef has zero today-available menus OR no

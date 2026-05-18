@@ -195,6 +195,7 @@ components:
             verified-newest-first).
         categories:
           type: array
+          maxItems: 100
           items: { $ref: "#/components/schemas/Category" }
           description: Phase 3 active-categories cached list.
         topRated:

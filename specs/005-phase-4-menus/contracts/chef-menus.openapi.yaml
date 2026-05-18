@@ -283,8 +283,8 @@ components:
       type: object
       required: [en, ar]
       properties:
-        en: { type: string, minLength: 1 }
-        ar: { type: string, minLength: 1 }
+        en: { type: string, minLength: 1, maxLength: 60 }
+        ar: { type: string, minLength: 1, maxLength: 60 }
       description: |
         Bilingual JSON shape used for `Menu.name`, `Item.name`,
         `Item.description`, and the Phase 3 `Category.name`. Both
