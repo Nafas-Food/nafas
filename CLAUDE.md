@@ -193,4 +193,14 @@ TypeScript 5.x across all three workspaces: Follow standard conventions. All mon
   to a customer (rejection / revocation reasons) is stored verbatim and
   rendered to the customer as-is; the platform does not translate
   admin-typed text.
+- The `mobile/services/api.ts` request interceptor MUST swap
+  `Content-Type` to `'multipart/form-data'` whenever `cfg.data instanceof
+  FormData`. The axios instance defaults to
+  `Content-Type: application/json` for JSON endpoints, but on RN the
+  underlying XHR layer only attaches the multipart boundary when the
+  outgoing Content-Type is left as `'multipart/form-data'` (no boundary).
+  Without this swap, chef logo / banner uploads (and any future multipart
+  POST) produce a body Nest's `FileInterceptor` cannot parse — the route
+  handler never runs (silent on the backend) and the client surfaces a
+  generic "Network error".
 <!-- MANUAL ADDITIONS END -->

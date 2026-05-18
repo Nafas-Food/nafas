@@ -36,6 +36,10 @@ export default function SetLocationScreen() {
       Alert.alert(t('setLocation.validation.coordinatesRequired'));
       return;
     }
+    if (coords.latitude === 0 && coords.longitude === 0) {
+      Alert.alert(t('setLocation.validation.coordinatesRequired'));
+      return;
+    }
     setSaving(true);
     try {
       await updateChefProfile({

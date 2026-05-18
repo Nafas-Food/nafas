@@ -228,7 +228,7 @@ export const ar: I18nDict = {
     profile: 'حسابي',
   },
   chefTabs: {
-    dashboard: 'لوحة التحكم',
+    dashboard: 'الرئيسية',
     orders: 'الطلبات',
     menu: 'القائمة',
     stats: 'الإحصائيات',

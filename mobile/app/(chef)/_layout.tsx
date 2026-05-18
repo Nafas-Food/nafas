@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { ChefGlassTabBar } from '../../components/ChefGlassTabBar';
 import { useColors } from '../../hooks/useColors';
@@ -14,6 +14,7 @@ function ChefLocationGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments() as string[];
   const [checking, setChecking] = React.useState(true);
+  const [profileError, setProfileError] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -29,11 +30,9 @@ function ChefLocationGate({ children }: { children: React.ReactNode }) {
         if (unset && !onSetLocation) {
           router.replace('/(chef)/set-location');
         }
-      } catch {
-        // Profile fetch failed (network / token issue) — fall through;
-        // the surrounding role guard will eventually re-route.
-      } finally {
         if (!cancelled) setChecking(false);
+      } catch {
+        if (!cancelled) setProfileError(true);
       }
     })();
     return () => {
@@ -52,6 +51,20 @@ function ChefLocationGate({ children }: { children: React.ReactNode }) {
         }}
       >
         <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+  if (profileError) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
+        <Text style={{ color: colors.danger }}>Failed to load profile.</Text>
       </View>
     );
   }

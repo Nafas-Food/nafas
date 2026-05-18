@@ -30,6 +30,18 @@ const INITIAL: FormState = {
   minOrderPrice: '',
 };
 
+// Forgive common ways admins paste a phone: spaces, dashes, parens,
+// leading "00" instead of "+", or a bare country-code number with no
+// "+" at all. Whatever comes out must still be valid E.164.
+function normalizePhone(raw: string): string {
+  let s = raw.replace(/[\s\-()]/g, '');
+  if (s.startsWith('00')) s = '+' + s.slice(2);
+  if (!s.startsWith('+') && /^\d+$/.test(s)) s = '+' + s;
+  return s;
+}
+
+const E164 = /^\+[1-9]\d{7,14}$/;
+
 export default function ChefApplyPage() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [loading, setLoading] = useState(false);
@@ -53,12 +65,21 @@ export default function ChefApplyPage() {
       return;
     }
 
+    const normalizedPhone = normalizePhone(form.phone);
+    if (!E164.test(normalizedPhone)) {
+      setError(
+        'Phone must be in international format, e.g. +201012345678 (country code, no leading 0).',
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       // Location is intentionally NOT collected here. Verified chefs
       // set it on the mobile app's first sign-in via (chef)/set-location.
       await axios.post(`${getBackendUrl()}/api/v1/chef/web-apply`, {
         fullName: form.fullName.trim(),
-        phone: form.phone.trim(),
+        phone: normalizedPhone,
         password: form.password,
         email: form.email.trim() || undefined,
         chefName: form.chefName.trim(),
@@ -119,7 +140,7 @@ export default function ChefApplyPage() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-mocha">Account</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Full name *" value={form.fullName} onChange={update('fullName')} required minLength={2} maxLength={80} />
-              <Field label="Phone (E.164, e.g. +201234567890) *" value={form.phone} onChange={update('phone')} required pattern="^\+[1-9]\d{7,14}$" />
+              <Field label="Phone (E.164, e.g. +201234567890) *" value={form.phone} onChange={update('phone')} required inputMode="tel" autoComplete="tel" />
               <Field label="Email (optional)" type="email" value={form.email} onChange={update('email')} />
               <Field label="Password (min 8 chars) *" type="password" value={form.password} onChange={update('password')} required minLength={8} />
             </div>
@@ -164,6 +185,7 @@ function Field({
   value,
   onChange,
   type = 'text',
+  id,
   ...rest
 }: {
   label: string;
@@ -171,14 +193,16 @@ function Field({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   type?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const inputId = id ?? React.useId();
+  // suppressHydrationWarning on the wrapper covers sibling nodes
+  // (e.g. Keeper's <keeper-lock>) injected next to the <input> before
+  // React hydrates. Attribute-only suppression on the <input> itself
+  // does NOT cover injected siblings.
   return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-mocha">{label}</label>
-      {/* suppressHydrationWarning silences mismatch errors caused by
-          password-manager extensions (Keeper, LastPass, 1Password) that
-          inject extra attributes / sibling nodes into inputs before
-          React hydrates. Doesn't affect runtime behavior. */}
+    <div suppressHydrationWarning>
+      <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-mocha">{label}</label>
       <input
+        id={inputId}
         type={type}
         value={value}
         onChange={onChange}
@@ -194,16 +218,19 @@ function TextArea({
   label,
   value,
   onChange,
+  id,
   ...rest
 }: {
   label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const inputId = id ?? React.useId();
   return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-mocha">{label}</label>
+    <div suppressHydrationWarning>
+      <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-mocha">{label}</label>
       <textarea
+        id={inputId}
         value={value}
         onChange={onChange}
         className="w-full rounded-input border border-border bg-background px-4 py-2.5 text-sm text-umber outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"

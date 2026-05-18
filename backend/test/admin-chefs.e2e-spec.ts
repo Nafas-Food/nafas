@@ -280,7 +280,8 @@ describe('Admin Chefs (e2e) — US2 verify / reject / revoke', () => {
         `SELECT deleted_at FROM chefs WHERE id = $1::uuid`,
         chefId,
       )) as Array<{ deleted_at: Date | null }>;
-      expect(rows[0]?.deleted_at).not.toBeNull();
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows[0].deleted_at).not.toBeNull();
 
       const updatedUser = await prisma.user.findUnique({
         where: { id: user.id },

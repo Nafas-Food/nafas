@@ -231,7 +231,7 @@ export const en = {
     profile: 'Profile',
   },
   chefTabs: {
-    dashboard: 'Dashboard',
+    dashboard: 'Home',
     orders: 'Orders',
     menu: 'Menu',
     stats: 'Stats',

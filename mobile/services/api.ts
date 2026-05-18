@@ -32,6 +32,12 @@ api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
   if (token) {
     cfg.headers.Authorization = `Bearer ${token}`;
   }
+  // FormData uploads must let RN's XHR layer attach the multipart boundary;
+  // leaving the instance's JSON Content-Type in place produces a body the
+  // server can't parse.
+  if (typeof FormData !== 'undefined' && cfg.data instanceof FormData) {
+    cfg.headers['Content-Type'] = 'multipart/form-data';
+  }
   return cfg;
 });
 
