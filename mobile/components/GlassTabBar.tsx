@@ -96,7 +96,7 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
         isRTL && styles.barContainerRtl,
       ]}
     >
-      <BlurView intensity={60} tint="light" style={styles.glassPill}>
+      <BlurView intensity={80} tint="light" style={styles.glassPill}>
         {filteredRoutes.map((route, index) => {
           const isFocused = index === filteredIndex;
 
@@ -163,18 +163,19 @@ function makeStyles(colors: NafasColors) {
       paddingHorizontal: 10,
       borderRadius: 100,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255, 255, 255, 0.75)',
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
       ...Platform.select({
         ios: {
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 32,
+          backgroundColor: colors.glassBackgroundIOS,
+          shadowColor: colors.glassShadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.glassShadowOpacity,
+          shadowRadius: 24,
         },
         android: {
-          backgroundColor: 'rgba(255, 255, 255, 0.92)',
-          elevation: 10,
+          backgroundColor: colors.glassBackgroundAndroid,
+          elevation: 12,
         },
       }),
     },
@@ -189,7 +190,7 @@ function makeStyles(colors: NafasColors) {
       minHeight: 48,
     },
     tabItemActive: {
-      backgroundColor: 'rgba(196, 98, 45, 0.13)',
+      backgroundColor: colors.tabItemActiveBg,
     },
     tabLabel: {
       fontSize: 10,

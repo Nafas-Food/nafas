@@ -35,7 +35,9 @@ export class DiscoveryQueryDto {
   @IsLongitude()
   lng?: number;
 
-  @ValidateIf((o: DiscoveryQueryDto) => o.lat !== undefined && o.lng !== undefined)
+  @ValidateIf(
+    (o: DiscoveryQueryDto) => o.lat !== undefined && o.lng !== undefined,
+  )
   @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
   @IsNumber()

@@ -2095,7 +2095,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 ### Backend integration tests
 
-- [ ] T067 [P] Create the chef-apply + chef-self-mutation integration test. Create `<repo>\backend\test\chefs.e2e-spec.ts`. Suites and cases:
+- [X] T067 [P] Create the chef-apply + chef-self-mutation integration test. Create `<repo>\backend\test\chefs.e2e-spec.ts`. Suites and cases:
   - "POST /chef/apply" — happy path: signed-in customer with no prior application submits a complete body, response is 201, `Chef` row in pending state, `chef.apply / success` log line is emitted with no lat/lng.
   - "POST /chef/apply" — `400 VALIDATION_ERROR` for: missing chefName, missing bio, missing latitude, missing longitude, missing minOrderPrice, non-positive minOrderPrice, extra undocumented field.
   - "POST /chef/apply" — `409 APPLICATION_PENDING` when re-submitted while pending.
@@ -2107,7 +2107,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
   Use the Phase 1 / Phase 2 test bootstrap (`createApp()`, signed-in-customer fixture).
 
-- [ ] T068 [P] Create the admin-chefs integration test. Create `<repo>\backend\test\admin-chefs.e2e-spec.ts`. Suites and cases:
+- [X] T068 [P] Create the admin-chefs integration test. Create `<repo>\backend\test\admin-chefs.e2e-spec.ts`. Suites and cases:
   - "PATCH /admin/chefs/:id/verify" — happy path: admin verifies a pending Chef, response is 200, `Chef.isVerified=true`, `User.role=chef`, a `chef_verified` Notification exists. The Phase 3 log line `chef.verify / success` is emitted.
   - "PATCH /admin/chefs/:id/verify" — `409 APPLICATION_NOT_PENDING` when the chef is already verified, rejected, or soft-deleted.
   - "PATCH /admin/chefs/:id/verify" — `403 FORBIDDEN_ROLE` for a non-admin caller.
@@ -2118,9 +2118,9 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   - **"DELETE /admin/chefs/:id — extra-field rejection"** — send `{ reason: 'valid reason', extra: 'field' }`. Assert `400 VALIDATION_ERROR`. (SC-018 explicit coverage.)
   - **"PATCH /admin/chefs/:id/verify — extra-field rejection"** — verify has no body, but Nest's global pipe still rejects an unexpected body. Send `{ extra: 'field' }`. Assert `400 VALIDATION_ERROR`. (SC-018 explicit coverage.)
 
-- [ ] T069 [P] Create the concurrent-verify race test. Create `<repo>\backend\test\concurrency-verify.e2e-spec.ts`. Seed one pending application. Issue two `PATCH /admin/chefs/:id/verify` requests in parallel (`Promise.all`). Assert exactly one returns 200, the other returns `409 APPLICATION_NOT_PENDING`. Assert the resulting database state: `Chef.isVerified=true` (exactly one update), one `User.role=chef`, exactly one `chef_verified` Notification row.
+- [X] T069 [P] Create the concurrent-verify race test. Create `<repo>\backend\test\concurrency-verify.e2e-spec.ts`. Seed one pending application. Issue two `PATCH /admin/chefs/:id/verify` requests in parallel (`Promise.all`). Assert exactly one returns 200, the other returns `409 APPLICATION_NOT_PENDING`. Assert the resulting database state: `Chef.isVerified=true` (exactly one update), one `User.role=chef`, exactly one `chef_verified` Notification row.
 
-- [ ] T070 [P] Create the discovery integration test. Create `<repo>\backend\test\discovery.e2e-spec.ts`. Seed eight verified chefs at distributed lat/lng points around a test centre (30.0444, 31.2357) using a helper `seedManyChefs(N, centre, categoryDistribution)` from the test fixtures (T076). Cases:
+- [X] T070 [P] Create the discovery integration test. Create `<repo>\backend\test\discovery.e2e-spec.ts`. Seed eight verified chefs at distributed lat/lng points around a test centre (30.0444, 31.2357) using a helper `seedManyChefs(N, centre, categoryDistribution)` from the test fixtures (T076). Cases:
   - List all → 8 chefs, open-first then verified-newest-first.
   - Category filter narrows to chefs whose seeded menu carries that category (uses `seedMenu(chef, category)` from fixtures).
   - Search filter `q='Umm'` narrows by name / bio substring.
@@ -2131,7 +2131,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   - `distanceKm` is populated only when the radius filter applies.
   - **FR-029 soft-deleted-category continuity**: seed one chef whose only active menu references a category that the admin then soft-deletes. After the soft-delete: (a) `GET /categories` no longer returns the category; (b) `GET /chefs?categoryId=<soft-deleted>` returns an empty list (the deleted category cannot be supplied as a filter from the customer surface anyway, but the test forces it directly); (c) `GET /chefs` (no `categoryId` filter) still returns the chef — the chef's discoverability is unaffected by the category soft-delete; (d) the chef's public profile still lists the (now-orphaned) categoryId in `categoryIds` because `menus.service.categoriesForChef` doesn't filter on Category soft-delete (the Menu row is what determines membership). This last point preserves Menu audit history per FR-029.
 
-- [ ] T071 [P] Create the categories integration test. Create `<repo>\backend\test\categories.e2e-spec.ts`. Cases:
+- [X] T071 [P] Create the categories integration test. Create `<repo>\backend\test\categories.e2e-spec.ts`. Cases:
   - `GET /categories` returns the eight seeded categories with both `name.en` and `name.ar` populated, ordered by `displayOrder`.
   - `POST /admin/categories` creates a new category; subsequent `GET /categories` includes it after cache invalidation (no waiting needed since the same service invalidates the cache synchronously).
   - `PATCH /admin/categories/:id` updates a category.
@@ -2140,11 +2140,11 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
   - Atomicity test: simulate a mid-reorder failure by passing an item with an unknown UUID. Assert the entire reorder is rolled back (no displayOrder changes are committed). The test name "atomic reorder" is referenced by quickstart Step 8.
   - Role refusal: non-admin caller on any mutation endpoint → `403 FORBIDDEN_ROLE`.
 
-- [ ] T072 Extend the existing `http-redaction.e2e-spec.ts` to cover the chef paths. Open `<repo>\backend\test\http-redaction.e2e-spec.ts`. Add cases that send a `POST /chef/apply` with out-of-range `latitude: 999`, inspect the response body, and assert neither `latitude` nor `longitude` nor any nested `coordinates` property appears anywhere in the payload. Same for `PATCH /chef/profile`. Confirm the existing Phase 2 address-path cases still pass.
+- [X] T072 Extend the existing `http-redaction.e2e-spec.ts` to cover the chef paths. Open `<repo>\backend\test\http-redaction.e2e-spec.ts`. Add cases that send a `POST /chef/apply` with out-of-range `latitude: 999`, inspect the response body, and assert neither `latitude` nor `longitude` nor any nested `coordinates` property appears anywhere in the payload. Same for `PATCH /chef/profile`. Confirm the existing Phase 2 address-path cases still pass.
 
 ### Test fixtures
 
-- [ ] T073 Create the Phase 3 test fixtures. Add to the test fixtures file (typically `<repo>\backend\test\fixtures.ts` or similar — match the existing project pattern):
+- [X] T073 Create the Phase 3 test fixtures. Add to the test fixtures file (typically `<repo>\backend\test\fixtures.ts` or similar — match the existing project pattern):
   - `signedInAdmin()` — registers + signs in a user, then directly mutates `User.role = 'admin'` via `prisma.user.update`. Returns the session.
   - `pendingApplication(user, overrides?)` — calls the real `POST /chef/apply` flow.
   - `verifiedChef(user, overrides?)` — calls `pendingApplication` then has the test admin verify it.
@@ -2159,7 +2159,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
 
 - [ ] T074 Run the Phase 3 quickstart end-to-end on a real device. Open `<repo>\specs\004-phase-3-chefs\quickstart.md` and execute every step in order. Tick each "**Verify**" line as you go. Failures = task incomplete; investigate and fix the underlying code (don't relax the quickstart).
 
-- [ ] T075 Update `<repo>\CLAUDE.md` with the Phase 3 conventions. Append a new section under the `<!-- MANUAL ADDITIONS START -->` marker (after the Phase 2 conventions section):
+- [X] T075 Update `<repo>\CLAUDE.md` with the Phase 3 conventions. Append a new section under the `<!-- MANUAL ADDITIONS START -->` marker (after the Phase 2 conventions section):
   ```markdown
   ## Phase 3 conventions (do not regress)
 
@@ -2208,7 +2208,7 @@ description: "Phase 3 Categories, Chef Application & Verification — implementa
     admin-typed text.
   ```
 
-- [ ] T076 [P] Retract the `$queryRaw` Haversine exception from the implementation plan. Open `<repo>\docs\IMPLEMENTATION_PLAN.md`. Find task 3.9's exception note:
+- [X] T076 [P] Retract the `$queryRaw` Haversine exception from the implementation plan. Open `<repo>\docs\IMPLEMENTATION_PLAN.md`. Find task 3.9's exception note:
   > **Constitution exception note** (Task 3.9): Haversine distance ranking inside Postgres requires raw SQL. We accept a narrow `$queryRaw` exception scoped to the chef-discovery query, isolated to one repository method, with a unit test proving the contract. Recorded in Complexity Tracking.
 
   Replace it with:

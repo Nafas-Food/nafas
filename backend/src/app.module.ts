@@ -35,7 +35,13 @@ import { ThrottlerGuard } from '@nestjs/throttler';
       // Global default is a sane API baseline (60 req/min/IP). Sensitive endpoints
       // tighten it per-route via @Throttle: FR-016 (send-otp / change-phone) =
       // 3/min, FR-016a (register / sign-in / refresh) = 10 / 15 min.
-      { name: 'default', ttl: 60_000, limit: 60 },
+      // Test runs (NODE_ENV=test, set by Jest) get a 1M cap so the e2e suite's
+      // shared-IP traffic doesn't trip the limiter under test.
+      {
+        name: 'default',
+        ttl: 60_000,
+        limit: process.env.NODE_ENV === 'test' ? 1_000_000 : 60,
+      },
     ]),
     AdminContextModule,
     PrismaModule,

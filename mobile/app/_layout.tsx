@@ -75,7 +75,8 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     if (user.role === 'customer') {
       const onWhitelistedAuthScreen =
         inAuth && authScreen && CUSTOMER_AUTH_SCREEN_WHITELIST.has(authScreen);
-      if (!inTabs && !onWhitelistedAuthScreen) {
+      const onPublicChefProfile = segments[0] === 'chef';
+      if (!inTabs && !onWhitelistedAuthScreen && !onPublicChefProfile) {
         router.replace('/(tabs)');
       }
       return;

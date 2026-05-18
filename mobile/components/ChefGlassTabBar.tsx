@@ -54,6 +54,14 @@ export function ChefGlassTabBar({ state, descriptors, navigation }: BottomTabBar
   const insets = useSafeAreaInsets();
   const styles = makeStyles(colors);
 
+  const focusedRouteName = state.routes[state.index]?.name;
+  // Hide the floating bar on non-tab screens (e.g. the one-time
+  // /(chef)/set-location gate). Otherwise the pill draws on top of the
+  // screen's own CTA at the bottom.
+  if (!focusedRouteName || !TOP_LEVEL_TABS.includes(focusedRouteName)) {
+    return null;
+  }
+
   const filteredRoutes = state.routes.filter((route) =>
     TOP_LEVEL_TABS.includes(route.name),
   );
@@ -87,7 +95,7 @@ export function ChefGlassTabBar({ state, descriptors, navigation }: BottomTabBar
         isRTL && styles.barContainerRtl,
       ]}
     >
-      <BlurView intensity={60} tint="light" style={styles.glassPill}>
+      <BlurView intensity={80} tint="light" style={styles.glassPill}>
         {filteredRoutes.map((route, index) => {
           const isFocused = index === filteredIndex;
 
@@ -149,23 +157,24 @@ function makeStyles(colors: NafasColors) {
     glassPill: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
+      gap: 0,
       paddingVertical: 8,
-      paddingHorizontal: 8,
+      paddingHorizontal: 6,
       borderRadius: 100,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255, 255, 255, 0.75)',
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
       ...Platform.select({
         ios: {
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 32,
+          backgroundColor: colors.glassBackgroundIOS,
+          shadowColor: colors.glassShadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: colors.glassShadowOpacity,
+          shadowRadius: 24,
         },
         android: {
-          backgroundColor: 'rgba(255, 255, 255, 0.92)',
-          elevation: 10,
+          backgroundColor: colors.glassBackgroundAndroid,
+          elevation: 12,
         },
       }),
     },
@@ -175,12 +184,12 @@ function makeStyles(colors: NafasColors) {
       justifyContent: 'center',
       gap: 2,
       paddingVertical: 5,
-      paddingHorizontal: 4,
+      paddingHorizontal: 2,
       borderRadius: 100,
       minHeight: 44,
     },
     tabItemActive: {
-      backgroundColor: 'rgba(196, 98, 45, 0.13)',
+      backgroundColor: colors.tabItemActiveBg,
     },
     tabLabel: {
       fontSize: 9,

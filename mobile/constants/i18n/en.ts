@@ -57,6 +57,18 @@ export const en = {
   },
   profile: {
     signOut: 'Sign out',
+    becomeChef: {
+      body: 'To become a chef, contact us at',
+      phone: '+20 XXX XXX XXXX',
+    },
+  },
+  setLocation: {
+    title: 'Set your kitchen location',
+    subtitle: 'Drag the pin on the map to mark where you cook from. Customers see your distance from this point.',
+    saveCta: 'Save & continue',
+    validation: {
+      coordinatesRequired: 'Please drop a pin on the map first.',
+    },
   },
   home: {
     greeting: 'Hello, {name}',
@@ -149,6 +161,7 @@ export const en = {
       bioLabel: 'Bio',
       minOrderPriceLabel: 'Minimum order price (EGP)',
       submitCta: 'Submit application',
+      locationLater: "You'll set your kitchen's location on the map after admin approves your application.",
     },
     validation: {
       chefNameRequired: 'Kitchen name is required.',
@@ -185,6 +198,7 @@ export const en = {
   },
   discovery: {
     tabTitle: 'Explore',
+    allChip: 'All',
     searchPlaceholder: 'Search chefs...',
     emptyState: 'No chefs found.',
     openBadge: 'Open',
@@ -217,7 +231,7 @@ export const en = {
     profile: 'Profile',
   },
   chefTabs: {
-    dashboard: 'Dashboard',
+    dashboard: 'Home',
     orders: 'Orders',
     menu: 'Menu',
     stats: 'Stats',

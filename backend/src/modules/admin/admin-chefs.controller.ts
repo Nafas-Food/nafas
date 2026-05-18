@@ -25,6 +25,16 @@ import { AdminService } from './admin.service';
 import { RejectApplicationDto } from './dto/reject-application.dto';
 import { RevokeChefDto } from './dto/revoke-chef.dto';
 
+// Verify and reject are admin-moderation actions — tight 3/min/IP cap so
+// a compromised admin token can't blast through the pending queue. Tests
+// (NODE_ENV=test) get a 1M cap so the e2e suite isn't rate-limited.
+const MOD_THROTTLE = {
+  default: {
+    limit: process.env.NODE_ENV === 'test' ? 1_000_000 : 3,
+    ttl: 60_000,
+  },
+};
+
 @ApiTags('AdminChefs')
 @ApiBearerAuth()
 @Controller('admin/chefs')
@@ -60,7 +70,7 @@ export class AdminChefsController {
   }
 
   @Patch(':id/verify')
-  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Throttle(MOD_THROTTLE)
   @ApiOperation({ operationId: 'verifyChef' })
   verify(
     @CurrentUser() admin: CurrentUserPayload,
@@ -71,7 +81,7 @@ export class AdminChefsController {
   }
 
   @Patch(':id/reject')
-  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Throttle(MOD_THROTTLE)
   @ApiOperation({ operationId: 'rejectChefApplication' })
   reject(
     @CurrentUser() admin: CurrentUserPayload,
@@ -89,7 +99,7 @@ export class AdminChefsController {
 
   @Delete(':id')
   @HttpCode(204)
-  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Throttle(MOD_THROTTLE)
   @ApiOperation({ operationId: 'revokeChef' })
   revoke(
     @CurrentUser() admin: CurrentUserPayload,

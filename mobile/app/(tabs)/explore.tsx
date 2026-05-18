@@ -49,6 +49,13 @@ export default function ExploreScreen() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
+  // Bumped whenever the active filter (category or query) changes. Each
+  // in-flight fetch captures the epoch at start; if the epoch has moved
+  // on by the time the response arrives, the result belongs to a
+  // superseded filter and is discarded. Without this, a load-more
+  // request from filter X can resolve after a switch to filter Y and
+  // append stale chefs into Y's list.
+  const filterEpochRef = useRef(0);
 
   // Debounce search input
   useEffect(() => {
@@ -74,6 +81,7 @@ export default function ExploreScreen() {
   // Fetch chefs when filters or cursor change
   const fetchChefs = useCallback(
     async (targetCursor: number, append: boolean) => {
+      const myEpoch = filterEpochRef.current;
       if (targetCursor === 0) setLoading(true);
       else setLoadingMore(true);
       setError(null);
@@ -87,6 +95,7 @@ export default function ExploreScreen() {
         if (debouncedQ) query.q = debouncedQ;
 
         const data = await discoverChefs(query);
+        if (myEpoch !== filterEpochRef.current) return; // stale — superseded by a newer filter
         if (append) {
           setChefs((prev) => [...prev, ...data]);
         } else {
@@ -94,16 +103,21 @@ export default function ExploreScreen() {
         }
         setHasMore(data.length === PAGE_SIZE);
       } catch {
-        setError(t('errors.NETWORK'));
+        if (myEpoch === filterEpochRef.current) setError(t('errors.NETWORK'));
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
+        if (myEpoch !== filterEpochRef.current) return;
+        if (targetCursor === 0) setLoading(false);
+        else setLoadingMore(false);
       }
     },
     [selectedCategoryId, debouncedQ, t],
   );
 
   useEffect(() => {
+    filterEpochRef.current += 1;
+    // Drop any "load-more is busy" guard from the previous filter so the
+    // user can paginate the new list immediately.
+    inFlightRef.current = false;
     setCursor(0);
     setHasMore(true);
     fetchChefs(0, false);
@@ -213,37 +227,59 @@ export default function ExploreScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsScroll}
-      >
-        {categories.map((cat) => {
-          const active = selectedCategoryId === cat.id;
-          return (
-            <Pressable
-              key={cat.id}
-              onPress={() => toggleCategory(cat.id)}
-              style={[
-                styles.chip,
-                active && {
-                  backgroundColor: colors.primary,
-                  borderColor: colors.primary,
-                },
-              ]}
-            >
-              <Text
+      <View style={styles.chipsBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScroll}
+        >
+          {/* "All" — selected when no category filter is active */}
+          {(() => {
+            const allActive = selectedCategoryId === null;
+            return (
+              <Pressable
+                key="__all__"
+                onPress={() => setSelectedCategoryId(null)}
                 style={[
-                  styles.chipText,
-                  active && { color: colors.surface },
+                  styles.chip,
+                  allActive && styles.chipActive,
                 ]}
               >
-                {cat.name[locale]}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.chipText,
+                    allActive && styles.chipTextActive,
+                  ]}
+                >
+                  {t('discovery.allChip')}
+                </Text>
+              </Pressable>
+            );
+          })()}
+          {categories.map((cat) => {
+            const active = selectedCategoryId === cat.id;
+            return (
+              <Pressable
+                key={cat.id}
+                onPress={() => toggleCategory(cat.id)}
+                style={[
+                  styles.chip,
+                  active && styles.chipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    active && styles.chipTextActive,
+                  ]}
+                >
+                  {cat.name[locale]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {loading && chefs.length === 0 && (
         <View style={styles.center}>
@@ -331,24 +367,41 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     clearBtn: {
       padding: 2,
     },
+    // The outer bar fixes the row's height so the horizontal ScrollView
+    // can't cross-axis-stretch its children into tall capsules.
+    chipsBar: {
+      height: 52,
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
     chipsScroll: {
+      alignItems: 'center',
       paddingHorizontal: 16,
-      paddingVertical: 10,
       gap: 8,
     },
     chip: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
+      height: 32,
+      paddingHorizontal: 16,
       borderRadius: 100,
       borderWidth: 1,
       borderColor: colors.border,
       backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
       marginRight: 8,
     },
+    chipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
     chipText: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontSize: 14,
+      fontWeight: '500',
       color: colors.text,
+    },
+    chipTextActive: {
+      color: colors.surface,
+      fontWeight: '600',
     },
     center: {
       flex: 1,

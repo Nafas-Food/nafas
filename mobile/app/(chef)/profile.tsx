@@ -140,7 +140,7 @@ export default function ChefProfileEditorScreen() {
       // Dynamic import so the app doesn't crash if expo-image-picker isn't installed yet
       const ImagePicker = await import('expo-image-picker');
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: kind === 'logo' ? [1, 1] : [3, 1],
         quality: 0.9,

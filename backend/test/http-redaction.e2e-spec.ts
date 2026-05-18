@@ -9,6 +9,8 @@ import {
 import { HttpExceptionNormalizerFilter } from '../src/common/errors/http-exception.filter';
 import { AuthEventLogger } from '../src/common/logging/auth-event.logger';
 import { AddressEventLogger } from '../src/common/logging/address-event.logger';
+import { ChefEventLogger } from '../src/common/logging/chef-event.logger';
+import { CategoryEventLogger } from '../src/common/logging/category-event.logger';
 
 function makeHost(req: {
   url: string;
@@ -32,6 +34,8 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
         HttpExceptionNormalizerFilter,
         { provide: AuthEventLogger, useValue: { emit: jest.fn() } },
         { provide: AddressEventLogger, useValue: addressEvents },
+        { provide: ChefEventLogger, useValue: { emit: jest.fn() } },
+        { provide: CategoryEventLogger, useValue: { emit: jest.fn() } },
       ],
     }).compile();
     filter = mod.get(HttpExceptionNormalizerFilter);
@@ -191,6 +195,73 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
       });
       expect(body).not.toHaveProperty('latitude');
       expect(body).not.toHaveProperty('longitude');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // T072 — Chef path redaction (SC-012 extension)
+  // -------------------------------------------------------------------------
+
+  describe('Chef path coordinate redaction (T072 / SC-012)', () => {
+    it('POST /chef/apply with out-of-range latitude: strips lat/lng from 400 response', () => {
+      const exc = new BadRequestException({
+        message: ['latitude must not be greater than 90'],
+        latitude: 999,
+        longitude: 31.2,
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/apply',
+        method: 'POST',
+        user: { sub: 'u-chef-1' },
+      });
+      expect(body).not.toHaveProperty('latitude');
+      expect(body).not.toHaveProperty('longitude');
+      expect(body).not.toHaveProperty('coordinates');
+    });
+
+    it('PATCH /chef/profile with out-of-range latitude: strips lat/lng from 400 response', () => {
+      const exc = new BadRequestException({
+        message: ['latitude must not be greater than 90'],
+        latitude: 999,
+        longitude: 31.2,
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/profile',
+        method: 'PATCH',
+        user: { sub: 'u-chef-2' },
+      });
+      expect(body).not.toHaveProperty('latitude');
+      expect(body).not.toHaveProperty('longitude');
+      expect(body).not.toHaveProperty('coordinates');
+    });
+
+    it('nested coordinates inside details are scrubbed on chef paths', () => {
+      const exc = new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'invalid',
+        details: { coordinates: { latitude: 999, longitude: 31.2 } },
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/apply',
+        method: 'POST',
+        user: { sub: 'u-chef-3' },
+      });
+      expect(body.details).not.toHaveProperty('coordinates');
+    });
+
+    it('preserves a chef-path error body that has no coordinate keys', () => {
+      const body = run(
+        new ConflictException({
+          code: 'APPLICATION_PENDING',
+          message: 'pending',
+        }),
+        {
+          url: '/api/v1/chef/apply',
+          method: 'POST',
+          user: { sub: 'u-chef-4' },
+        },
+      );
+      expect(body.code).toBe('APPLICATION_PENDING');
     });
   });
 });
