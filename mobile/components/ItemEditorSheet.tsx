@@ -116,11 +116,12 @@ export function ItemEditorSheet({
     if (isUnlimitedStock) {
       stock = { isUnlimitedStock: true };
     } else {
-      const q = parseInt(quantityText, 10);
-      if (isNaN(q) || q < 0) {
+      const trimmedQty = quantityText.trim();
+      if (!/^\d+$/.test(trimmedQty)) {
         setError(t('errors.item.item_stock_ambiguous'));
         return;
       }
+      const q = parseInt(trimmedQty, 10);
       stock = { isUnlimitedStock: false, quantity: q };
     }
 
