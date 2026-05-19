@@ -240,7 +240,7 @@ export class ItemsService {
    */
   toPublicWire(item: Item): PublicItemWire {
     const wire = this.toWire(item);
-    const { isActive, ...publicWire } = wire;
+    const { isActive: _isActive, ...publicWire } = wire;
     return publicWire as PublicItemWire;
   }
 
