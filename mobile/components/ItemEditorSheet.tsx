@@ -77,7 +77,12 @@ export function ItemEditorSheet({
       return;
     }
 
-    const priceVal = parseFloat(priceText);
+    const DECIMAL_RE = /^\d+(\.\d{1,2})?$/;
+    if (!DECIMAL_RE.test(priceText.trim())) {
+      setError(t('errors.item.item_price_invalid'));
+      return;
+    }
+    const priceVal = parseFloat(priceText.trim());
     if (isNaN(priceVal) || priceVal <= 0) {
       setError(t('errors.item.item_price_invalid'));
       return;
@@ -86,7 +91,11 @@ export function ItemEditorSheet({
     // Discount validation
     let discountVal: string | undefined;
     if (discountValueText.trim()) {
-      const d = parseFloat(discountValueText);
+      if (!DECIMAL_RE.test(discountValueText.trim())) {
+        setError(t('errors.item.item_discount_invalid'));
+        return;
+      }
+      const d = parseFloat(discountValueText.trim());
       if (isNaN(d) || d < 0) {
         setError(t('errors.item.item_discount_invalid'));
         return;

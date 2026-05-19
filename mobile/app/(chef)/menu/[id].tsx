@@ -22,13 +22,21 @@ export default function ChefMenuDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   async function refresh() {
-    setItems(await itemsService.listForMenu(menuId));
+    try {
+      const data = await itemsService.listForMenu(menuId);
+      setItems(data);
+    } catch (err) {
+      console.error('Failed to refresh items for menu', menuId, err);
+    }
   }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
   }, [menuId]);
 
   useEffect(() => {

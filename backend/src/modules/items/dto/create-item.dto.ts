@@ -2,8 +2,8 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
-  IsNumberString,
   IsOptional,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import {
@@ -11,6 +11,9 @@ import {
   ItemDescription500,
 } from '../../menus/dto/bilingual-text.dto';
 import { StockInputDto } from './stock-input.dto';
+
+/** Matches non-negative decimal strings up to 8 digits before and 2 after the point. */
+const DECIMAL_10_2_RE = /^\d{1,8}(\.\d{1,2})?$/;
 
 export class CreateItemDto {
   @ValidateNested()
@@ -25,11 +28,11 @@ export class CreateItemDto {
    * Decimal string with up to 2 decimal places, > 0. The service
    * converts to a Decimal before any math.
    */
-  @IsNumberString({ no_symbols: false }, { message: 'ITEM_PRICE_INVALID' })
+  @Matches(DECIMAL_10_2_RE, { message: 'ITEM_PRICE_INVALID' })
   price!: string;
 
   @IsOptional()
-  @IsNumberString({ no_symbols: false }, { message: 'ITEM_DISCOUNT_INVALID' })
+  @Matches(DECIMAL_10_2_RE, { message: 'ITEM_DISCOUNT_INVALID' })
   discountValue?: string;
 
   @IsOptional()

@@ -14,7 +14,7 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
   const { t, isRTL } = useLanguage();
 
   const name = item.name[isRTL ? 'ar' : 'en'];
-  const hasDiscount = item.discountValue !== '0' && item.discountValue !== '';
+  const hasDiscount = item.effectivePrice !== item.price;
   const displayPrice = hasDiscount ? item.effectivePrice : item.price;
 
   return (

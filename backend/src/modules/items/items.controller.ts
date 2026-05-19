@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -89,6 +90,9 @@ export class ItemsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    if (!file || !file.buffer || !file.mimetype) {
+      throw new BadRequestException({ code: 'MISSING_FILE' });
+    }
     return this.actorContext.run(user.sub, sourceIp, () =>
       this.itemsService.appendImage(
         itemId,

@@ -86,6 +86,9 @@ export class ItemsService {
    * The throttle (FR-012b: 20 / 60 s per chef) is applied at the
    * controller (T031). This service method is called only after the
    * throttle passes.
+   *
+   * Uses an optimistic-concurrency retry loop so concurrent uploads do
+   * not overwrite each other (compare-and-swap via updatedAt).
    */
   async appendImage(
     itemId: string,
@@ -106,6 +109,7 @@ export class ItemsService {
       throw new BadRequestException({ code: 'UNSUPPORTED_MEDIA_TYPE' });
     }
 
+    // Verify ownership + cap before uploading storage.
     const item = await this.findOwnedItemOrThrow(itemId, chefId);
     if (item.images.length >= 5) {
       this.itemEventLogger.emit({
@@ -133,21 +137,50 @@ export class ItemsService {
       mimeType,
     );
 
-    const next = [...item.images, publicUrl];
-    const updated = await this.prismaService.item.update({
-      where: { id: itemId },
-      data: { images: { set: next } },
-    });
+    // Optimistic-concurrency retry loop (max 3 attempts).
+    let attempt = 0;
+    const maxAttempts = 3;
+    while (attempt < maxAttempts) {
+      const current = await this.prismaService.extended.item.findFirst({
+        where: { id: itemId, menu: { chefId } },
+      });
+      if (!current) {
+        throw new NotFoundException({ code: 'ITEM_NOT_FOUND' });
+      }
+      if (current.images.length >= 5) {
+        // Cap hit by a concurrent upload; clean up the orphan storage object.
+        this.storage.delete('item-images', objectKey).catch(() => {});
+        throw new BadRequestException({ code: 'ITEM_IMAGES_FULL' });
+      }
 
-    this.itemEventLogger.emit({
-      event: 'item.image_upload',
-      outcome: 'success',
-      actorUserId: this.actorContext.getUserId() ?? null,
-      actorRole: 'chef',
-      sourceIp: this.actorContext.getSourceIp() ?? null,
-      targetItemId: itemId,
+      const next = [...current.images, publicUrl];
+      const { count } = await this.prismaService.item.updateMany({
+        where: { id: itemId, updatedAt: current.updatedAt },
+        data: { images: { set: next } },
+      });
+
+      if (count === 1) {
+        this.itemEventLogger.emit({
+          event: 'item.image_upload',
+          outcome: 'success',
+          actorUserId: this.actorContext.getUserId() ?? null,
+          actorRole: 'chef',
+          sourceIp: this.actorContext.getSourceIp() ?? null,
+          targetItemId: itemId,
+        });
+        return this.toWire({ ...current, images: next, updatedAt: new Date() });
+      }
+
+      // CAS miss — another writer changed the row. Retry.
+      attempt++;
+    }
+
+    // Exceeded retries; clean up orphan storage object.
+    this.storage.delete('item-images', objectKey).catch(() => {});
+    throw new BadRequestException({
+      code: 'ITEM_CONCURRENT_UPDATE',
+      message: 'Concurrent image upload conflict — please retry.',
     });
-    return this.toWire(updated);
   }
 
   /**
