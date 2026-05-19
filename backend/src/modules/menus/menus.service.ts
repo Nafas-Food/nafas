@@ -5,6 +5,7 @@ import { CategoriesService } from '../categories/categories.service';
 import { MenuEventLogger } from '../../common/logging/menu-event.logger';
 import { ActorContext } from '../../common/actor-context/actor-context.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
+import { todaysCairoWeekday } from './today-cairo';
 
 /**
  * Phase 3 shell + Phase 4 expansion. Owns menu reads and writes.
@@ -137,6 +138,48 @@ export class MenusService {
   }
 
   /**
+   * FR-017 today-available read for the customer-facing chef profile.
+   * A menu is today-available iff availableAllDays=true OR there is
+   * a MenuAvailability row for today's Cairo weekday.
+   *
+   * Returns menus with their items already included AND filtered to
+   * isActive=true AND deletedAt=null (FR-018). The Prisma extension
+   * filters deletedAt only on the top-level Menu read — nested
+   * includes are NOT touched by the extension, so the items where
+   * MUST include `deletedAt: null` explicitly to avoid leaking
+   * soft-deleted items to the customer-facing profile.
+   */
+  async findTodayAvailableForChef(
+    chefId: string,
+  ): Promise<MenuWithActiveItems[]> {
+    const today = todaysCairoWeekday();
+    return this.prismaService.extended.menu.findMany({
+      where: {
+        chefId,
+        OR: [
+          { availableAllDays: true },
+          { availability: { some: { dayOfWeek: today } } },
+        ],
+      },
+      include: {
+        items: {
+          where: { isActive: true, deletedAt: null },
+          orderBy: [
+            { displayOrder: 'asc' },
+            { createdAt: 'asc' },
+            { id: 'asc' },
+          ],
+        },
+      },
+      orderBy: [
+        { displayOrder: 'asc' },
+        { createdAt: 'asc' },
+        { id: 'asc' },
+      ],
+    });
+  }
+
+  /**
    * FR-004: idempotent on the (menuId, dayOfWeek) composite. A re-
    * submit with the same dayOfWeek is a no-op (handled by upsert).
    */
@@ -236,4 +279,7 @@ type MenuWithAvailability = Prisma.MenuGetPayload<{
 }>;
 type ChefMenuWithItems = Prisma.MenuGetPayload<{
   include: { availability: true; items: true };
+}>;
+type MenuWithActiveItems = Prisma.MenuGetPayload<{
+  include: { items: true };
 }>;

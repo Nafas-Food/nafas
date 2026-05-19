@@ -236,6 +236,15 @@ export class ItemsService {
   }
 
   /**
+   * Customer-facing wire shape. Omits chef-only fields (isActive).
+   */
+  toPublicWire(item: Item): PublicItemWire {
+    const wire = this.toWire(item);
+    const { isActive, ...publicWire } = wire;
+    return publicWire as PublicItemWire;
+  }
+
+  /**
    * Private ownership helper. Walks item → menu → chefId and
    * returns the item when the chain resolves to the calling chef.
    * Throws NotFoundException with code ITEM_NOT_FOUND when the
@@ -274,3 +283,5 @@ export interface ItemWire {
   createdAt: string;
   updatedAt: string;
 }
+
+export type PublicItemWire = Omit<ItemWire, 'isActive'>;

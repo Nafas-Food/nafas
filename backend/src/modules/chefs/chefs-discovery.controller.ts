@@ -28,7 +28,7 @@ export class ChefsDiscoveryController {
   @Get(':id')
   @ApiOperation({ operationId: 'getChefPublicProfile' })
   publicProfile(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.chefsService.findPublicProfile(id);
+    return this.chefsService.findFullProfile(id);
   }
 
   @Get(':id/reviews')

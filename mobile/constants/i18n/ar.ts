@@ -217,6 +217,7 @@ export const ar: I18nDict = {
   chefPublicProfile: {
     aboutHeader: 'نبذة',
     categoriesHeader: 'التصنيفات',
+    menusHeader: 'القوائم',
     reviewsHeader: 'التقييمات',
     noReviewsYet: 'لا توجد تقييمات بعد.',
   },
@@ -299,6 +300,11 @@ export const ar: I18nDict = {
     },
   },
   customer: {
+    profile: {
+      menu: {
+        empty: 'لا توجد أصناف متاحة حالياً.',
+      },
+    },
     item: {
       outOfStock: 'غير متوفر',
       discountBadge: '-{discount}٪',

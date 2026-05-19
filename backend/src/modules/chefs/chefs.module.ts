@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { LoggingModule } from '../../common/logging/logging.module';
 import { MenusModule } from '../menus/menus.module';
+import { ItemsModule } from '../items/items.module';
 import { StorageModule } from '../storage/storage.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
@@ -16,6 +17,7 @@ import { ChefApplicationService } from './chef-application.service';
     PrismaModule,
     LoggingModule,
     forwardRef(() => MenusModule),
+    forwardRef(() => ItemsModule),
     StorageModule,
     NotificationsModule,
     UsersModule,
