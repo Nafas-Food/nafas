@@ -9,6 +9,7 @@ export const en = {
     cancel: 'Cancel',
     back: 'Back',
     submit: 'Submit',
+    done: 'Done',
     loading: 'Loading...',
     networkError: 'Network error. Check your connection and try again.',
     cooldown: {
@@ -258,6 +259,7 @@ export const en = {
       everyDay: 'Every day',
       specificDays: 'Specific days',
       itemCount: '{count} items',
+      items: 'Items',
       nameEn: 'Name (English)',
       nameAr: 'Name (Arabic)',
       nameEnPlaceholder: 'e.g. Koshary',
@@ -269,6 +271,48 @@ export const en = {
         'every-day': 'Every day',
         'specific-days': 'Specific days',
       },
+    },
+    // Phase 4 US2 chef-side item editor strings.
+    item: {
+      create: 'Add item',
+      empty: 'No items yet. Tap "Add item" to add your first one.',
+      noImage: 'No image',
+      images: {
+        title: 'Item images',
+        add: 'Add image',
+        limit: '{count} / 5 images',
+        full: 'You already have the maximum 5 images for this item.',
+      },
+      editor: {
+        name: {
+          en: 'Name (English)',
+          ar: 'Name (Arabic)',
+        },
+        description: {
+          en: 'Description (English)',
+          ar: 'Description (Arabic)',
+        },
+        price: 'Price (EGP)',
+        discount: 'Discount',
+        discountUnit: {
+          fixed: 'EGP',
+          percent: '%',
+        },
+        stock: {
+          unlimited: 'Unlimited stock',
+          quantity: 'Quantity',
+        },
+      },
+    },
+  },
+  // Phase 4 US2 customer-facing item strings (ItemCard renders these
+  // even on the chef-side detail screen since the same component
+  // serves both surfaces).
+  customer: {
+    item: {
+      outOfStock: 'Out of stock',
+      discountBadge: '-{discount}%',
+      addToCart: 'Add to cart',
     },
   },
   comingSoon: 'Coming soon',
@@ -299,6 +343,25 @@ export const en = {
       menu_not_found: "We couldn't find that menu.",
       menus_reorder_not_exact_set: 'The menu order is out of sync. Please refresh and try again.',
       category_not_found: 'That category is no longer available. Pick another.',
+    },
+    // Phase 4 US2 item errors. Keys are the server's error `code`
+    // lower-cased (ItemEditorSheet / ItemImagesDialog map
+    // `code.toLowerCase()` into this namespace).
+    item: {
+      item_name_required: 'Please enter the item name in both languages.',
+      item_name_too_long: 'The item name is too long (max 60 characters).',
+      item_description_required: 'Please enter a description in both languages.',
+      item_description_too_long: 'The description is too long (max 500 characters).',
+      item_price_invalid: 'Enter a valid price greater than zero.',
+      item_discount_invalid: 'Enter a valid discount value.',
+      item_negative_effective_price: 'The discount cannot be larger than the price.',
+      item_stock_ambiguous: 'Set either "Unlimited" or a quantity — not both.',
+      item_images_full: 'You already have the maximum 5 images for this item.',
+      item_not_found: "We couldn't find that item.",
+      menu_not_found: "We couldn't find that menu.",
+      unsupported_media_type: 'Image must be JPEG, PNG, or WebP.',
+      payload_too_large: 'Image must be 3 MB or smaller.',
+      item_upload_rate_limited: "You're uploading too fast — please retry shortly.",
     },
   },
 } as const;

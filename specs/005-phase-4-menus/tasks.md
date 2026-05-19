@@ -1099,7 +1099,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### DTOs
 
-- [ ] T027 [P] [US2] Create `<repo>\backend\src\modules\items\dto\create-item.dto.ts`:
+- [X] T027 [P] [US2] Create `<repo>\backend\src\modules\items\dto\create-item.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import {
@@ -1148,7 +1148,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Service methods
 
-- [ ] T028 [US2] Create `<repo>\backend\src\modules\items\items.service.ts`. Verbatim shell (further methods are added in US5):
+- [X] T028 [US2] Create `<repo>\backend\src\modules\items\items.service.ts`. Verbatim shell (further methods are added in US5):
   ```ts
   import {
     BadRequestException,
@@ -1305,7 +1305,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
   Confirm with `npx tsc --noEmit`.
 
-- [ ] T029 [US2] Add `appendImage` to `<repo>\backend\src\modules\items\items.service.ts`. Append to the class body:
+- [X] T029 [US2] Add `appendImage` to `<repo>\backend\src\modules\items\items.service.ts`. Append to the class body:
   ```ts
   /**
    * FR-012 / FR-013: append a new image to an item's images array.
@@ -1392,7 +1392,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Controller
 
-- [ ] T030 [US2] Create the per-chef throttle guard AND the `ItemsController`. **First** create `<repo>\backend\src\common\guards\chef-throttler.guard.ts` — verbatim:
+- [X] T030 [US2] Create the per-chef throttle guard AND the `ItemsController`. **First** create `<repo>\backend\src\common\guards\chef-throttler.guard.ts` — verbatim:
   ```ts
   import { Injectable } from '@nestjs/common';
   import { ThrottlerGuard } from '@nestjs/throttler';
@@ -1541,7 +1541,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Mobile
 
-- [ ] T031 [P] [US2] Create `<repo>\mobile\services\items.ts`. Verbatim:
+- [X] T031 [P] [US2] Create `<repo>\mobile\services\items.ts`. Verbatim:
   ```ts
   import { api } from './api';
 
@@ -1592,18 +1592,18 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   };
   ```
 
-- [ ] T032 [P] [US2] Create `<repo>\mobile\components\ItemCard.tsx`. The card renders an item per the design-system "item card" mockup (consult `nafas-design-system` skill). Contract:
+- [X] T032 [P] [US2] Create `<repo>\mobile\components\ItemCard.tsx`. The card renders an item per the design-system "item card" mockup (consult `nafas-design-system` skill). Contract:
   - props: `{ item: ChefItem | PublicItem; onAddToCart?: () => void }`
   - renders: first image from `images[]` (or design-system default placeholder when empty); bilingual name (`item.name[isRTL ? 'ar' : 'en']`); discount badge when `discountValue > "0"`; effective price + struck-through base price when `discountValue > "0"`; "Out of stock" overlay when `!inStock`; "Add to cart" CTA only when `onAddToCart` is provided (Phase 5 wires this prop; Phase 4 leaves it `undefined` on the customer-facing chef profile).
   - colors via `useColors()`; layout uses `isRTL`. Zero hex literals.
 
-- [ ] T033 [P] [US2] Create `<repo>\mobile\components\ItemEditorSheet.tsx`. Modal that creates OR edits an item. For US2 it only covers create — edit lands in US5. Contract:
+- [X] T033 [P] [US2] Create `<repo>\mobile\components\ItemEditorSheet.tsx`. Modal that creates OR edits an item. For US2 it only covers create — edit lands in US5. Contract:
   - props: `{ visible: boolean; menuId: string; onClose: () => void; onCreated: (item: ChefItem) => void }`
   - state: `nameEn`, `nameAr`, `descriptionEn`, `descriptionAr`, `priceText`, `discountValueText`, `discountUnit: 'fixed' | 'percent'`, `isUnlimitedStock: boolean`, `quantityText`
   - submit: validate that `priceText` parses as `Decimal > 0`; validate that `discountUnit === 'percent'` → `Decimal(discountValueText) <= 100`; validate that `discountUnit === 'fixed'` → `Decimal(discountValueText) <= Decimal(priceText)`; build the body per the items.ts contract; on success call `onCreated(item)`.
   - errors: server's error `code` mapped via `t('errors.item.' + code.toLowerCase())`.
 
-- [ ] T034 [P] [US2] Create `<repo>\mobile\components\ItemImagesDialog.tsx`. Modal that:
+- [X] T034 [P] [US2] Create `<repo>\mobile\components\ItemImagesDialog.tsx`. Modal that:
   - shows the existing image array as a horizontal carousel (re-uses `ItemCard`'s carousel primitive if extracted, otherwise local).
   - has an "Add Image" CTA that opens `expo-image-picker` (`ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 })`).
   - posts the picked file via `itemsService.uploadImage(itemId, file)`.
@@ -1615,7 +1615,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
     - `ITEM_UPLOAD_RATE_LIMITED` → "You're uploading too fast — please retry shortly." (Phase 4 throttle refusal copy)
   - US5 (T056) extends this dialog with per-image remove.
 
-- [ ] T035 [US2] Wire `ItemEditorSheet` + `ItemImagesDialog` into the chef-side menu detail flow. Open `<repo>\mobile\app\(chef)\menu.tsx` (the file extended in T026). Each menu row in the FlatList becomes pressable → opens a per-menu detail screen at `<repo>\mobile\app\(chef)\menu\[id].tsx` (new file). The detail screen:
+- [X] T035 [US2] Wire `ItemEditorSheet` + `ItemImagesDialog` into the chef-side menu detail flow. Open `<repo>\mobile\app\(chef)\menu.tsx` (the file extended in T026). Each menu row in the FlatList becomes pressable → opens a per-menu detail screen at `<repo>\mobile\app\(chef)\menu\[id].tsx` (new file). The detail screen:
   1. Fetches `itemsService.listForMenu(menuId)` on mount.
   2. Renders the items as a list (use `ItemCard` from T032 for visual consistency).
   3. Top-right header action: "Add Item" → opens `ItemEditorSheet` with `menuId` prop.
