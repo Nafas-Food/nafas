@@ -16,9 +16,10 @@ import { useRTL } from '../../hooks/useRTL';
 import { useColors } from '../../hooks/useColors';
 import {
   getChefPublicProfile,
-  type ChefPublicProfile,
+  type ChefPublicProfileWithMenus,
 } from '../../services/chefs';
 import { listCategories, type Category } from '../../services/categories';
+import { MenuSectionList } from '../../components/MenuSectionList';
 
 export default function ChefPublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,7 +30,7 @@ export default function ChefPublicProfileScreen() {
   const router = useRouter();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const [chef, setChef] = useState<ChefPublicProfile | null>(null);
+  const [chef, setChef] = useState<ChefPublicProfileWithMenus | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,6 +194,14 @@ export default function ChefPublicProfileScreen() {
           ) : (
             <Text style={[styles.emptyValue, { textAlign }]}>—</Text>
           )}
+        </View>
+
+        {/* Menus */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { textAlign }]}>
+            {t('chefPublicProfile.menusHeader')}
+          </Text>
+          <MenuSectionList menus={chef.menus ?? []} />
         </View>
 
         {/* Reviews */}

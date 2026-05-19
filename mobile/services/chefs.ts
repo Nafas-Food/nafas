@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { ChefItem } from './items';
 
 export interface ChefCard {
   id: string;
@@ -16,6 +17,20 @@ export interface ChefCard {
 
 export interface ChefPublicProfile extends ChefCard {
   categoryIds: string[];
+}
+
+export type PublicItem = Omit<ChefItem, 'isActive'>;
+
+export interface PublicMenuSection {
+  id: string;
+  categoryId: string;
+  name: { en: string; ar: string };
+  displayOrder: number;
+  items: PublicItem[];
+}
+
+export interface ChefPublicProfileWithMenus extends ChefPublicProfile {
+  menus: PublicMenuSection[];
 }
 
 export interface ChefPrivateProfileResponseDto {
@@ -51,7 +66,7 @@ export async function discoverChefs(query: DiscoveryQuery): Promise<ChefCard[]> 
 
 export async function getChefPublicProfile(
   chefId: string,
-): Promise<ChefPublicProfile> {
+): Promise<ChefPublicProfileWithMenus> {
   const { data } = await api.get(`/chefs/${chefId}`);
   return data;
 }

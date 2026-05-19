@@ -10,7 +10,7 @@ import { ItemsService } from './items.service';
 @Module({
   imports: [
     PrismaModule,
-    ChefsModule,
+    forwardRef(() => ChefsModule),
     forwardRef(() => MenusModule),
     StorageModule,
     LoggingModule,

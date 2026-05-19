@@ -93,6 +93,18 @@ export class ChefPublicProfileResponseDto extends ChefCardResponseDto {
   }
 }
 
+export interface PublicMenuSection {
+  id: string;
+  categoryId: string;
+  name: { en: string; ar: string };
+  displayOrder: number;
+  items: import('../../items/items.service').PublicItemWire[];
+}
+
+export type ChefPublicProfileWithMenus = ChefPublicProfileResponseDto & {
+  menus: PublicMenuSection[];
+};
+
 export class ChefPrivateProfileResponseDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;

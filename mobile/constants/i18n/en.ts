@@ -220,6 +220,7 @@ export const en = {
   chefPublicProfile: {
     aboutHeader: 'About',
     categoriesHeader: 'Categories',
+    menusHeader: 'Menus',
     reviewsHeader: 'Reviews',
     noReviewsYet: 'No reviews yet.',
   },
@@ -309,6 +310,11 @@ export const en = {
   // even on the chef-side detail screen since the same component
   // serves both surfaces).
   customer: {
+    profile: {
+      menu: {
+        empty: 'No items available right now.',
+      },
+    },
     item: {
       outOfStock: 'Out of stock',
       discountBadge: '-{discount}%',

@@ -1,9 +1,11 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   PayloadTooLargeException,
   UnsupportedMediaTypeException,
+  forwardRef,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { Prisma, Chef, Role } from '@prisma/client';
@@ -16,6 +18,7 @@ import {
   ChefCardResponseDto,
   ChefPrivateProfileResponseDto,
   ChefPublicProfileResponseDto,
+  ChefPublicProfileWithMenus,
 } from './dto/chef.response.dto';
 import { DiscoveryQueryDto } from './dto/discovery-query.dto';
 import {
@@ -23,6 +26,7 @@ import {
   UpdateAvailabilityDto,
 } from './dto/update-chef-profile.dto';
 import { MenusService } from '../menus/menus.service';
+import { ItemsService } from '../items/items.service';
 import { StorageService } from '../storage/storage.service';
 import { haversineKm } from './haversine';
 import {
@@ -37,6 +41,8 @@ export class ChefsService {
     private readonly chefApplicationService: ChefApplicationService,
     private readonly chefEventLogger: ChefEventLogger,
     private readonly menusService: MenusService,
+    @Inject(forwardRef(() => ItemsService))
+    private readonly itemsService: ItemsService,
     private readonly storageService: StorageService,
   ) {}
 
@@ -387,6 +393,29 @@ export class ChefsService {
     if (!chef) throw new NotFoundException({ code: 'CHEF_NOT_FOUND' });
     const categoryIds = await this.menusService.categoriesForChef(chefId);
     return ChefPublicProfileResponseDto.fromEntity(chef, categoryIds);
+  }
+
+  /**
+   * Phase 4 composer. Combines the Phase 3 chef header with the
+   * today-available menu region (FR-017 / FR-018 / FR-019).
+   * Refuses unverified / soft-deleted chefs with 404 CHEF_NOT_FOUND
+   * (FR-020) — identical shape to a genuinely missing chef.
+   */
+  async findFullProfile(
+    chefId: string,
+  ): Promise<ChefPublicProfileWithMenus> {
+    const header = await this.findPublicProfile(chefId);
+    const menus = await this.menusService.findTodayAvailableForChef(chefId);
+    return {
+      ...header,
+      menus: menus.map((m) => ({
+        id: m.id,
+        categoryId: m.categoryId,
+        name: m.name as any,
+        displayOrder: m.displayOrder,
+        items: m.items.map((it) => this.itemsService.toPublicWire(it)),
+      })),
+    };
   }
 
   async findReviewsForChef(chefId: string, _cursor = 0, _pageSize = 20) {

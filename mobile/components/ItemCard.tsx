@@ -3,9 +3,10 @@ import { View, Text, Pressable, Image } from 'react-native';
 import { useColors } from '../hooks/useColors';
 import { useLanguage } from '../context/LanguageContext';
 import type { ChefItem } from '../services/items';
+import type { PublicItem } from '../services/chefs';
 
 interface ItemCardProps {
-  item: ChefItem;
+  item: ChefItem | PublicItem;
   onAddToCart?: () => void;
 }
 

@@ -1694,7 +1694,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Service methods
 
-- [ ] T036 [US3] Add `findTodayAvailableForChef` to `<repo>\backend\src\modules\menus\menus.service.ts`:
+- [X] T036 [US3] Add `findTodayAvailableForChef` to `<repo>\backend\src\modules\menus\menus.service.ts`:
   ```ts
   import { todaysCairoWeekday } from './today-cairo';
 
@@ -1737,7 +1737,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add type alias: `type MenuWithActiveItems = Prisma.MenuGetPayload<{ include: { items: true } }>;`
 
-- [ ] T037 [US3] Extend `chefs.service` with `findFullProfile(chefId)` — a composer that combines the Phase 3 header read with the Phase 4 today-available menu region. Open `<repo>\backend\src\modules\chefs\chefs.service.ts`. The Phase 3 `findOnePublic(chefId)` (or whatever the Phase 3 read is named — look for the method that powers `GET /chefs/:id`) returns the header. Add:
+- [X] T037 [US3] Extend `chefs.service` with `findFullProfile(chefId)` — a composer that combines the Phase 3 header read with the Phase 4 today-available menu region. Open `<repo>\backend\src\modules\chefs\chefs.service.ts`. The Phase 3 `findOnePublic(chefId)` (or whatever the Phase 3 read is named — look for the method that powers `GET /chefs/:id`) returns the header. Add:
   ```ts
   import { MenusService } from '../menus/menus.service';
   import { ItemsService, ItemWire } from '../items/items.service';
@@ -1782,16 +1782,16 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add `ChefPublicProfileWithMenus` interface to `<repo>\backend\src\modules\chefs\dto\chef-public-profile.response.dto.ts` (extend the existing Phase 3 type to include `menus`).
 
-- [ ] T038 [US3] Extend the chefs controller to use `findFullProfile`. Open `<repo>\backend\src\modules\chefs\chefs-discovery.controller.ts` (the Phase 3 controller that handles `GET /chefs/:id`). Replace the handler body so it calls `chefsService.findFullProfile(id)` instead of the Phase 3 header-only read. The 404 path is unchanged (Phase 3's `findOnePublic` returns `null` → `findFullProfile` throws `NotFoundException` with `code: 'CHEF_NOT_FOUND'`).
+- [X] T038 [US3] Extend the chefs controller to use `findFullProfile`. Open `<repo>\backend\src\modules\chefs\chefs-discovery.controller.ts` (the Phase 3 controller that handles `GET /chefs/:id`). Replace the handler body so it calls `chefsService.findFullProfile(id)` instead of the Phase 3 header-only read. The 404 path is unchanged (Phase 3's `findOnePublic` returns `null` → `findFullProfile` throws `NotFoundException` with `code: 'CHEF_NOT_FOUND'`).
 
 ### Mobile
 
-- [ ] T039 [P] [US3] Create `<repo>\mobile\components\MenuSectionList.tsx`. The component renders the menu region of a chef profile per the design-system mockup. Contract:
+- [X] T039 [P] [US3] Create `<repo>\mobile\components\MenuSectionList.tsx`. The component renders the menu region of a chef profile per the design-system mockup. Contract:
   - props: `{ menus: PublicMenuSection[] }` where `PublicMenuSection = { id: string; name: BilingualText; items: PublicItem[] }`
   - renders one collapsible section per menu (use the design-system collapsible-section primitive); each section's body is a list of `ItemCard` instances; empty `menus` → render the "no items available right now" empty state (FR-019).
   - colors via `useColors()`; layout uses `isRTL`.
 
-- [ ] T040 [P] [US3] Extend `<repo>\mobile\services\chefs.ts` (Phase 3 file) with a typed `getPublicProfile(chefId)` that returns the new shape:
+- [X] T040 [P] [US3] Extend `<repo>\mobile\services\chefs.ts` (Phase 3 file) with a typed `getPublicProfile(chefId)` that returns the new shape:
   ```ts
   export interface PublicMenuSection {
     id: string;
@@ -1813,7 +1813,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   If Phase 3's `chefsService` already exposes a public-profile getter, REPLACE its return type with `ChefPublicProfileWithMenus` rather than adding a second method.
 
-- [ ] T041 [US3] Extend `<repo>\mobile\app\chef\[id].tsx` (the Phase 3 public chef profile screen) to render the menu region. Below the existing Phase 3 header section, add:
+- [X] T041 [US3] Extend `<repo>\mobile\app\chef\[id].tsx` (the Phase 3 public chef profile screen) to render the menu region. Below the existing Phase 3 header section, add:
   ```tsx
   import { MenuSectionList } from '../../components/MenuSectionList';
   // inside the screen component:
