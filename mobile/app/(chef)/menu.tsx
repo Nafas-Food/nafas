@@ -1,39 +1,46 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { FlatList, View, Text, Pressable, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
 import { useColors } from '../../hooks/useColors';
 import { useLanguage } from '../../context/LanguageContext';
 import { menusService, type ChefMenu } from '../../services/menus';
 import { categoriesService, type Category } from '../../services/categories';
 import { MenuEditorSheet } from '../../components/MenuEditorSheet';
+import { errorCodeOf } from '../../services/api';
 
 export default function ChefMenuScreen() {
   const colors = useColors();
   const { t, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
   const [menus, setMenus] = useState<ChefMenu[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingMenu, setEditingMenu] = useState<ChefMenu | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Reorder mode
+  const [reorderMode, setReorderMode] = useState(false);
+  const [orderedMenus, setOrderedMenus] = useState<ChefMenu[]>([]);
+  const [reorderSaving, setReorderSaving] = useState(false);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+
   async function refresh() {
-    // Fetch menus independently — always set menus even if categories fail
     let m: ChefMenu[] = [];
     try {
       m = await menusService.listOwn();
     } catch {
-      // silent fail for menus
+      // silent
     }
     setMenus(m);
-
-    // Fetch categories separately so a categories failure doesn't block menus
     try {
       const c = await categoriesService.list();
       setCategories(c);
     } catch {
-      // silent fail for categories — leave previous state or empty
+      // silent
     }
   }
 
@@ -47,10 +54,65 @@ export default function ChefMenuScreen() {
     refresh();
   }, []);
 
+  function openCreateSheet() {
+    setEditingMenu(undefined);
+    setSheetOpen(true);
+  }
+
+  function openEditSheet(menu: ChefMenu) {
+    setEditingMenu(menu);
+    setSheetOpen(true);
+  }
+
+  function closeSheet() {
+    setSheetOpen(false);
+    setEditingMenu(undefined);
+  }
+
+  function enterReorderMode() {
+    setOrderedMenus([...menus]);
+    setReorderMode(true);
+    setReorderError(null);
+  }
+
+  function cancelReorder() {
+    setReorderMode(false);
+    setOrderedMenus([]);
+    setReorderError(null);
+  }
+
+  function moveMenu(index: number, direction: 'up' | 'down') {
+    setOrderedMenus((prev) => {
+      const next = [...prev];
+      const swapIdx = direction === 'up' ? index - 1 : index + 1;
+      if (swapIdx < 0 || swapIdx >= next.length) return prev;
+      [next[index], next[swapIdx]] = [next[swapIdx], next[index]];
+      return next;
+    });
+  }
+
+  async function saveReorder() {
+    setReorderSaving(true);
+    setReorderError(null);
+    try {
+      await menusService.reorder(orderedMenus.map((m) => m.id));
+      setMenus(orderedMenus);
+      setReorderMode(false);
+    } catch (err) {
+      const code = errorCodeOf(err);
+      setReorderError(t('errors.menu.' + code.toLowerCase()) || code);
+      await refresh();
+      setReorderMode(false);
+    } finally {
+      setReorderSaving(false);
+    }
+  }
+
+  const displayMenus = reorderMode ? orderedMenus : menus;
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header — paddingTop accounts for the status bar / notch (mirrors
-          the profile-tab pattern with useSafeAreaInsets). */}
+      {/* Header */}
       <View
         style={{
           flexDirection: isRTL ? 'row-reverse' : 'row',
@@ -65,34 +127,87 @@ export default function ChefMenuScreen() {
         <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>
           {t('chef.menu.title')}
         </Text>
-        <Pressable
-          onPress={() => setSheetOpen(true)}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 12,
-            paddingHorizontal: 14,
-            paddingVertical: 9,
-            flexDirection: isRTL ? 'row-reverse' : 'row',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <Text style={{ color: colors.primaryText, fontSize: 14, fontWeight: '600' }}>
-            {t('chef.menu.create')}
-          </Text>
-        </Pressable>
+        {reorderMode ? (
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, alignItems: 'center' }}>
+            <Pressable
+              onPress={cancelReorder}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 9,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '600' }}>
+                {t('common.cancel')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={saveReorder}
+              disabled={reorderSaving}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 9,
+                opacity: reorderSaving ? 0.6 : 1,
+              }}
+            >
+              <Text style={{ color: colors.primaryText, fontSize: 14, fontWeight: '600' }}>
+                {reorderSaving ? t('common.loading') : t('chef.menu.saveOrder')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, alignItems: 'center' }}>
+            {menus.length > 1 && (
+              <Pressable
+                onPress={enterReorderMode}
+                style={{
+                  padding: 9,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Feather name="list" size={18} color={colors.muted} />
+              </Pressable>
+            )}
+            <Pressable
+              onPress={openCreateSheet}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 9,
+              }}
+            >
+              <Text style={{ color: colors.primaryText, fontSize: 14, fontWeight: '600' }}>
+                {t('chef.menu.create')}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
-      {/* Always render FlatList so RefreshControl is available even when empty */}
+      {reorderError && (
+        <Text style={{ color: colors.danger, fontSize: 13, textAlign: 'center', paddingHorizontal: 20, paddingBottom: 8 }}>
+          {reorderError}
+        </Text>
+      )}
+
       <FlatList
-        data={menus}
+        data={displayMenus}
         keyExtractor={(m) => m.id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          reorderMode ? undefined : (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          )
         }
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 96, // clears the floating ChefGlassTabBar
+          paddingBottom: insets.bottom + 96,
           flexGrow: 1,
         }}
         ListEmptyComponent={
@@ -102,12 +217,53 @@ export default function ChefMenuScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const name = item.name[isRTL ? 'ar' : 'en'];
           const cat = categories.find((c) => c.id === item.categoryId);
           const catName = cat?.name[isRTL ? 'ar' : 'en'] ?? '';
+
+          if (reorderMode) {
+            return (
+              <View
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 16,
+                  padding: 16,
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <Feather name="menu" size={20} color={colors.muted} />
+                <Text style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>
+                  {name}
+                </Text>
+                <View style={{ flexDirection: 'column', gap: 4 }}>
+                  <Pressable
+                    onPress={() => moveMenu(index, 'up')}
+                    disabled={index === 0}
+                    style={{ opacity: index === 0 ? 0.3 : 1, padding: 4 }}
+                  >
+                    <Feather name="chevron-up" size={20} color={colors.primary} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => moveMenu(index, 'down')}
+                    disabled={index === displayMenus.length - 1}
+                    style={{ opacity: index === displayMenus.length - 1 ? 0.3 : 1, padding: 4 }}
+                  >
+                    <Feather name="chevron-down" size={20} color={colors.primary} />
+                  </Pressable>
+                </View>
+              </View>
+            );
+          }
+
           return (
             <Pressable
+              onLongPress={menus.length > 1 ? enterReorderMode : undefined}
               onPress={() => router.push(`/(chef)/menu/${item.id}`)}
               style={{
                 backgroundColor: colors.surface,
@@ -118,37 +274,49 @@ export default function ChefMenuScreen() {
                 borderColor: colors.border,
               }}
             >
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{name}</Text>
-              {catName ? (
-                <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>{catName}</Text>
-              ) : null}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginTop: 8, gap: 6 }}>
-                <View
-                  style={{
-                    backgroundColor: colors.primaryLight,
-                    borderRadius: 100,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
-                    {item.availableAllDays
-                      ? t('chef.menu.everyDay')
-                      : t('chef.menu.specificDays')}
-                  </Text>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{name}</Text>
+                  {catName ? (
+                    <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>{catName}</Text>
+                  ) : null}
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginTop: 8, gap: 6 }}>
+                    <View
+                      style={{
+                        backgroundColor: colors.primaryLight,
+                        borderRadius: 100,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
+                        {item.availableAllDays
+                          ? t('chef.menu.everyDay')
+                          : t('chef.menu.specificDays')}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: colors.primaryLight,
+                        borderRadius: 100,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
+                        {t('chef.menu.itemCount', { count: item.items?.length ?? 0 })}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-                <View
-                  style={{
-                    backgroundColor: colors.primaryLight,
-                    borderRadius: 100,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                  }}
+                {/* Edit button */}
+                <Pressable
+                  onPress={() => openEditSheet(item)}
+                  hitSlop={8}
+                  style={{ padding: 4, marginLeft: 8 }}
                 >
-                  <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '500' }}>
-                    {t('chef.menu.itemCount', { count: item.items?.length ?? 0 })}
-                  </Text>
-                </View>
+                  <Feather name="edit-2" size={18} color={colors.muted} />
+                </Pressable>
               </View>
             </Pressable>
           );
@@ -158,9 +326,14 @@ export default function ChefMenuScreen() {
       <MenuEditorSheet
         visible={sheetOpen}
         categories={categories}
-        onClose={() => setSheetOpen(false)}
+        editing={editingMenu}
+        onClose={closeSheet}
         onCreated={() => {
-          setSheetOpen(false);
+          closeSheet();
+          refresh();
+        }}
+        onChanged={() => {
+          closeSheet();
           refresh();
         }}
       />

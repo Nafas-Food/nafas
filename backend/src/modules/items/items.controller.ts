@@ -2,11 +2,14 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Ip,
   Param,
+  Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -26,6 +29,8 @@ import { ActorContext } from '../../common/actor-context/actor-context.service';
 import { ChefsService } from '../chefs/chefs.service';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
+import { ReorderItemsDto } from './dto/reorder-items.dto';
 
 @ApiTags('ChefItems')
 @ApiBearerAuth()
@@ -58,6 +63,67 @@ export class ItemsController {
     const chef = await this.chefsService.findOwnedOrThrow(user.sub);
     return this.actorContext.run(user.sub, sourceIp, () =>
       this.itemsService.createItem(menuId, chef.id, dto),
+    );
+  }
+
+  @Patch('menus/:menuId/items/reorder')
+  @HttpCode(204)
+  async reorderItems(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('menuId') menuId: string,
+    @Body() dto: ReorderItemsDto,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    await this.actorContext.run(user.sub, sourceIp, () =>
+      this.itemsService.reorderItems(menuId, chef.id, dto.itemIds),
+    );
+  }
+
+  @Patch('items/:id')
+  async updateItem(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('id') itemId: string,
+    @Body() dto: UpdateItemDto,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    return this.actorContext.run(user.sub, sourceIp, () =>
+      this.itemsService.updateItem(itemId, chef.id, dto),
+    );
+  }
+
+  // @Delete('items/:id/images') MUST be declared before @Delete('items/:id')
+  // so Express/NestJS matches the longer literal path first.
+  @Delete('items/:id/images')
+  @HttpCode(200)
+  async removeImage(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('id') itemId: string,
+    @Query('key') imageKey: string,
+  ) {
+    // FR-012a: key travels as ?key=… query param — the storage object key
+    // contains slashes which would otherwise require a wildcard route.
+    if (!imageKey || imageKey.length === 0) {
+      throw new BadRequestException({ code: 'IMAGE_KEY_REQUIRED' });
+    }
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    return this.actorContext.run(user.sub, sourceIp, () =>
+      this.itemsService.removeImage(itemId, chef.id, imageKey),
+    );
+  }
+
+  @Delete('items/:id')
+  @HttpCode(204)
+  async softDeleteItem(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('id') itemId: string,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    await this.actorContext.run(user.sub, sourceIp, () =>
+      this.itemsService.softDeleteItem(itemId, chef.id),
     );
   }
 

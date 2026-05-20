@@ -44,4 +44,24 @@ export const itemsService = {
     const res = await api.post<ChefItem>(`/chef/items/${itemId}/images`, form);
     return res.data;
   },
+  update: (
+    itemId: string,
+    body: Partial<{
+      name: BilingualText;
+      description: BilingualText;
+      price: string;
+      discountValue: string;
+      discountUnit: 'fixed' | 'percent';
+      stock: { isUnlimitedStock: true } | { isUnlimitedStock: false; quantity: number };
+      isActive: boolean;
+    }>,
+  ) => api.patch<ChefItem>(`/chef/items/${itemId}`, body).then((r) => r.data),
+  remove: (itemId: string) => api.delete<void>(`/chef/items/${itemId}`),
+  reorder: (menuId: string, itemIds: string[]) =>
+    api.patch<void>(`/chef/menus/${menuId}/items/reorder`, { itemIds }),
+  removeImage: (itemId: string, imageKey: string) =>
+    // FR-012a: imageKey via ?key= query param — axios URL-encodes slashes transparently.
+    api
+      .delete<ChefItem>(`/chef/items/${itemId}/images`, { params: { key: imageKey } })
+      .then((r) => r.data),
 };

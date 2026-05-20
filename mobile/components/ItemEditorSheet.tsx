@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import {
+  Alert,
+  KeyboardAvoidingView,
   Modal,
-  View,
-  Text,
-  TextInput,
+  Platform,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { useColors } from '../hooks/useColors';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,6 +21,8 @@ interface ItemEditorSheetProps {
   menuId: string;
   onClose: () => void;
   onCreated: (item: ChefItem) => void;
+  editing?: ChefItem;
+  onChanged?: () => void;
 }
 
 export function ItemEditorSheet({
@@ -27,6 +30,8 @@ export function ItemEditorSheet({
   menuId,
   onClose,
   onCreated,
+  editing,
+  onChanged,
 }: ItemEditorSheetProps) {
   const colors = useColors();
   const { t, isRTL } = useLanguage();
@@ -43,27 +48,45 @@ export function ItemEditorSheet({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset form when sheet opens
+  // Pre-fill from editing when the sheet opens, or reset for create mode.
   React.useEffect(() => {
     if (visible) {
-      setNameEn('');
-      setNameAr('');
-      setDescriptionEn('');
-      setDescriptionAr('');
-      setPriceText('');
-      setDiscountValueText('');
-      setDiscountUnit('fixed');
-      setIsUnlimitedStock(false);
-      setQuantityText('');
+      if (editing) {
+        setNameEn(editing.name.en);
+        setNameAr(editing.name.ar);
+        setDescriptionEn(editing.description.en);
+        setDescriptionAr(editing.description.ar);
+        setPriceText(editing.price);
+        setDiscountValueText(
+          editing.discountValue && editing.discountValue !== '0.00'
+            ? editing.discountValue
+            : '',
+        );
+        setDiscountUnit(editing.discountUnit);
+        setIsUnlimitedStock(editing.isUnlimitedStock);
+        setQuantityText(
+          editing.quantity !== undefined ? String(editing.quantity) : '',
+        );
+      } else {
+        setNameEn('');
+        setNameAr('');
+        setDescriptionEn('');
+        setDescriptionAr('');
+        setPriceText('');
+        setDiscountValueText('');
+        setDiscountUnit('fixed');
+        setIsUnlimitedStock(false);
+        setQuantityText('');
+      }
       setSubmitting(false);
       setError(null);
     }
-  }, [visible]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, editing]);
 
   async function submit() {
     setError(null);
 
-    // Basic client-side validation
     if (!nameEn.trim() || !nameAr.trim()) {
       setError(t('errors.item.item_name_required'));
       return;
@@ -88,7 +111,6 @@ export function ItemEditorSheet({
       return;
     }
 
-    // Discount validation
     let discountVal: string | undefined;
     if (discountValueText.trim()) {
       if (!DECIMAL_RE.test(discountValueText.trim())) {
@@ -111,7 +133,6 @@ export function ItemEditorSheet({
       discountVal = discountValueText.trim();
     }
 
-    // Stock validation
     let stock: { isUnlimitedStock: true } | { isUnlimitedStock: false; quantity: number };
     if (isUnlimitedStock) {
       stock = { isUnlimitedStock: true };
@@ -127,20 +148,58 @@ export function ItemEditorSheet({
 
     setSubmitting(true);
     try {
-      const item = await itemsService.create(menuId, {
-        name: { en: nameEn.trim(), ar: nameAr.trim() },
-        description: { en: descriptionEn.trim(), ar: descriptionAr.trim() },
-        price: priceText.trim(),
-        ...(discountVal !== undefined ? { discountValue: discountVal, discountUnit } : {}),
-        stock,
-      });
-      onCreated(item);
+      if (editing) {
+        await itemsService.update(editing.id, {
+          name: { en: nameEn.trim(), ar: nameAr.trim() },
+          description: { en: descriptionEn.trim(), ar: descriptionAr.trim() },
+          price: priceText.trim(),
+          ...(discountVal !== undefined ? { discountValue: discountVal, discountUnit } : {}),
+          stock,
+        });
+        onChanged?.();
+      } else {
+        const item = await itemsService.create(menuId, {
+          name: { en: nameEn.trim(), ar: nameAr.trim() },
+          description: { en: descriptionEn.trim(), ar: descriptionAr.trim() },
+          price: priceText.trim(),
+          ...(discountVal !== undefined ? { discountValue: discountVal, discountUnit } : {}),
+          stock,
+        });
+        onCreated(item);
+      }
     } catch (err) {
       const code = errorCodeOf(err);
       setError(t('errors.item.' + code.toLowerCase()) || code);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function confirmDelete() {
+    if (!editing) return;
+    Alert.alert(
+      t('chef.item.deleteTitle'),
+      t('chef.item.deleteConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            setSubmitting(true);
+            try {
+              await itemsService.remove(editing.id);
+              onChanged?.();
+            } catch (err) {
+              const code = errorCodeOf(err);
+              setError(t('errors.item.' + code.toLowerCase()) || code);
+            } finally {
+              setSubmitting(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   return (
@@ -170,7 +229,7 @@ export function ItemEditorSheet({
                 }}
               >
                 <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>
-                  {t('chef.item.create')}
+                  {editing ? t('chef.item.edit') : t('chef.item.create')}
                 </Text>
                 <Pressable onPress={onClose}>
                   <Text style={{ fontSize: 14, color: colors.muted }}>{t('common.cancel')}</Text>
@@ -348,9 +407,29 @@ export function ItemEditorSheet({
                 }}
               >
                 <Text style={{ color: colors.primaryText, fontSize: 16, fontWeight: '700' }}>
-                  {submitting ? t('common.loading') : t('common.submit')}
+                  {submitting ? t('common.loading') : editing ? t('common.save') : t('common.submit')}
                 </Text>
               </Pressable>
+
+              {/* Delete (edit mode only) */}
+              {editing && (
+                <Pressable
+                  onPress={confirmDelete}
+                  disabled={submitting}
+                  style={{
+                    marginTop: 12,
+                    paddingVertical: 14,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    backgroundColor: colors.dangerSurface,
+                    opacity: submitting ? 0.6 : 1,
+                  }}
+                >
+                  <Text style={{ color: colors.danger, fontSize: 16, fontWeight: '700' }}>
+                    {t('chef.item.delete')}
+                  </Text>
+                </Pressable>
+              )}
             </ScrollView>
           </View>
         </View>

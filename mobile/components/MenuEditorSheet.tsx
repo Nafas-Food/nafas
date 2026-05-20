@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
+  KeyboardAvoidingView,
   Modal,
-  View,
-  Text,
-  TextInput,
+  Platform,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { useColors } from '../hooks/useColors';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,6 +21,8 @@ interface MenuEditorSheetProps {
   categories: { id: string; name: BilingualText }[];
   onClose: () => void;
   onCreated: (menu: ChefMenu) => void;
+  editing?: ChefMenu;
+  onChanged?: () => void;
 }
 
 export function MenuEditorSheet({
@@ -27,6 +30,8 @@ export function MenuEditorSheet({
   categories,
   onClose,
   onCreated,
+  editing,
+  onChanged,
 }: MenuEditorSheetProps) {
   const colors = useColors();
   const { t, isRTL } = useLanguage();
@@ -39,30 +44,37 @@ export function MenuEditorSheet({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset the whole form only when the sheet opens (false → true)
+  // Pre-fill from editing when the sheet opens, or reset for create mode.
   useEffect(() => {
     if (visible) {
-      setNameEn('');
-      setNameAr('');
-      setCategoryId(categories[0]?.id ?? '');
-      setMode('every-day');
-      setSelectedDays([]);
+      if (editing) {
+        setNameEn(editing.name.en);
+        setNameAr(editing.name.ar);
+        setCategoryId(editing.categoryId);
+        setMode(editing.availableAllDays ? 'every-day' : 'specific-days');
+        setSelectedDays(editing.availability.map((a) => a.dayOfWeek));
+      } else {
+        setNameEn('');
+        setNameAr('');
+        setCategoryId(categories[0]?.id ?? '');
+        setMode('every-day');
+        setSelectedDays([]);
+      }
       setSubmitting(false);
       setError(null);
     }
-  }, [visible]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, editing]);
 
-  // If categories load (or change) while the sheet is already open,
-  // reset to the first category when none is selected OR the selected
-  // id is no longer present in the array (stale / soft-deleted category).
+  // If categories load/change while open in create mode, reset to first.
   useEffect(() => {
-    if (visible && categories.length > 0) {
+    if (visible && categories.length > 0 && !editing) {
       const stillValid = categories.some((c) => c.id === categoryId);
       if (!categoryId || !stillValid) {
         setCategoryId(categories[0].id);
       }
     }
-  }, [visible, categories, categoryId]);
+  }, [visible, categories, categoryId, editing]);
 
   async function submit() {
     setError(null);
@@ -81,19 +93,72 @@ export function MenuEditorSheet({
 
     setSubmitting(true);
     try {
-      const menu = await menusService.create({
-        name: { en: nameEn.trim(), ar: nameAr.trim() },
-        categoryId,
-        availableAllDays: mode === 'every-day',
-        initialAvailability: mode === 'specific-days' ? selectedDays : undefined,
-      });
-      onCreated(menu);
+      if (editing) {
+        await menusService.update(editing.id, {
+          name: { en: nameEn.trim(), ar: nameAr.trim() },
+          categoryId,
+          availableAllDays: mode === 'every-day',
+        });
+        // Sync availability rows. The PATCH endpoint does not accept the day
+        // list — backend FR-004 keeps add/remove on dedicated routes. Diff
+        // the current rows against the user's selection and fire each delta.
+        // (Specific-days mode only; every-day flags the menu as always-on
+        // regardless of which rows exist.)
+        if (mode === 'specific-days') {
+          const currentDays = new Set(editing.availability.map((a) => a.dayOfWeek));
+          const targetDays = new Set(selectedDays);
+          const toAdd = [...targetDays].filter((d) => !currentDays.has(d));
+          const toRemove = [...currentDays].filter((d) => !targetDays.has(d));
+          for (const day of toAdd) {
+            await menusService.addAvailability(editing.id, day);
+          }
+          for (const day of toRemove) {
+            await menusService.removeAvailability(editing.id, day);
+          }
+        }
+        onChanged?.();
+      } else {
+        const menu = await menusService.create({
+          name: { en: nameEn.trim(), ar: nameAr.trim() },
+          categoryId,
+          availableAllDays: mode === 'every-day',
+          initialAvailability: mode === 'specific-days' ? selectedDays : undefined,
+        });
+        onCreated(menu);
+      }
     } catch (err) {
       const code = errorCodeOf(err);
       setError(t('errors.menu.' + code.toLowerCase()) || code);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function confirmDelete() {
+    if (!editing) return;
+    Alert.alert(
+      t('chef.menu.deleteTitle'),
+      t('chef.menu.deleteConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            setSubmitting(true);
+            try {
+              await menusService.remove(editing.id);
+              onChanged?.();
+            } catch (err) {
+              const code = errorCodeOf(err);
+              setError(t('errors.menu.' + code.toLowerCase()) || code);
+            } finally {
+              setSubmitting(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   return (
@@ -137,7 +202,7 @@ export function MenuEditorSheet({
                 }}
               >
                 <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>
-                  {t('chef.menu.create')}
+                  {editing ? t('chef.menu.edit') : t('chef.menu.create')}
                 </Text>
                 <Pressable onPress={onClose}>
                   <Text style={{ fontSize: 14, color: colors.muted }}>{t('common.cancel')}</Text>
@@ -295,9 +360,29 @@ export function MenuEditorSheet({
                 }}
               >
                 <Text style={{ color: colors.primaryText, fontSize: 16, fontWeight: '700' }}>
-                  {submitting ? t('common.loading') : t('common.submit')}
+                  {submitting ? t('common.loading') : editing ? t('common.save') : t('common.submit')}
                 </Text>
               </Pressable>
+
+              {/* Delete (edit mode only) */}
+              {editing && (
+                <Pressable
+                  onPress={confirmDelete}
+                  disabled={submitting}
+                  style={{
+                    marginTop: 12,
+                    paddingVertical: 14,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    backgroundColor: colors.dangerSurface,
+                    opacity: submitting ? 0.6 : 1,
+                  }}
+                >
+                  <Text style={{ color: colors.danger, fontSize: 16, fontWeight: '700' }}>
+                    {t('chef.menu.delete')}
+                  </Text>
+                </Pressable>
+              )}
             </ScrollView>
           </View>
         </View>

@@ -12,6 +12,7 @@ import { StorageService } from '../storage/storage.service';
 import { ItemEventLogger } from '../../common/logging/item-event.logger';
 import { ActorContext } from '../../common/actor-context/actor-context.service';
 import { CreateItemDto } from './dto/create-item.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
 import { stockInputToDb, dbToStockOutput } from './dto/stock-input.dto';
 import { effectivePrice } from './effective-price';
 import { randomUUID } from 'crypto';
@@ -181,6 +182,157 @@ export class ItemsService {
       code: 'ITEM_CONCURRENT_UPDATE',
       message: 'Concurrent image upload conflict — please retry.',
     });
+  }
+
+  /** FR-008a: patch one or more item fields. */
+  async updateItem(
+    itemId: string,
+    chefId: string,
+    dto: UpdateItemDto,
+  ): Promise<ItemWire> {
+    const item = await this.findOwnedItemOrThrow(itemId, chefId);
+    if (
+      dto.price !== undefined ||
+      dto.discountValue !== undefined ||
+      dto.discountUnit !== undefined
+    ) {
+      const next = {
+        price: dto.price ?? (item.price as unknown as string),
+        discountValue:
+          dto.discountValue ?? (item.discountValue as unknown as string),
+        discountUnit: dto.discountUnit ?? (item.discountUnit as 'fixed' | 'percent'),
+      };
+      this.assertNonNegativeEffectivePrice(next);
+    }
+    const updated = await this.prismaService.item.update({
+      where: { id: itemId },
+      data: {
+        ...(dto.name ? { name: dto.name as any } : {}),
+        ...(dto.description ? { description: dto.description as any } : {}),
+        ...(dto.price !== undefined
+          ? { price: new Decimal(dto.price).toFixed(2) }
+          : {}),
+        ...(dto.discountValue !== undefined
+          ? { discountValue: new Decimal(dto.discountValue).toFixed(2) }
+          : {}),
+        ...(dto.discountUnit !== undefined
+          ? { discountUnit: dto.discountUnit as any }
+          : {}),
+        ...(dto.stock !== undefined
+          ? { quantity: stockInputToDb(dto.stock) }
+          : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+      },
+    });
+    const onlyActive =
+      Object.keys(dto).length === 1 && dto.isActive !== undefined;
+    this.itemEventLogger.emit({
+      event: onlyActive ? 'item.active_toggle' : 'item.update',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+      targetItemId: itemId,
+    });
+    return this.toWire(updated);
+  }
+
+  /** FR-011: soft-delete an item owned by `chefId`. */
+  async softDeleteItem(itemId: string, chefId: string): Promise<void> {
+    await this.findOwnedItemOrThrow(itemId, chefId);
+    await this.prismaService.extended.item.softDelete({ id: itemId });
+    this.itemEventLogger.emit({
+      event: 'item.soft_delete',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+      targetItemId: itemId,
+    });
+  }
+
+  /**
+   * FR-009a: atomic dense renumber. Ownership is re-derived inside
+   * the transaction so a stale menuId can't slip past.
+   */
+  async reorderItems(
+    menuId: string,
+    chefId: string,
+    orderedItemIds: string[],
+  ): Promise<void> {
+    await this.menusService.assertMenuOwnedByChefPublic(menuId, chefId);
+    await this.prismaService.$transaction(async (tx) => {
+      const currentRows = await tx.item.findMany({
+        where: { menuId, deletedAt: null },
+        select: { id: true },
+      });
+      const currentSet = new Set(currentRows.map((r) => r.id));
+      const submittedSet = new Set(orderedItemIds);
+      if (
+        currentSet.size !== submittedSet.size ||
+        orderedItemIds.length !== submittedSet.size ||
+        [...submittedSet].some((id) => !currentSet.has(id))
+      ) {
+        throw new BadRequestException({ code: 'ITEMS_REORDER_NOT_EXACT_SET' });
+      }
+      for (let i = 0; i < orderedItemIds.length; i++) {
+        await tx.item.update({
+          where: { id: orderedItemIds[i] },
+          data: { displayOrder: i },
+        });
+      }
+    });
+    this.itemEventLogger.emit({
+      event: 'item.reorder',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+    });
+  }
+
+  /**
+   * FR-012a: idempotent per-image remove. The `imageKey` is the
+   * storage object key suffix (everything after the bucket name in
+   * the public URL). Stable across concurrent edits — does NOT
+   * depend on array indices.
+   */
+  async removeImage(
+    itemId: string,
+    chefId: string,
+    imageKey: string,
+  ): Promise<ItemWire> {
+    const item = await this.findOwnedItemOrThrow(itemId, chefId);
+    const remaining = item.images.filter((u) => !u.endsWith(imageKey));
+    if (remaining.length === item.images.length) {
+      // Idempotent: key is already absent — return current state.
+      this.itemEventLogger.emit({
+        event: 'item.image_remove',
+        outcome: 'success',
+        actorUserId: this.actorContext.getUserId() ?? null,
+        actorRole: 'chef',
+        sourceIp: this.actorContext.getSourceIp() ?? null,
+        targetItemId: itemId,
+      });
+      return this.toWire(item);
+    }
+    const updated = await this.prismaService.item.update({
+      where: { id: itemId },
+      data: { images: { set: remaining } },
+    });
+    // Best-effort storage cleanup — mirrors Phase 3 chef-logo replacement.
+    this.storage.delete('item-images', imageKey).catch((err) => {
+      console.error('storage.delete failed', { imageKey, err });
+    });
+    this.itemEventLogger.emit({
+      event: 'item.image_remove',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+      targetItemId: itemId,
+    });
+    return this.toWire(updated);
   }
 
   /**

@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CategoriesService } from '../categories/categories.service';
 import { MenuEventLogger } from '../../common/logging/menu-event.logger';
 import { ActorContext } from '../../common/actor-context/actor-context.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
+import { UpdateMenuDto } from './dto/update-menu.dto';
 import { todaysCairoWeekday } from './today-cairo';
 
 /**
@@ -239,6 +240,101 @@ export class MenusService {
       sourceIp: this.actorContext.getSourceIp() ?? null,
       targetMenuId: menuId,
     });
+  }
+
+  /**
+   * FR-003a: edit a menu's name, category, or availability mode.
+   */
+  async updateMenu(
+    menuId: string,
+    chefId: string,
+    dto: UpdateMenuDto,
+  ): Promise<MenuWithAvailability> {
+    await this.assertMenuOwnedByChef(menuId, chefId);
+    if (dto.categoryId) {
+      await this.categoriesService.findOneActiveOrThrow(dto.categoryId);
+    }
+    const updated = await this.prismaService.menu.update({
+      where: { id: menuId },
+      data: {
+        ...(dto.name ? { name: dto.name as any } : {}),
+        ...(dto.categoryId ? { categoryId: dto.categoryId } : {}),
+        ...(dto.availableAllDays !== undefined
+          ? { availableAllDays: dto.availableAllDays }
+          : {}),
+      },
+      include: { availability: true },
+    });
+    this.menuEventLogger.emit({
+      event: 'menu.update',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+      targetMenuId: menuId,
+    });
+    return updated;
+  }
+
+  /** FR-005: soft-delete a menu owned by `chefId`. */
+  async softDeleteMenu(menuId: string, chefId: string): Promise<void> {
+    await this.assertMenuOwnedByChef(menuId, chefId);
+    await this.prismaService.extended.menu.softDelete({ id: menuId });
+    this.menuEventLogger.emit({
+      event: 'menu.soft_delete',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+      targetMenuId: menuId,
+    });
+  }
+
+  /**
+   * FR-002a: atomic dense renumber. The submitted menuIds MUST be an
+   * exact cover of the chef's current non-soft-deleted menus.
+   */
+  async reorderMenus(chefId: string, orderedMenuIds: string[]): Promise<void> {
+    await this.prismaService.$transaction(async (tx) => {
+      const currentRows = await tx.menu.findMany({
+        where: { chefId, deletedAt: null },
+        select: { id: true },
+      });
+      this.assertExactSet(
+        currentRows.map((r) => r.id),
+        orderedMenuIds,
+        'MENUS_REORDER_NOT_EXACT_SET',
+      );
+      for (let i = 0; i < orderedMenuIds.length; i++) {
+        await tx.menu.update({
+          where: { id: orderedMenuIds[i] },
+          data: { displayOrder: i },
+        });
+      }
+    });
+    this.menuEventLogger.emit({
+      event: 'menu.reorder',
+      outcome: 'success',
+      actorUserId: this.actorContext.getUserId() ?? null,
+      actorRole: 'chef',
+      sourceIp: this.actorContext.getSourceIp() ?? null,
+    });
+  }
+
+  private assertExactSet(
+    current: string[],
+    submitted: string[],
+    errorCode: string,
+  ): void {
+    const currentSet = new Set(current);
+    const submittedSet = new Set(submitted);
+    if (
+      currentSet.size !== submittedSet.size ||
+      submitted.length !== submittedSet.size ||
+      [...submittedSet].some((id) => !currentSet.has(id))
+    ) {
+      throw new BadRequestException({ code: errorCode });
+    }
   }
 
   /**

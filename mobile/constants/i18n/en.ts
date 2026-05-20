@@ -9,6 +9,8 @@ export const en = {
     cancel: 'Cancel',
     back: 'Back',
     submit: 'Submit',
+    save: 'Save',
+    delete: 'Delete',
     done: 'Done',
     loading: 'Loading...',
     networkError: 'Network error. Check your connection and try again.',
@@ -263,6 +265,12 @@ export const en = {
     menu: {
       title: 'Menu',
       create: 'Create menu',
+      edit: 'Edit menu',
+      delete: 'Delete menu',
+      deleteTitle: 'Delete this menu?',
+      deleteConfirm: 'This hides the menu and all its items from customers. You can re-create it later.',
+      reorderItems: 'Reorder items',
+      saveOrder: 'Save order',
       empty: 'No menus yet. Tap "Create menu" to add your first one.',
       everyDay: 'Every day',
       specificDays: 'Specific days',
@@ -283,6 +291,10 @@ export const en = {
     // Phase 4 US2 chef-side item editor strings.
     item: {
       create: 'Add item',
+      edit: 'Edit item',
+      delete: 'Delete item',
+      deleteTitle: 'Delete this item?',
+      deleteConfirm: 'This hides the item from customers. You can re-create it later.',
       empty: 'No items yet. Tap "Add item" to add your first one.',
       noImage: 'No image',
       images: {
@@ -290,6 +302,8 @@ export const en = {
         add: 'Add image',
         limit: '{count} / 5 images',
         full: 'You already have the maximum 5 images for this item.',
+        removeTitle: 'Remove this image?',
+        removeConfirm: 'The image will be permanently removed from this item.',
       },
       editor: {
         name: {
@@ -375,6 +389,8 @@ export const en = {
       unsupported_media_type: 'Image must be JPEG, PNG, or WebP.',
       payload_too_large: 'Image must be 3 MB or smaller.',
       item_upload_rate_limited: "You're uploading too fast — please retry shortly.",
+      items_reorder_not_exact_set: 'The item order is out of sync. Please refresh and try again.',
+      image_key_required: 'Image key is missing — please refresh and try again.',
     },
   },
 } as const;
