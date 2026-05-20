@@ -191,9 +191,10 @@ describe('Items upload throttle (e2e) — T072 (FR-012b / SC-007b)', () => {
     // reset is attributable to ChefThrottlerGuard.getTracker(), confirming
     // the cap is per-chef and not shared with chef A.
     const throttlerStorage = app.get(ThrottlerStorageService);
-    (
-      throttlerStorage as unknown as { _storage: Record<string, unknown> }
-    )._storage = {};
+    const s = throttlerStorage.storage;
+    for (const key of Object.keys(s)) {
+      delete s[key];
+    }
 
     for (let i = 0; i < 25; i++) {
       const resB = await request(ctx.server)
@@ -206,8 +207,7 @@ describe('Items upload throttle (e2e) — T072 (FR-012b / SC-007b)', () => {
       statusesB.push(resB.status);
     }
 
-    // Uploads 1-20: 201 (success) or possibly 400 (ITEM_IMAGES_FULL hit at round-robin boundary)
-    // The throttle kicks in at upload 21.
+    // Uploads 1-20 are expected 201; the throttle kicks in at upload 21 resulting in 5×429.
     const successA = statusesA.filter((s) => s === 201).length;
     const throttledA = statusesA.filter((s) => s === 429).length;
     const successB = statusesB.filter((s) => s === 201).length;

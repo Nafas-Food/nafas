@@ -238,8 +238,7 @@ describe('Chef Bulk Reorder (e2e) — T075 (SC-007d)', () => {
       .send({ menuIds: [menu1Id, menu2Id, menu3Id, menu1Id, itemMenuId] })
       .expect(400);
 
-    // The DTO's @ArrayUnique guard fires before service validation
-    expect([400].includes(res.status)).toBe(true);
+    expect(res.body.code).toBe('MENUS_REORDER_NOT_EXACT_SET');
   });
 
   // -----------------------------------------------------------------------

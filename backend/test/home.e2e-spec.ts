@@ -89,7 +89,7 @@ describe('Home (e2e) — T073', () => {
           bio: `Bio ${i + 1}`,
           latitude: 30.0 + i * 0.01,
           longitude: 31.0 + i * 0.01,
-          minOrderPrice: 50,
+          minOrderPrice: '50.00',
           isVerified: true,
           verifiedAt: new Date(Date.now() - (3 - i) * 1_000),
           isOpen: i < 2, // chefs 0 and 1 are open, chef 2 is closed

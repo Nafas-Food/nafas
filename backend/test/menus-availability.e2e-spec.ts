@@ -135,6 +135,10 @@ describe('Menus Availability (e2e) — T069 (FR-017 today-available filter)', ()
     await app.close();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function pinWeekday(day: number) {
     jest.spyOn(todayCairo, 'todaysCairoWeekday').mockReturnValue(day);
   }

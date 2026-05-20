@@ -239,6 +239,7 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
         expect.objectContaining({
           event: 'menu.create',
           outcome: 'validation_rejected',
+          actorId: 'u-m2',
         }),
       );
     });

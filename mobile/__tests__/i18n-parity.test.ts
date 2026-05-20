@@ -1,11 +1,11 @@
 import { en } from '../constants/i18n/en';
 import { ar } from '../constants/i18n/ar';
 
-function flatten(obj: any, prefix = ''): string[] {
+function flatten(obj: Record<string, unknown>, prefix = ''): string[] {
   const keys: string[] = [];
   for (const [k, v] of Object.entries(obj)) {
     const full = prefix ? `${prefix}.${k}` : k;
-    if (typeof v === 'object' && v !== null) keys.push(...flatten(v, full));
+    if (typeof v === 'object' && v !== null) keys.push(...flatten(v as Record<string, unknown>, full));
     else keys.push(full);
   }
   return keys.sort();
@@ -28,6 +28,4 @@ test('en and ar have identical key sets', () => {
       .join('\n');
     throw new Error(`i18n key mismatch:\n${msg}`);
   }
-
-  expect(enKeys).toEqual(arKeys);
 });
