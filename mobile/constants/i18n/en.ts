@@ -92,6 +92,7 @@ export const en = {
     seeAll: 'See all',
     categories: 'Categories',
     topRated: 'Top rated',
+    viewOrders: 'View orders',
   },
   tabs: {
     home: 'Home',
