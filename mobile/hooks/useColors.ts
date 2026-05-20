@@ -7,8 +7,14 @@ export interface NafasColors {
   accent: string;
   accentLight: string;
   danger: string;
+  /** Tinted destructive surface (e.g., delete-button background, danger banners). */
+  dangerSurface: string;
   successGreen: string;
   shadow: string;
+  /** Translucent dark overlay for image action buttons / pressed cards. */
+  scrim: string;
+  /** Stronger scrim for prominent overlays (carousel remove button). */
+  scrimStrong: string;
   warningSurface: string;
   warningBorder: string;
   background: string;
@@ -32,8 +38,11 @@ const TOKENS: NafasColors = {
   accent: '#D4944A',
   accentLight: '#FDEEC8',
   danger: '#A33333',
+  dangerSurface: 'rgba(163, 51, 51, 0.10)',
   successGreen: '#16A34A',
   shadow: '#2C1F14',
+  scrim: 'rgba(31, 26, 23, 0.55)',
+  scrimStrong: 'rgba(31, 26, 23, 0.65)',
   warningSurface: '#FFF3E0',
   warningBorder: '#C4622D',
   background: '#FAF6F2',

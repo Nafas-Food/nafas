@@ -8,6 +8,7 @@ import {
   Ip,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +23,8 @@ import {
 import { ChefsService } from '../chefs/chefs.service';
 import { MenusService } from './menus.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
+import { UpdateMenuDto } from './dto/update-menu.dto';
+import { ReorderMenusDto } from './dto/reorder-menus.dto';
 import { AddAvailabilityDto } from './dto/add-availability.dto';
 import { ActorContext } from '../../common/actor-context/actor-context.service';
 
@@ -90,6 +93,48 @@ export class MenusController {
     const chef = await this.chefsService.findOwnedOrThrow(user.sub);
     await this.actorContext.run(user.sub, sourceIp, () =>
       this.menusService.removeAvailability(menuId, chef.id, dayOfWeek),
+    );
+  }
+
+  // CRITICAL: @Patch('reorder') MUST be declared before @Patch(':id') so
+  // the router matches the literal string 'reorder' rather than treating
+  // it as a UUID path param.
+  @Patch('reorder')
+  @HttpCode(204)
+  async reorderMenus(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Body() dto: ReorderMenusDto,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    await this.actorContext.run(user.sub, sourceIp, () =>
+      this.menusService.reorderMenus(chef.id, dto.menuIds),
+    );
+  }
+
+  @Patch(':id')
+  async updateMenu(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('id') menuId: string,
+    @Body() dto: UpdateMenuDto,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    return this.actorContext.run(user.sub, sourceIp, () =>
+      this.menusService.updateMenu(menuId, chef.id, dto),
+    );
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async softDeleteMenu(
+    @CurrentUser() user: CurrentUserPayload,
+    @Ip() sourceIp: string,
+    @Param('id') menuId: string,
+  ) {
+    const chef = await this.chefsService.findOwnedOrThrow(user.sub);
+    await this.actorContext.run(user.sub, sourceIp, () =>
+      this.menusService.softDeleteMenu(menuId, chef.id),
     );
   }
 }

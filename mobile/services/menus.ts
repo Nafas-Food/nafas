@@ -33,4 +33,11 @@ export const menusService = {
       .then((r) => r.data),
   removeAvailability: (menuId: string, dayOfWeek: number) =>
     api.delete<void>(`/chef/menus/${menuId}/availability/${dayOfWeek}`),
+  update: (
+    menuId: string,
+    body: { name?: BilingualText; categoryId?: string; availableAllDays?: boolean },
+  ) => api.patch<ChefMenu>(`/chef/menus/${menuId}`, body).then((r) => r.data),
+  remove: (menuId: string) => api.delete<void>(`/chef/menus/${menuId}`),
+  reorder: (menuIds: string[]) =>
+    api.patch<void>(`/chef/menus/reorder`, { menuIds }),
 };

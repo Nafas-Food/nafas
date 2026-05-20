@@ -4,6 +4,7 @@ import { Tabs, useRouter, useSegments } from 'expo-router';
 import { ChefGlassTabBar } from '../../components/ChefGlassTabBar';
 import { useColors } from '../../hooks/useColors';
 import { getOwnChefProfile } from '../../services/chefProfile';
+import { ChefMenuProvider } from '../../context/ChefMenuContext';
 
 // Sentinel: a freshly-verified chef has lat=0, lng=0 (the apply form
 // no longer collects coordinates — that's deferred to set-location).
@@ -73,6 +74,7 @@ function ChefLocationGate({ children }: { children: React.ReactNode }) {
 
 export default function ChefLayout() {
   return (
+    <ChefMenuProvider>
     <ChefLocationGate>
       <Tabs
         tabBar={(props) => <ChefGlassTabBar {...props} />}
@@ -91,5 +93,6 @@ export default function ChefLayout() {
         <Tabs.Screen name="set-location" options={{ href: null }} />
       </Tabs>
     </ChefLocationGate>
+    </ChefMenuProvider>
   );
 }

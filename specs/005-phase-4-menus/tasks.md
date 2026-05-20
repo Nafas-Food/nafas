@@ -2089,7 +2089,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### DTOs
 
-- [ ] T049 [P] [US5] Create `<repo>\backend\src\modules\menus\dto\update-menu.dto.ts`:
+- [X] T049 [P] [US5] Create `<repo>\backend\src\modules\menus\dto\update-menu.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import { IsBoolean, IsOptional, IsUUID, ValidateNested } from 'class-validator';
@@ -2108,7 +2108,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   DO NOT declare `displayOrder` (display order is reorder-endpoint-only — R5).
 
-- [ ] T050 [P] [US5] Create `<repo>\backend\src\modules\menus\dto\reorder-menus.dto.ts`:
+- [X] T050 [P] [US5] Create `<repo>\backend\src\modules\menus\dto\reorder-menus.dto.ts`:
   ```ts
   import { ArrayMinSize, ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
@@ -2121,7 +2121,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   }
   ```
 
-- [ ] T051 [P] [US5] Create `<repo>\backend\src\modules\items\dto\update-item.dto.ts`:
+- [X] T051 [P] [US5] Create `<repo>\backend\src\modules\items\dto\update-item.dto.ts`:
   ```ts
   import { Type } from 'class-transformer';
   import {
@@ -2159,7 +2159,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   DO NOT declare `displayOrder` or `images`.
 
-- [ ] T052 [P] [US5] Create `<repo>\backend\src\modules\items\dto\reorder-items.dto.ts`:
+- [X] T052 [P] [US5] Create `<repo>\backend\src\modules\items\dto\reorder-items.dto.ts`:
   ```ts
   import { ArrayMinSize, ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
@@ -2174,7 +2174,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Service methods
 
-- [ ] T053 [US5] Add `updateMenu` + `softDeleteMenu` + `reorderMenus` to `<repo>\backend\src\modules\menus\menus.service.ts`:
+- [X] T053 [US5] Add `updateMenu` + `softDeleteMenu` + `reorderMenus` to `<repo>\backend\src\modules\menus\menus.service.ts`:
   ```ts
   async updateMenu(menuId: string, chefId: string, dto: UpdateMenuDto): Promise<MenuWithAvailability> {
     await this.assertMenuOwnedByChef(menuId, chefId);
@@ -2253,7 +2253,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add `import { BadRequestException } from '@nestjs/common';` and `import { UpdateMenuDto } from './dto/update-menu.dto';`.
 
-- [ ] T054 [US5] Add `updateItem` + `softDeleteItem` + `reorderItems` + `removeImage` to `<repo>\backend\src\modules\items\items.service.ts`. Append to the class body (in the order shown):
+- [X] T054 [US5] Add `updateItem` + `softDeleteItem` + `reorderItems` + `removeImage` to `<repo>\backend\src\modules\items\items.service.ts`. Append to the class body (in the order shown):
   ```ts
   async updateItem(itemId: string, chefId: string, dto: UpdateItemDto): Promise<ItemWire> {
     const item = await this.findOwnedItemOrThrow(itemId, chefId);
@@ -2376,7 +2376,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Controllers (extend US1 / US2 controllers)
 
-- [ ] T055 [US5] Extend `<repo>\backend\src\modules\menus\menus.controller.ts` with the missing verbs. Add methods (alongside the US1 methods):
+- [X] T055 [US5] Extend `<repo>\backend\src\modules\menus\menus.controller.ts` with the missing verbs. Add methods (alongside the US1 methods):
   ```ts
   @Patch('reorder')
   @HttpCode(204)
@@ -2400,7 +2400,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Add imports: `import { Patch } from '@nestjs/common';`, `import { UpdateMenuDto } from './dto/update-menu.dto';`, `import { ReorderMenusDto } from './dto/reorder-menus.dto';`. **CRITICAL**: declare `@Patch('reorder')` BEFORE `@Patch(':id')` so the route resolver matches `/reorder` literally rather than treating `'reorder'` as a UUID path param.
 
-- [ ] T056 [US5] Extend `<repo>\backend\src\modules\items\items.controller.ts` with the missing verbs. Add (alongside the US2 methods):
+- [X] T056 [US5] Extend `<repo>\backend\src\modules\items\items.controller.ts` with the missing verbs. Add (alongside the US2 methods):
   ```ts
   @Patch('menus/:menuId/items/reorder')
   @HttpCode(204)
@@ -2449,7 +2449,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Mobile
 
-- [ ] T057 [P] [US5] Extend `<repo>\mobile\services\menus.ts` with the missing methods:
+- [X] T057 [P] [US5] Extend `<repo>\mobile\services\menus.ts` with the missing methods:
   ```ts
   // Append to the menusService object:
   update: (menuId: string, body: { name?: BilingualText; categoryId?: string; availableAllDays?: boolean }) =>
@@ -2458,7 +2458,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   reorder: (menuIds: string[]) => api.patch<void>(`/api/v1/chef/menus/reorder`, { menuIds }),
   ```
 
-- [ ] T058 [P] [US5] Extend `<repo>\mobile\services\items.ts` with the missing methods:
+- [X] T058 [P] [US5] Extend `<repo>\mobile\services\items.ts` with the missing methods:
   ```ts
   // Append to itemsService:
   update: (
@@ -2484,11 +2484,11 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
       .then((r) => r.data),
   ```
 
-- [ ] T059 [P] [US5] Extend `MenuEditorSheet` (T025) to support an `editing?: ChefMenu` prop that pre-fills the form and submits via `menusService.update(menuId, body)` instead of `create`. Wire a "Delete menu" action behind a confirm dialog that calls `menusService.remove(menuId)`. Both actions call an `onChanged()` prop so the screen can re-fetch.
+- [X] T059 [P] [US5] Extend `MenuEditorSheet` (T025) to support an `editing?: ChefMenu` prop that pre-fills the form and submits via `menusService.update(menuId, body)` instead of `create`. Wire a "Delete menu" action behind a confirm dialog that calls `menusService.remove(menuId)`. Both actions call an `onChanged()` prop so the screen can re-fetch.
 
-- [ ] T060 [P] [US5] Extend `ItemEditorSheet` (T033) symmetrically — `editing?: ChefItem` prop, submit via `itemsService.update`, "Delete item" action calling `itemsService.remove`.
+- [X] T060 [P] [US5] Extend `ItemEditorSheet` (T033) symmetrically — `editing?: ChefItem` prop, submit via `itemsService.update`, "Delete item" action calling `itemsService.remove`.
 
-- [ ] T061 [P] [US5] Extend `ItemImagesDialog` (T034) with a per-image remove action. Each image in the carousel gets a small overlay "remove" button (design-system trash icon at top-right of the thumbnail). On press, show a confirm dialog ("Remove this image?") and on confirm call `itemsService.removeImage(itemId, imageKey)`. Derive `imageKey` from the URL — the storage object key is everything after `/storage/v1/object/public/item-images/` in the Supabase URL. Example: for `https://<project>.supabase.co/storage/v1/object/public/item-images/items/<chefId>/<itemId>/<uuid>.<ext>`, `imageKey = items/<chefId>/<itemId>/<uuid>.<ext>`. Helper:
+- [X] T061 [P] [US5] Extend `ItemImagesDialog` (T034) with a per-image remove action. Each image in the carousel gets a small overlay "remove" button (design-system trash icon at top-right of the thumbnail). On press, show a confirm dialog ("Remove this image?") and on confirm call `itemsService.removeImage(itemId, imageKey)`. Derive `imageKey` from the URL — the storage object key is everything after `/storage/v1/object/public/item-images/` in the Supabase URL. Example: for `https://<project>.supabase.co/storage/v1/object/public/item-images/items/<chefId>/<itemId>/<uuid>.<ext>`, `imageKey = items/<chefId>/<itemId>/<uuid>.<ext>`. Helper:
   ```ts
   function imageKeyFromUrl(publicUrl: string): string {
     const marker = '/storage/v1/object/public/item-images/';
@@ -2499,9 +2499,9 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   The backend `items.controller` reads the key via `?key=...` query param (T056), so the slash-containing value travels through axios's `params: { key: imageKey }` (T058) and is URL-encoded automatically — no NestJS wildcard route is involved.
 
-- [ ] T062 [P] [US5] Add drag-reorder to the chef-side menu list and item list. Use `react-native-reanimated`'s gesture handler (already in the deps from Phase 0). On reorder commit, call `menusService.reorder(orderedIds)` or `itemsService.reorder(menuId, orderedIds)`. On error (e.g., `MENUS_REORDER_NOT_EXACT_SET` from a stale client view), refresh the list and surface a clear in-app message via `t(...)`. Use the design-system reorder pattern (long-press to enter reorder mode, "Save Order" / "Cancel" buttons).
+- [X] T062 [P] [US5] Add drag-reorder to the chef-side menu list and item list. Use `react-native-reanimated`'s gesture handler (already in the deps from Phase 0). On reorder commit, call `menusService.reorder(orderedIds)` or `itemsService.reorder(menuId, orderedIds)`. On error (e.g., `MENUS_REORDER_NOT_EXACT_SET` from a stale client view), refresh the list and surface a clear in-app message via `t(...)`. Use the design-system reorder pattern (long-press to enter reorder mode, "Save Order" / "Cancel" buttons).
 
-- [ ] T063 [P] [US5] Create `<repo>\mobile\context\ChefMenuContext.tsx` to hold the chef-side editor's optimistic state (current menu list, in-flight drafts, pending reorder buffer). The context exposes `{ menus, refresh, reorderMenus, ... }`. Wraps the chef tab subtree (`<ChefMenuProvider>` in `app/(chef)/_layout.tsx`).
+- [X] T063 [P] [US5] Create `<repo>\mobile\context\ChefMenuContext.tsx` to hold the chef-side editor's optimistic state (current menu list, in-flight drafts, pending reorder buffer). The context exposes `{ menus, refresh, reorderMenus, ... }`. Wraps the chef tab subtree (`<ChefMenuProvider>` in `app/(chef)/_layout.tsx`).
 
 **Checkpoint**: At this point, User Story 5 is fully functional. A chef can fully edit + soft-delete + reorder + remove individual images. Backend tests in T078 below cover the reorder atomicity.
 

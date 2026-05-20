@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
+  Alert,
+  Image,
   Modal,
-  View,
-  Text,
   Pressable,
   ScrollView,
-  Image,
-  Alert,
+  Text,
+  View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useColors } from '../hooks/useColors';
@@ -18,6 +18,17 @@ interface ItemImagesDialogProps {
   item: ChefItem;
   onClose: () => void;
   onChanged: (updated: ChefItem) => void;
+}
+
+function imageKeyFromUrl(publicUrl: string): string {
+  const marker = '/storage/v1/object/public/item-images/';
+  const i = publicUrl.indexOf(marker);
+  if (i === -1) throw new Error('unexpected supabase URL shape');
+  const raw = publicUrl.slice(i + marker.length);
+  const q = raw.indexOf('?');
+  const h = raw.indexOf('#');
+  const end = Math.min(q === -1 ? raw.length : q, h === -1 ? raw.length : h);
+  return raw.slice(0, end);
 }
 
 export function ItemImagesDialog({ item, onClose, onChanged }: ItemImagesDialogProps) {
@@ -66,6 +77,35 @@ export function ItemImagesDialog({ item, onClose, onChanged }: ItemImagesDialogP
     }
   }
 
+  function confirmRemoveImage(uri: string) {
+    Alert.alert(
+      t('chef.item.images.removeTitle'),
+      t('chef.item.images.removeConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            setError(null);
+            setUploading(true);
+            try {
+              const imageKey = imageKeyFromUrl(uri);
+              const updated = await itemsService.removeImage(item.id, imageKey);
+              setImages(updated.images);
+              onChanged(updated);
+            } catch (err) {
+              const code = errorCodeOf(err);
+              setError(t('errors.item.' + code.toLowerCase()) || code);
+            } finally {
+              setUploading(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: 'rgba(31,26,23,0.5)', justifyContent: 'flex-end' }}>
@@ -109,6 +149,27 @@ export function ItemImagesDialog({ item, onClose, onChanged }: ItemImagesDialogP
                   style={{ width: 140, height: 140, borderRadius: 14 }}
                   resizeMode="cover"
                 />
+                {/* Per-image remove button */}
+                <Pressable
+                  onPress={() => confirmRemoveImage(uri)}
+                  disabled={uploading}
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    backgroundColor: colors.scrimStrong,
+                    borderRadius: 14,
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: uploading ? 0.4 : 1,
+                  }}
+                >
+                  <Text style={{ color: colors.primaryText, fontSize: 14, fontWeight: '700', lineHeight: 16 }}>
+                    ✕
+                  </Text>
+                </Pressable>
               </View>
             ))}
             {/* Add image placeholder */}

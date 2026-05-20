@@ -6,6 +6,8 @@ export const ar: I18nDict = {
     cancel: 'إلغاء',
     back: 'رجوع',
     submit: 'إرسال',
+    save: 'حفظ',
+    delete: 'حذف',
     done: 'تم',
     loading: 'جارٍ التحميل...',
     networkError: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مجددًا.',
@@ -257,6 +259,12 @@ export const ar: I18nDict = {
     menu: {
       title: 'القائمة',
       create: 'إضافة قائمة',
+      edit: 'تعديل القائمة',
+      delete: 'حذف القائمة',
+      deleteTitle: 'حذف هذه القائمة؟',
+      deleteConfirm: 'سيؤدّي ذلك إلى إخفاء القائمة وأصنافها عن العملاء. يمكنك إعادة إنشائها لاحقاً.',
+      reorderItems: 'ترتيب الأصناف',
+      saveOrder: 'حفظ الترتيب',
       empty: 'لا توجد قوائم بعد. اضغط "إضافة قائمة" لإنشاء أول قائمة.',
       everyDay: 'كل يوم',
       specificDays: 'أيام محدّدة',
@@ -276,6 +284,10 @@ export const ar: I18nDict = {
     },
     item: {
       create: 'إضافة صنف',
+      edit: 'تعديل الصنف',
+      delete: 'حذف الصنف',
+      deleteTitle: 'حذف هذا الصنف؟',
+      deleteConfirm: 'سيؤدّي ذلك إلى إخفاء الصنف عن العملاء. يمكنك إعادة إنشائه لاحقاً.',
       empty: 'لا توجد أصناف بعد. اضغط "إضافة صنف" لإضافة أول صنف.',
       noImage: 'لا توجد صورة',
       images: {
@@ -283,6 +295,8 @@ export const ar: I18nDict = {
         add: 'إضافة صورة',
         limit: '{count} / 5 صور',
         full: 'لقد وصلت إلى الحد الأقصى (5 صور) لهذا الصنف.',
+        removeTitle: 'حذف هذه الصورة؟',
+        removeConfirm: 'سيتم حذف الصورة نهائيًا من هذا الصنف.',
       },
       editor: {
         name: {
@@ -359,6 +373,8 @@ export const ar: I18nDict = {
       unsupported_media_type: 'الصورة يجب أن تكون JPEG أو PNG أو WebP.',
       payload_too_large: 'حجم الصورة يجب ألا يتجاوز 3 ميغابايت.',
       item_upload_rate_limited: 'أنت ترفع صورًا بسرعة كبيرة — حاول بعد قليل.',
+      items_reorder_not_exact_set: 'ترتيب الأصناف غير متطابق. حدّث الصفحة وحاول مرة أخرى.',
+      image_key_required: 'بيانات الصورة ناقصة — حدّث الصفحة وحاول مرة أخرى.',
     },
   },
 };
