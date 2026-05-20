@@ -7,6 +7,8 @@ export interface NafasColors {
   accent: string;
   accentLight: string;
   danger: string;
+  successGreen: string;
+  shadow: string;
   warningSurface: string;
   warningBorder: string;
   background: string;
@@ -30,6 +32,8 @@ const TOKENS: NafasColors = {
   accent: '#D4944A',
   accentLight: '#FDEEC8',
   danger: '#A33333',
+  successGreen: '#16A34A',
+  shadow: '#2C1F14',
   warningSurface: '#FFF3E0',
   warningBorder: '#C4622D',
   background: '#FAF6F2',

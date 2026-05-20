@@ -1838,7 +1838,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 ### Backend
 
-- [ ] T042 [US4] Create `<repo>\backend\src\modules\home\home.module.ts`:
+- [X] T042 [US4] Create `<repo>\backend\src\modules\home\home.module.ts`:
   ```ts
   import { Module } from '@nestjs/common';
   import { ChefsModule } from '../chefs/chefs.module';
@@ -1855,7 +1855,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   export class HomeModule {}
   ```
 
-- [ ] T043 [US4] Create `<repo>\backend\src\modules\home\home.service.ts`:
+- [X] T043 [US4] Create `<repo>\backend\src\modules\home\home.service.ts`:
   ```ts
   import { Injectable } from '@nestjs/common';
   import { ChefsService } from '../chefs/chefs.service';
@@ -1892,7 +1892,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   If `findManyForDiscovery` requires a different shape, adapt the call; the Phase 3 method signature is the source of truth. If `users.service.findOneOrThrow` is named differently, use whatever Phase 1 / 3 exposes.
 
-- [ ] T044 [US4] Create `<repo>\backend\src\modules\home\home.controller.ts`:
+- [X] T044 [US4] Create `<repo>\backend\src\modules\home\home.controller.ts`:
   ```ts
   import { Controller, Get, Req, UseGuards } from '@nestjs/common';
   import { Request } from 'express';
@@ -1903,7 +1903,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   @ApiTags('Home')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Controller('api/v1/home')
+  @Controller('home')
   export class HomeController {
     constructor(private readonly homeService: HomeService) {}
 
@@ -1913,11 +1913,11 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
     }
   }
   ```
-  Register `HomeModule` in `<repo>\backend\src\app.module.ts`. Confirm with `npx tsc --noEmit`.
+  The global route prefix `api/v1` is applied by the NestJS bootstrap (`app.setGlobalPrefix('api/v1')`), so the controller uses `'home'` (not `'api/v1/home'`) to avoid a doubled prefix. Mobile clients call `GET /api/v1/home`. Register `HomeModule` in `<repo>\backend\src\app.module.ts`. Confirm with `npx tsc --noEmit`.
 
 ### Mobile
 
-- [ ] T045 [P] [US4] Create `<repo>\mobile\services\home.ts`:
+- [X] T045 [P] [US4] Create `<repo>\mobile\services\home.ts`:
   ```ts
   import { api } from './api';
 
@@ -1947,7 +1947,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   };
   ```
 
-- [ ] T046 [P] [US4] Create `<repo>\mobile\hooks\useDebouncedDiscovery.ts`. Verbatim:
+- [X] T046 [P] [US4] ~~Create `<repo>\mobile\hooks\useDebouncedDiscovery.ts`.~~ **Retracted in review fixes**: the Phase 3 explore screen already implements debouncing + a `filterEpochRef` stale-response guard that's more capable than this hook (handles pagination, retry-on-error, and multi-dimensional filter changes). T048 keeps the Phase 3 fetch and the standalone hook is not needed. Original verbatim spec retained below for historical reference only:
   ```ts
   import { useEffect, useRef, useState } from 'react';
   import { api } from '../services/api';
@@ -2009,7 +2009,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   }
   ```
 
-- [ ] T047 [P] [US4] Fill in the Home screen at `<repo>\mobile\app\(tabs)\index.tsx` (Phase 3 placeholder). Consult the design-system "customer home" mockup. Sketch:
+- [X] T047 [P] [US4] Fill in the Home screen at `<repo>\mobile\app\(tabs)\index.tsx` (Phase 3 placeholder). Consult the design-system "customer home" mockup. Sketch:
   ```tsx
   import React, { useEffect, useState } from 'react';
   import { ScrollView, View, Text, FlatList, Pressable } from 'react-native';
@@ -2070,9 +2070,9 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Adjust the JSX to the design-system "customer home" mockup. Confirm with `npx tsc --noEmit`.
 
-- [ ] T048 [P] [US4] Extend `<repo>\mobile\app\(tabs)\explore.tsx` (Phase 3 file, exists from US-level wiring of the discovery screen) to:
+- [X] T048 [P] [US4] Extend `<repo>\mobile\app\(tabs)\explore.tsx` (Phase 3 file, exists from US-level wiring of the discovery screen) to:
   - read `useLocalSearchParams<{ categoryId?: string }>()` to honour the pre-filter from Home (T047);
-  - use `useDebouncedDiscovery` from T046 instead of the Phase 3 ad-hoc fetch;
+  - use the Phase 3 Explore fetch flow (epoch-guarded `fetchChefs` + cursor pagination);
   - render a "Clear filter" pill near the search input when `categoryId` is set, which clears the param via `router.setParams({ categoryId: undefined })`.
 
   Confirm with `npx tsc --noEmit`.

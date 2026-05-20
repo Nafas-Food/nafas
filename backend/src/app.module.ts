@@ -25,6 +25,7 @@ import { ItemsModule } from './modules/items/items.module';
 import { ChefsModule } from './modules/chefs/chefs.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { HomeModule } from './modules/home/home.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -64,6 +65,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ChefsModule,
     AdminModule,
     CategoriesModule,
+    HomeModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

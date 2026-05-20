@@ -79,8 +79,14 @@ export const ar: I18nDict = {
   },
   home: {
     greeting: 'أهلاً، {name}',
+    greetingGeneric: 'أهلاً بك',
+    greetingSubtitle: 'ماذا تشتهي اليوم؟',
     deliverTo: 'التوصيل إلى',
     addAddress: 'إضافة عنوان',
+    openChefs: 'الطهاة المتاحون',
+    seeAll: 'عرض الكل',
+    categories: 'التصنيفات',
+    topRated: 'الأعلى تقييماً',
   },
   tabs: {
     home: 'الرئيسية',
@@ -213,6 +219,7 @@ export const ar: I18nDict = {
     distanceFormat: 'على بعد {km} كم',
     minOrder: 'الحد الأدنى {amount} جنيه',
     reviewCount: '{count} تقييم',
+    clearFilter: 'إزالة الفلتر',
   },
   chefPublicProfile: {
     aboutHeader: 'نبذة',

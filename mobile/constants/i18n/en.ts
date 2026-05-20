@@ -82,8 +82,14 @@ export const en = {
   },
   home: {
     greeting: 'Hello, {name}',
+    greetingGeneric: 'Welcome',
+    greetingSubtitle: 'What are you in the mood for today?',
     deliverTo: 'Delivering to',
     addAddress: 'Add address',
+    openChefs: 'Open chefs',
+    seeAll: 'See all',
+    categories: 'Categories',
+    topRated: 'Top rated',
   },
   tabs: {
     home: 'Home',
@@ -216,6 +222,7 @@ export const en = {
     distanceFormat: '{km} km away',
     minOrder: 'Min. order {amount} EGP',
     reviewCount: '{count} reviews',
+    clearFilter: 'Clear filter',
   },
   chefPublicProfile: {
     aboutHeader: 'About',
