@@ -243,7 +243,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: colors.bannerScrim,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -259,7 +259,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     },
     bannerOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.12)',
+      backgroundColor: colors.bannerTint,
     },
     logoWrap: {
       marginTop: -40,

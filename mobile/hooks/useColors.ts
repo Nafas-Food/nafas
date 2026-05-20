@@ -15,6 +15,12 @@ export interface NafasColors {
   scrim: string;
   /** Stronger scrim for prominent overlays (carousel remove button). */
   scrimStrong: string;
+  /** Shared backdrop for slide-up modal sheets (menu / item editors, image dialog). */
+  modalBackdrop: string;
+  /** Circular icon-button scrim over hero imagery (chef profile back button). */
+  bannerScrim: string;
+  /** Subtle dark tint laid on top of a banner image to improve text contrast. */
+  bannerTint: string;
   warningSurface: string;
   warningBorder: string;
   background: string;
@@ -43,6 +49,9 @@ const TOKENS: NafasColors = {
   shadow: '#2C1F14',
   scrim: 'rgba(31, 26, 23, 0.55)',
   scrimStrong: 'rgba(31, 26, 23, 0.65)',
+  modalBackdrop: 'rgba(31, 26, 23, 0.45)',
+  bannerScrim: 'rgba(0, 0, 0, 0.35)',
+  bannerTint: 'rgba(0, 0, 0, 0.12)',
   warningSurface: '#FFF3E0',
   warningBorder: '#C4622D',
   background: '#FAF6F2',

@@ -108,7 +108,7 @@ export function ItemImagesDialog({ item, onClose, onChanged }: ItemImagesDialogP
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(31,26,23,0.5)', justifyContent: 'flex-end' }}>
+      <View style={{ flex: 1, backgroundColor: colors.modalBackdrop, justifyContent: 'flex-end' }}>
         <Pressable style={{ flex: 1 }} onPress={onClose} />
         <View
           style={{

@@ -205,7 +205,7 @@ export function ItemEditorSheet({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(31,26,23,0.4)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: colors.modalBackdrop, justifyContent: 'flex-end' }}>
           <Pressable style={{ flex: 1 }} onPress={onClose} />
           <View
             style={{
