@@ -405,9 +405,7 @@ export class ChefsService {
    * Refuses unverified / soft-deleted chefs with 404 CHEF_NOT_FOUND
    * (FR-020) — identical shape to a genuinely missing chef.
    */
-  async findFullProfile(
-    chefId: string,
-  ): Promise<ChefPublicProfileWithMenus> {
+  async findFullProfile(chefId: string): Promise<ChefPublicProfileWithMenus> {
     const header = await this.findPublicProfile(chefId);
     const menus = await this.menusService.findTodayAvailableForChef(chefId);
     return {

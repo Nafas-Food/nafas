@@ -200,7 +200,8 @@ export class ItemsService {
         price: dto.price ?? (item.price as unknown as string),
         discountValue:
           dto.discountValue ?? (item.discountValue as unknown as string),
-        discountUnit: dto.discountUnit ?? (item.discountUnit as 'fixed' | 'percent'),
+        discountUnit:
+          dto.discountUnit ?? (item.discountUnit as 'fixed' | 'percent'),
       };
       this.assertNonNegativeEffectivePrice(next);
     }
@@ -303,7 +304,9 @@ export class ItemsService {
     imageKey: string,
   ): Promise<ItemWire> {
     const item = await this.findOwnedItemOrThrow(itemId, chefId);
-    const remaining = item.images.filter((u) => extractImageKey(u) !== imageKey);
+    const remaining = item.images.filter(
+      (u) => extractImageKey(u) !== imageKey,
+    );
     if (remaining.length === item.images.length) {
       // Idempotent: key is already absent — return current state.
       this.itemEventLogger.emit({
@@ -425,10 +428,7 @@ function extractImageKey(publicUrl: string): string {
   const raw = publicUrl.slice(i + ITEM_IMAGES_MARKER.length);
   const q = raw.indexOf('?');
   const h = raw.indexOf('#');
-  const end = Math.min(
-    q === -1 ? raw.length : q,
-    h === -1 ? raw.length : h,
-  );
+  const end = Math.min(q === -1 ? raw.length : q, h === -1 ? raw.length : h);
   return raw.slice(0, end);
 }
 

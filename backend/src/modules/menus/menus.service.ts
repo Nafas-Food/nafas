@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CategoriesService } from '../categories/categories.service';
@@ -172,11 +176,7 @@ export class MenusService {
           ],
         },
       },
-      orderBy: [
-        { displayOrder: 'asc' },
-        { createdAt: 'asc' },
-        { id: 'asc' },
-      ],
+      orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
   }
 
