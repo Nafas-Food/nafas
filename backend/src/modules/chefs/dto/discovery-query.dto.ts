@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsLatitude,
   IsLongitude,
@@ -17,6 +18,20 @@ export class DiscoveryQueryDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  // Phase 4 FR-021: HomeService passes `isOpen: true` for the "Open
+  // chefs" strip. Accepted on the public discovery surface too so the
+  // single chokepoint serves both consumers.
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' || value === true
+      ? true
+      : value === 'false' || value === false
+        ? false
+        : undefined,
+  )
+  @IsBoolean()
+  isOpen?: boolean;
 
   @IsOptional()
   @IsString()

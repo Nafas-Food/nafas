@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { useLanguage } from '../../context/LanguageContext';
@@ -34,9 +34,12 @@ export default function ExploreScreen() {
   const router = useRouter();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
+  // Pre-filter from Home screen category-chip tap (T047 → T048)
+  const { categoryId: paramCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
+    paramCategoryId ?? null,
   );
   const [q, setQ] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
@@ -225,6 +228,22 @@ export default function ExploreScreen() {
             </Pressable>
           )}
         </View>
+        {/* Clear category filter pill — shown when a category came from Home */}
+        {selectedCategoryId !== null && (
+          <Pressable
+            onPress={() => {
+              setSelectedCategoryId(null);
+              router.setParams({ categoryId: undefined });
+            }}
+            style={[
+              styles.clearFilterPill,
+              { flexDirection: isRTL ? 'row-reverse' : 'row' },
+            ]}
+          >
+            <Text style={styles.clearFilterText}>{t('discovery.clearFilter')}</Text>
+            <Feather name="x" size={13} color={colors.primary} />
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.chipsBar}>
@@ -367,12 +386,29 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     clearBtn: {
       padding: 2,
     },
+    clearFilterPill: {
+      alignSelf: 'flex-start',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 100,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    clearFilterText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
+    },
     // The outer bar fixes the row's height so the horizontal ScrollView
     // can't cross-axis-stretch its children into tall capsules.
     chipsBar: {
-      height: 52,
       justifyContent: 'center',
       backgroundColor: colors.background,
+      paddingBottom: 4,
     },
     chipsScroll: {
       alignItems: 'center',

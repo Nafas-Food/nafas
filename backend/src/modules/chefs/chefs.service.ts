@@ -318,6 +318,10 @@ export class ChefsService {
 
     const where: Prisma.ChefWhereInput = { isVerified: true };
 
+    if (query.isOpen !== undefined) {
+      where.isOpen = query.isOpen;
+    }
+
     if (query.categoryId) {
       const chefIds = await this.menusService.chefIdsInCategory(
         query.categoryId,
