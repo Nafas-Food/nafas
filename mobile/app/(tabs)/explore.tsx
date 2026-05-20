@@ -60,6 +60,12 @@ export default function ExploreScreen() {
   // append stale chefs into Y's list.
   const filterEpochRef = useRef(0);
 
+  // Sync category filter when the URL param changes (e.g. returning from Home
+  // with a different chip selection while this screen is already mounted).
+  useEffect(() => {
+    setSelectedCategoryId(paramCategoryId ?? null);
+  }, [paramCategoryId]);
+
   // Debounce search input
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);

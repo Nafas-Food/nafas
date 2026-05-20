@@ -32,13 +32,21 @@ export default function HomeScreen() {
 
   const [data, setData] = useState<HomePayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadHome() {
+    setLoading(true);
+    setError(null);
     homeService
       .get()
       .then(setData)
-      .catch(() => {})
+      .catch(() => setError(t('errors.NETWORK')))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadHome();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Server pre-splits to the first name; fall back to the auth context
@@ -61,6 +69,8 @@ export default function HomeScreen() {
         <Pressable
           style={styles.cartBtn}
           onPress={() => router.push('/(tabs)/orders')}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.viewOrders')}
         >
           <Feather name="shopping-bag" size={20} color={colors.primary} />
         </Pressable>
@@ -79,6 +89,19 @@ export default function HomeScreen() {
       {loading && (
         <View style={styles.loadingWrap}>
           <ActivityIndicator color={colors.primary} />
+        </View>
+      )}
+
+      {!loading && error !== null && data === null && (
+        <View style={styles.errorWrap}>
+          <Text style={[styles.errorText, { textAlign }]}>{error}</Text>
+          <Pressable
+            style={styles.retryBtn}
+            onPress={loadHome}
+            accessibilityRole="button"
+          >
+            <Text style={styles.retryBtnText}>{t('common.retry')}</Text>
+          </Pressable>
         </View>
       )}
 
@@ -375,6 +398,28 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     loadingWrap: {
       paddingVertical: 40,
       alignItems: 'center',
+    },
+    errorWrap: {
+      paddingVertical: 40,
+      paddingHorizontal: 32,
+      alignItems: 'center',
+      gap: 16,
+    },
+    errorText: {
+      fontSize: 15,
+      color: colors.muted,
+      lineHeight: 22,
+    },
+    retryBtn: {
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 100,
+      backgroundColor: colors.primary,
+    },
+    retryBtnText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.primaryText,
     },
     section: {
       marginTop: 24,

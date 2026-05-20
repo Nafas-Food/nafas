@@ -1903,17 +1903,17 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   @ApiTags('Home')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Controller('api/v1/home')
+  @Controller('home')
   export class HomeController {
     constructor(private readonly homeService: HomeService) {}
 
     @Get()
-    async getHome(@Req() req: Request) {
-      return this.homeService.findHomeForUser(req.user!.sub);
+    async getHome(@Req() req: JwtRequest) {
+      return this.homeService.findHomeForUser(req.user.sub);
     }
   }
   ```
-  Register `HomeModule` in `<repo>\backend\src\app.module.ts`. Confirm with `npx tsc --noEmit`.
+  The global route prefix `api/v1` is applied by the NestJS bootstrap (`app.setGlobalPrefix('api/v1')`), so the controller uses `'home'` (not `'api/v1/home'`) to avoid a doubled prefix. Mobile clients call `GET /api/v1/home`. Register `HomeModule` in `<repo>\backend\src\app.module.ts`. Confirm with `npx tsc --noEmit`.
 
 ### Mobile
 
@@ -2072,7 +2072,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 - [X] T048 [P] [US4] Extend `<repo>\mobile\app\(tabs)\explore.tsx` (Phase 3 file, exists from US-level wiring of the discovery screen) to:
   - read `useLocalSearchParams<{ categoryId?: string }>()` to honour the pre-filter from Home (T047);
-  - use `useDebouncedDiscovery` from T046 instead of the Phase 3 ad-hoc fetch;
+  - use the Phase 3 Explore fetch flow (epoch-guarded `fetchChefs` + cursor pagination) — `useDebouncedDiscovery` (T046) is retained as a standalone hook but the Explore screen keeps the Phase 3 discovery approach because it supports load-more pagination that the hook does not;
   - render a "Clear filter" pill near the search input when `categoryId` is set, which clears the param via `router.setParams({ categoryId: undefined })`.
 
   Confirm with `npx tsc --noEmit`.
