@@ -55,6 +55,12 @@ Response shape:
 - No authentication is required. Recommended monitor cadence: 5 minutes
   (UptimeRobot's free tier).
 
+## Recent changes
+
+- **Phase 4** ships the chef menu/item editor, today-available customer chef profile (Africa/Cairo wall clock), Home composer, and the server-authoritative `effectivePrice` helper. See `specs/005-phase-4-menus/quickstart.md` for the verification path. Zero new npm dependencies; migration is index-only (`0004_item_active_displayorder_indexes`). The `effectivePrice` helper lives at `backend/src/modules/items/effective-price.ts` for Phase 5 (cart) and Phase 6 (order snapshot) to import.
+- **Phase 3**: Chef application + admin verification/rejection/revocation, public chef discovery (Haversine bounding-box), chef profile self-edit, seeded categories + admin CRUD/reorder, FCM push via `firebase-admin`, role-driven mobile tab switch.
+- **Phase 2**: Saved customer addresses + map picker, in-flight-order delete safety rail, coordinate-redaction in error responses.
+
 ## Constitution
 
 Read `.specify/memory/constitution.md` before contributing. The seven core

@@ -11,6 +11,8 @@ import { AuthEventLogger } from '../src/common/logging/auth-event.logger';
 import { AddressEventLogger } from '../src/common/logging/address-event.logger';
 import { ChefEventLogger } from '../src/common/logging/chef-event.logger';
 import { CategoryEventLogger } from '../src/common/logging/category-event.logger';
+import { MenuEventLogger } from '../src/common/logging/menu-event.logger';
+import { ItemEventLogger } from '../src/common/logging/item-event.logger';
 
 function makeHost(req: {
   url: string;
@@ -26,9 +28,13 @@ function makeHost(req: {
 describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
   let filter: HttpExceptionNormalizerFilter;
   let addressEvents: { emit: jest.Mock };
+  let menuEvents: { emit: jest.Mock };
+  let itemEvents: { emit: jest.Mock };
 
   beforeEach(async () => {
     addressEvents = { emit: jest.fn() };
+    menuEvents = { emit: jest.fn() };
+    itemEvents = { emit: jest.fn() };
     const mod = await Test.createTestingModule({
       providers: [
         HttpExceptionNormalizerFilter,
@@ -36,6 +42,8 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
         { provide: AddressEventLogger, useValue: addressEvents },
         { provide: ChefEventLogger, useValue: { emit: jest.fn() } },
         { provide: CategoryEventLogger, useValue: { emit: jest.fn() } },
+        { provide: MenuEventLogger, useValue: menuEvents },
+        { provide: ItemEventLogger, useValue: itemEvents },
       ],
     }).compile();
     filter = mod.get(HttpExceptionNormalizerFilter);
@@ -195,6 +203,125 @@ describe('HttpExceptionNormalizerFilter (FR-019 / FR-021 / R6)', () => {
       });
       expect(body).not.toHaveProperty('latitude');
       expect(body).not.toHaveProperty('longitude');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // T076 — Phase 4 path coordinate redaction (SC-018 / SC-019)
+  // -------------------------------------------------------------------------
+
+  describe('Phase 4 menu path coordinate redaction (T076)', () => {
+    it('POST /chef/menus 400: response body does NOT contain latitude/longitude/coordinates', () => {
+      const exc = new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'invalid',
+        latitude: 30.0,
+        longitude: 31.2,
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/menus',
+        method: 'POST',
+        user: { sub: 'u-m1' },
+      });
+      expect(body).not.toHaveProperty('latitude');
+      expect(body).not.toHaveProperty('longitude');
+      expect(body).not.toHaveProperty('coordinates');
+    });
+
+    it('POST /chef/menus 400: MenuEventLogger emits menu.create / validation_rejected', () => {
+      const exc = new BadRequestException({ message: ['MENU_NAME_REQUIRED'] });
+      run(exc, {
+        url: '/api/v1/chef/menus',
+        method: 'POST',
+        user: { sub: 'u-m2' },
+      });
+      expect(menuEvents.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'menu.create',
+          outcome: 'validation_rejected',
+        }),
+      );
+    });
+
+    it('PATCH /chef/menus/:id 404: MenuEventLogger emits menu.update / not_found', () => {
+      const exc = new NotFoundException({
+        code: 'MENU_NOT_FOUND',
+        message: 'x',
+      });
+      run(exc, {
+        url: '/api/v1/chef/menus/abc-123',
+        method: 'PATCH',
+        user: { sub: 'u-m3' },
+      });
+      expect(menuEvents.emit).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'menu.update', outcome: 'not_found' }),
+      );
+    });
+
+    it('PATCH /chef/menus/reorder 400: MenuEventLogger emits menu.reorder / validation_rejected', () => {
+      const exc = new BadRequestException({
+        code: 'MENUS_REORDER_NOT_EXACT_SET',
+        message: 'x',
+      });
+      run(exc, {
+        url: '/api/v1/chef/menus/reorder',
+        method: 'PATCH',
+        user: { sub: 'u-m4' },
+      });
+      expect(menuEvents.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'menu.reorder',
+          outcome: 'validation_rejected',
+        }),
+      );
+    });
+  });
+
+  describe('Phase 4 item path coordinate redaction (T076)', () => {
+    it('POST /chef/items/:id/images 400: response body does NOT contain latitude/longitude/coordinates', () => {
+      const exc = new BadRequestException({
+        code: 'UNSUPPORTED_MEDIA_TYPE',
+        message: 'invalid',
+        latitude: 30.0,
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/items/abc/images',
+        method: 'POST',
+        user: { sub: 'u-i1' },
+      });
+      expect(body).not.toHaveProperty('latitude');
+      expect(body).not.toHaveProperty('longitude');
+    });
+
+    it('DELETE /chef/items/:id 404: ItemEventLogger emits item.soft_delete / not_found', () => {
+      const exc = new NotFoundException({
+        code: 'ITEM_NOT_FOUND',
+        message: 'x',
+      });
+      run(exc, {
+        url: '/api/v1/chef/items/abc-123',
+        method: 'DELETE',
+        user: { sub: 'u-i2' },
+      });
+      expect(itemEvents.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'item.soft_delete',
+          outcome: 'not_found',
+        }),
+      );
+    });
+
+    it('POST /chef/menus/:menuId/items 400: response does NOT contain coordinates', () => {
+      const exc = new BadRequestException({
+        message: ['ITEM_NAME_REQUIRED'],
+        coordinates: { latitude: 1, longitude: 2 },
+      });
+      const body = run(exc, {
+        url: '/api/v1/chef/menus/m-id/items',
+        method: 'POST',
+        user: { sub: 'u-i3' },
+      });
+      expect(body).not.toHaveProperty('coordinates');
     });
   });
 

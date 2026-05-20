@@ -254,6 +254,18 @@ sees chef tab bar. Categories endpoint returns seed data.
 **Done when**: Chef creates a menu with 3 items + day availability + images.
 Customer views chef profile and sees only today-available items.
 
+**Phase 4 implementation notes (updated 2026-05-20)**:
+The spec, plan, and tasks for Phase 4 ship as `specs/005-phase-4-menus/`. This phase adds zero new npm dependencies — every library needed (Decimal.js, class-validator, @nestjs/throttler, firebase-admin, Supabase Storage) was installed in Phases 0–3.
+
+Key implementation details:
+- **Migration**: index-only (`0004_item_active_displayorder_indexes`) — three composite indexes on `items` and `menus` tables. No new columns.
+- **`effectivePrice` helper**: exported as a pure function from `backend/src/modules/items/effective-price.ts`. Phase 5 (cart) and Phase 6 (`OrderItem.price` snapshot) MUST import from this path — using it as a service method would force a `forwardRef` circular dep.
+- **`todaysCairoWeekday` helper**: `backend/src/modules/menus/today-cairo.ts`. Accepts an optional `now: Date` argument so tests can pin the clock without `jest.useFakeTimers()`.
+- **Today-available filter**: menus service resolves "today" against Africa/Cairo wall clock at request-handler entry. Client clock is never used.
+- **Image uploads**: per-chef throttle 20 / 60 s (in addition to the global 60 / 60 s / IP tier). The `ChefThrottlerGuard` keys on `req.user.sub`; uses the same `default` tier name to stay within Phase 1's single-tier rule.
+- **`Item.quantity = -1`** is the database-internal unlimited sentinel. NEVER appears on the wire — reads map it to `{ isUnlimitedStock: true }`.
+- **`MenuAvailability`** is the one Phase 4 entity that hard-deletes (CI grep gate updated to allow it in T012).
+
 ---
 
 ## Phase 5 — Cart
