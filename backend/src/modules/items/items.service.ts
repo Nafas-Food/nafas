@@ -303,7 +303,7 @@ export class ItemsService {
     imageKey: string,
   ): Promise<ItemWire> {
     const item = await this.findOwnedItemOrThrow(itemId, chefId);
-    const remaining = item.images.filter((u) => !u.endsWith(imageKey));
+    const remaining = item.images.filter((u) => extractImageKey(u) !== imageKey);
     if (remaining.length === item.images.length) {
       // Idempotent: key is already absent — return current state.
       this.itemEventLogger.emit({
@@ -415,6 +415,21 @@ export class ItemsService {
     }
     return item;
   }
+}
+
+/** Extracts the storage object key from a Supabase public URL. */
+const ITEM_IMAGES_MARKER = '/storage/v1/object/public/item-images/';
+function extractImageKey(publicUrl: string): string {
+  const i = publicUrl.indexOf(ITEM_IMAGES_MARKER);
+  if (i === -1) return publicUrl;
+  const raw = publicUrl.slice(i + ITEM_IMAGES_MARKER.length);
+  const q = raw.indexOf('?');
+  const h = raw.indexOf('#');
+  const end = Math.min(
+    q === -1 ? raw.length : q,
+    h === -1 ? raw.length : h,
+  );
+  return raw.slice(0, end);
 }
 
 export interface ItemWire {

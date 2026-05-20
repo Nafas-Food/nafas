@@ -109,11 +109,16 @@ export function MenuEditorSheet({
           const targetDays = new Set(selectedDays);
           const toAdd = [...targetDays].filter((d) => !currentDays.has(d));
           const toRemove = [...currentDays].filter((d) => !targetDays.has(d));
-          for (const day of toAdd) {
-            await menusService.addAvailability(editing.id, day);
-          }
-          for (const day of toRemove) {
-            await menusService.removeAvailability(editing.id, day);
+          const results = await Promise.allSettled([
+            ...toAdd.map((d) => menusService.addAvailability(editing.id, d)),
+            ...toRemove.map((d) => menusService.removeAvailability(editing.id, d)),
+          ]);
+          const failures = results.filter((r) => r.status === 'rejected');
+          if (failures.length > 0) {
+            const code = errorCodeOf((failures[0] as PromiseRejectedResult).reason);
+            setError(t('errors.menu.' + code.toLowerCase()) || code);
+            setSubmitting(false);
+            return;
           }
         }
         onChanged?.();

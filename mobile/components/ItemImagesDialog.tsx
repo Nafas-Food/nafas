@@ -24,7 +24,11 @@ function imageKeyFromUrl(publicUrl: string): string {
   const marker = '/storage/v1/object/public/item-images/';
   const i = publicUrl.indexOf(marker);
   if (i === -1) throw new Error('unexpected supabase URL shape');
-  return publicUrl.slice(i + marker.length);
+  const raw = publicUrl.slice(i + marker.length);
+  const q = raw.indexOf('?');
+  const h = raw.indexOf('#');
+  const end = Math.min(q === -1 ? raw.length : q, h === -1 ? raw.length : h);
+  return raw.slice(0, end);
 }
 
 export function ItemImagesDialog({ item, onClose, onChanged }: ItemImagesDialogProps) {
