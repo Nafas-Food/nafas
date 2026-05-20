@@ -89,6 +89,7 @@ export const ar: I18nDict = {
     seeAll: 'عرض الكل',
     categories: 'التصنيفات',
     topRated: 'الأعلى تقييماً',
+    viewOrders: 'عرض الطلبات',
   },
   tabs: {
     home: 'الرئيسية',

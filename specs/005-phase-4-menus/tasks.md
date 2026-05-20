@@ -2513,7 +2513,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
 
 **Independent Test**: An Arabic-language customer exercises Home, a chef profile (with at least one discounted item and one out-of-stock item), Explore (search + category filter); every visible string is Arabic with right-to-left layout. An Arabic-language chef exercises the menu editor, item editor, image dialog, day-picker, every validation error — all in Arabic with RTL. Toggling to English re-renders everything in English without an app restart.
 
-- [ ] T064 [P] [US6] Add Phase 4 English i18n keys to `<repo>\mobile\constants\i18n\en.ts`. Append a `phase4` namespace (or merge into the existing `chef.*` / `customer.*` / `errors.*` namespaces — match the file's convention). Required keys at minimum (all referenced by T024 – T063):
+- [X] T064 [P] [US6] Add Phase 4 English i18n keys to `<repo>\mobile\constants\i18n\en.ts`. Append a `phase4` namespace (or merge into the existing `chef.*` / `customer.*` / `errors.*` namespaces — match the file's convention). Required keys at minimum (all referenced by T024 – T063):
   ```
   common.day.sun = "Sun"
   common.day.mon = "Mon"
@@ -2590,7 +2590,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Use the file's existing key-namespacing convention (some projects use dotted strings literally, others nest objects). Match whichever Phase 3 used in `<repo>\mobile\constants\i18n\en.ts`.
 
-- [ ] T065 [P] [US6] Mirror every T064 key into `<repo>\mobile\constants\i18n\ar.ts` with Arabic translations. Keep the keys identical to en.ts (the locale parity check in T084 enforces this). Examples:
+- [X] T065 [P] [US6] Mirror every T064 key into `<repo>\mobile\constants\i18n\ar.ts` with Arabic translations. Keep the keys identical to en.ts (the locale parity check in T084 enforces this). Examples:
   ```
   common.day.sun = "الأحد"
   common.day.mon = "الإثنين"
@@ -2607,7 +2607,7 @@ description: "Phase 4 Menus, Items & Customer Discovery Surfaces — implementat
   ```
   Have a native Arabic reviewer pass over the wording before merge — auto-translated strings frequently misuse classical-vs-colloquial register.
 
-- [ ] T066 [US6] Audit every new Phase 4 mobile component for design-system compliance: zero hex literals (search for `#` in the new component files); every visible string sourced via `t(key)`; every `flexDirection` reads from `isRTL`. Run a grep:
+- [X] T066 [US6] Audit every new Phase 4 mobile component for design-system compliance: zero hex literals (search for `#` in the new component files); every visible string sourced via `t(key)`; every `flexDirection` reads from `isRTL`. Run a grep:
   ```powershell
   Select-String -Path "<repo>\mobile\components\MenuSectionList.tsx","<repo>\mobile\components\ItemCard.tsx","<repo>\mobile\components\DayOfWeekPicker.tsx","<repo>\mobile\components\ItemImagesDialog.tsx","<repo>\mobile\components\MenuEditorSheet.tsx","<repo>\mobile\components\ItemEditorSheet.tsx","<repo>\mobile\app\(tabs)\index.tsx","<repo>\mobile\app\(chef)\menu.tsx","<repo>\mobile\app\(chef)\menu\[id].tsx","<repo>\mobile\app\chef\[id].tsx","<repo>\mobile\app\(tabs)\explore.tsx" -Pattern "#[0-9A-Fa-f]{3,8}" -SimpleMatch:$false
   ```

@@ -180,7 +180,7 @@ export function MenuEditorSheet({
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(31,26,23,0.4)',
+            backgroundColor: colors.modalBackdrop,
             justifyContent: 'flex-end',
           }}
         >
